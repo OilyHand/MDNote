@@ -3,6 +3,7 @@ node_modules/
 
 # Build output
 dist/
+*.tsbuildinfo
 dist-ssr/
 src-tauri/target/
 src-tauri/gen/schemas/

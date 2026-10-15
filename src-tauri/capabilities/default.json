@@ -1,0 +1,15 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "Document windows. Every permission MDNote's pages use is listed here; core:default alone does not cover them (Phase 0 lesson).",
+  "windows": ["main", "w-*"],
+  "permissions": [
+    "core:default",
+    "core:window:allow-set-title",
+    "core:window:allow-destroy",
+    "core:window:allow-close",
+    "dialog:allow-open",
+    "dialog:allow-save",
+    "log:default"
+  ]
+}
