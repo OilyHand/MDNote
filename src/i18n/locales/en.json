@@ -1,0 +1,119 @@
+{
+  "app": {
+    "name": "MDNote",
+    "untitled": "Untitled-{{number}}",
+    "windowTitle": "{{name}} - MDNote"
+  },
+  "menu": {
+    "file": "File",
+    "edit": "Edit",
+    "help": "Help",
+    "new": "New",
+    "open": "Open…",
+    "openRecent": "Open Recent",
+    "noRecent": "No recent files",
+    "clearRecent": "Clear Recent Files",
+    "save": "Save",
+    "saveAs": "Save As…",
+    "closeTab": "Close Tab",
+    "preferences": "Preferences…",
+    "exit": "Exit",
+    "undo": "Undo",
+    "redo": "Redo",
+    "cut": "Cut",
+    "copy": "Copy",
+    "paste": "Paste",
+    "selectAll": "Select All",
+    "makeDefault": "Make MDNote the Default for .md Files…",
+    "about": "About MDNote"
+  },
+  "tabs": {
+    "notSaved": "Not saved yet",
+    "close": "Close",
+    "newTab": "New document",
+    "unsaved": "Unsaved changes"
+  },
+  "empty": {
+    "title": "No document open",
+    "subtitle": "Create a new document or open an existing Markdown file.",
+    "new": "New document",
+    "open": "Open…",
+    "recent": "Recent files",
+    "makeDefault": "Make MDNote the default app for .md files"
+  },
+  "dialog": {
+    "unsaved": {
+      "title": "Save changes?",
+      "message": "Do you want to save the changes to “{{name}}”?",
+      "save": "Save",
+      "dontSave": "Don't Save",
+      "cancel": "Cancel"
+    },
+    "unmappable": {
+      "title": "Save as UTF-8?",
+      "message": "“{{name}}” uses the {{encoding}} encoding, which can't store some characters in this document. Save it as UTF-8 instead?",
+      "saveUtf8": "Save as UTF-8",
+      "cancel": "Cancel"
+    },
+    "about": {
+      "title": "About MDNote",
+      "version": "Version {{version}}",
+      "description": "Markdown notes with Word-style formatting, for Windows.",
+      "license": "MIT License · © 2026 OilyHand",
+      "close": "Close"
+    }
+  },
+  "fileTypes": {
+    "markdown": "Markdown documents",
+    "all": "All files"
+  },
+  "disk": {
+    "changed": "“{{name}}” was changed by another program.",
+    "removed": "“{{name}}” was deleted or moved by another program.",
+    "reload": "Reload",
+    "keepMine": "Keep My Version",
+    "save": "Save to Recreate It",
+    "closeTab": "Close Tab"
+  },
+  "notices": {
+    "ansiFallback": "“{{name}}” isn't UTF-8, so it was read with Windows code page {{codepage}}. It will be saved the same way.",
+    "mixedLineEndings": "“{{name}}” used mixed line endings. It will be saved with {{lineEnding}} throughout.",
+    "sessionMissing_one": "A file from the last session could not be opened: {{files}}",
+    "sessionMissing_other": "{{count}} files from the last session could not be opened: {{files}}",
+    "recentMissing": "“{{path}}” no longer exists, so it was removed from Recent Files.",
+    "pasteBlocked": "Use Ctrl+V to paste.",
+    "dismiss": "Dismiss"
+  },
+  "errors": {
+    "notFound": "File not found: {{detail}}",
+    "accessDenied": "Windows denied access to {{detail}}.",
+    "readOnly": "{{detail}} is read-only. Use Save As to save a copy.",
+    "unmappable": "The text contains characters that {{detail}} can't store.",
+    "io": "Could not access the file: {{detail}}",
+    "internal": "Something went wrong: {{detail}}"
+  },
+  "lineEnding": {
+    "crlf": "CRLF (Windows)",
+    "lf": "LF (Unix)"
+  },
+  "prefs": {
+    "title": "Preferences",
+    "general": "General",
+    "appearance": "Appearance",
+    "language": "Language",
+    "languageSystem": "Same as Windows ({{language}})",
+    "english": "English",
+    "korean": "한국어",
+    "restoreSession": "Reopen the documents from the last session at startup",
+    "recentFilesLimit": "Recent files to remember",
+    "defaultApp": "Default app for .md files",
+    "defaultAppButton": "Open Windows Settings",
+    "defaultAppHint": "Windows asks you to confirm the default app in Settings.",
+    "theme": "Theme",
+    "themeSystem": "Same as Windows",
+    "themeLight": "Light",
+    "themeDark": "Dark",
+    "resetAll": "Reset All",
+    "close": "Close"
+  }
+}
