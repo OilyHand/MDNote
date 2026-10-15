@@ -7,36 +7,134 @@
   "menu": {
     "file": "File",
     "edit": "Edit",
+    "insert": "Insert",
+    "format": "Format",
+    "view": "View",
     "help": "Help",
-    "new": "New",
-    "open": "Open…",
     "openRecent": "Open Recent",
     "noRecent": "No recent files",
     "clearRecent": "Clear Recent Files",
-    "save": "Save",
-    "saveAs": "Save As…",
-    "closeTab": "Close Tab",
-    "preferences": "Preferences…",
-    "exit": "Exit",
-    "undo": "Undo",
-    "redo": "Redo",
-    "cut": "Cut",
-    "copy": "Copy",
-    "paste": "Paste",
-    "selectAll": "Select All",
+    "heading": "Heading",
+    "table": "Table",
     "makeDefault": "Make MDNote the Default for .md Files…",
-    "about": "About MDNote",
-    "view": "View",
-    "print": "Print…",
-    "splitView": "Split View",
-    "sourceOnly": "Source Only",
-    "previewOnly": "Preview Only",
-    "zoomIn": "Zoom In",
-    "zoomOut": "Zoom Out",
-    "zoomInKeys": "Ctrl+Wheel Up",
-    "zoomOutKeys": "Ctrl+Wheel Down",
-    "actualSize": "Actual Size (100%)",
-    "fitWidth": "Fit Page Width"
+    "about": "About MDNote"
+  },
+  "commands": {
+    "file": {
+      "new": "New",
+      "open": "Open…",
+      "save": "Save",
+      "saveAs": "Save As…",
+      "print": "Print…",
+      "closeTab": "Close Tab",
+      "moveToNewWindow": "Move to New Window",
+      "preferences": "Preferences…",
+      "exit": "Exit"
+    },
+    "tab": {
+      "next": "Next Tab",
+      "previous": "Previous Tab"
+    },
+    "edit": {
+      "undo": "Undo",
+      "redo": "Redo",
+      "cut": "Cut",
+      "copy": "Copy",
+      "paste": "Paste",
+      "selectAll": "Select All",
+      "find": "Find…",
+      "replace": "Replace…",
+      "goToLine": "Go to Line…",
+      "moveLineUp": "Move Line Up",
+      "moveLineDown": "Move Line Down"
+    },
+    "format": {
+      "bold": "Bold",
+      "italic": "Italic",
+      "underline": "Underline",
+      "strikethrough": "Strikethrough",
+      "code": "Inline Code"
+    },
+    "paragraph": {
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "heading4": "Heading 4",
+      "heading5": "Heading 5",
+      "heading6": "Heading 6",
+      "normal": "Normal Paragraph",
+      "bulletList": "Bulleted List",
+      "numberedList": "Numbered List",
+      "taskList": "Task List",
+      "quote": "Blockquote",
+      "codeBlock": "Code Block",
+      "indent": "Indent List Item",
+      "outdent": "Outdent List Item"
+    },
+    "insert": {
+      "link": "Link…",
+      "image": "Image…",
+      "table": "Table…",
+      "equation": "Equation",
+      "pageBreak": "Page Break"
+    },
+    "table": {
+      "nextCell": "Next Table Cell",
+      "previousCell": "Previous Table Cell",
+      "insertRowAbove": "Insert Row Above",
+      "insertRowBelow": "Insert Row Below",
+      "insertColumnLeft": "Insert Column Left",
+      "insertColumnRight": "Insert Column Right",
+      "deleteRow": "Delete Row",
+      "deleteColumn": "Delete Column",
+      "delete": "Delete Table",
+      "alignLeft": "Align Column Left",
+      "alignCenter": "Align Column Center",
+      "alignRight": "Align Column Right",
+      "format": "Line Up Columns"
+    },
+    "view": {
+      "split": "Split View",
+      "source": "Source Only",
+      "preview": "Preview Only",
+      "zoomIn": "Zoom In",
+      "zoomOut": "Zoom Out",
+      "actualSize": "Actual Size (100%)",
+      "fitWidth": "Fit Page Width",
+      "statusBar": "Status Bar",
+      "shortcuts": "Keyboard Shortcuts"
+    }
+  },
+  "keys": {
+    "ctrlWheelUp": "Ctrl+Wheel Up",
+    "ctrlWheelDown": "Ctrl+Wheel Down"
+  },
+  "shortcuts": {
+    "title": "Keyboard Shortcuts",
+    "close": "Close",
+    "groups": {
+      "file": "File",
+      "edit": "Edit",
+      "format": "Text formatting",
+      "paragraph": "Paragraphs and blocks",
+      "insert": "Insert",
+      "table": "Tables",
+      "view": "View and help"
+    }
+  },
+  "linkDialog": {
+    "title": "Insert Link",
+    "text": "Text to display",
+    "url": "Address",
+    "insert": "Insert",
+    "cancel": "Cancel"
+  },
+  "tablePicker": {
+    "title": "Insert Table",
+    "size": "{{rows}} rows × {{columns}} columns",
+    "hint": "The first row is the header row.",
+    "insert": "Insert",
+    "cancel": "Cancel"
   },
   "preview": {
     "linkNotFound": "Can't find the link target “{{target}}”.",
@@ -98,6 +196,7 @@
     "sessionMissing_other": "{{count}} files from the last session could not be opened: {{files}}",
     "recentMissing": "“{{path}}” no longer exists, so it was removed from Recent Files.",
     "pasteBlocked": "Use Ctrl+V to paste.",
+    "notInTable": "Put the cursor in a table first.",
     "dismiss": "Dismiss"
   },
   "errors": {
@@ -134,6 +233,12 @@
     "editorFontSize": "Font size (px)",
     "wordWrap": "Wrap long lines",
     "lineNumbers": "Show line numbers",
+    "conveniences": "Typing conveniences",
+    "listContinuation": "Continue lists and quotes when pressing Enter",
+    "renumberLists": "Renumber numbered lists automatically",
+    "closeBrackets": "Close brackets and quotes automatically",
+    "wrapSelection": "Typing *, _, ` or ~ wraps the selected text",
+    "formatTables": "Line up table columns when the cursor leaves a table",
     "theme": "Theme",
     "themeSystem": "Same as Windows",
     "themeLight": "Light",

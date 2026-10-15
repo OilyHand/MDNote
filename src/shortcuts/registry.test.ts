@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { comboOf, commandFor } from "./registry";
+import { COMMANDS, EDITOR_COMMANDS, comboOf, commandFor, commandsFor, keyLabel } from "./registry";
 
 type Mods = Partial<{ ctrl: boolean; shift: boolean; alt: boolean }>;
 
@@ -34,5 +34,42 @@ describe("shortcut registry", () => {
   it("leaves editing keys to the editor", () => {
     expect(commandFor(press("z", "KeyZ", { ctrl: true }))).toBeUndefined();
     expect(commandFor(press("b", "KeyB", { ctrl: true }))).toBeUndefined();
+  });
+
+  it("reads shifted and punctuation keys from the physical key", () => {
+    const editor = (event: ReturnType<typeof press>) => commandsFor(event, EDITOR_COMMANDS);
+    expect(editor(press("&", "Digit7", { ctrl: true, shift: true }))).toEqual([
+      "paragraph.numberedList",
+    ]);
+    expect(editor(press("~", "Backquote", { ctrl: true, shift: true }))).toEqual([
+      "paragraph.codeBlock",
+    ]);
+    expect(editor(press("`", "Backquote", { ctrl: true }))).toEqual(["format.code"]);
+    expect(editor(press("=", "Equal", { alt: true }))).toEqual(["insert.equation"]);
+    expect(editor(press("1", "Digit1", { ctrl: true, alt: true }))).toEqual(["paragraph.heading1"]);
+    expect(editor(press("ArrowUp", "ArrowUp", { alt: true, shift: true }))).toEqual([
+      "edit.moveLineUp",
+    ]);
+    expect(editor(press("Enter", "NumpadEnter", { ctrl: true }))).toEqual(["insert.pageBreak"]);
+  });
+
+  it("tries a table cell before a list item for Tab", () => {
+    expect(commandsFor(press("Tab", "Tab"), EDITOR_COMMANDS)).toEqual([
+      "table.nextCell",
+      "paragraph.indent",
+    ]);
+  });
+
+  it("binds every other key combination to one command only", () => {
+    const owners = new Map<string, string[]>();
+    for (const [id, spec] of Object.entries(COMMANDS)) {
+      for (const key of spec.keys) owners.set(key, [...(owners.get(key) ?? []), id]);
+    }
+    const shared = [...owners].filter(([, ids]) => ids.length > 1).map(([key]) => key);
+    expect(shared.sort()).toEqual(["Shift+Tab", "Tab"]);
+  });
+
+  it("writes arrow keys as arrows", () => {
+    expect(keyLabel("Alt+Shift+ArrowDown")).toBe("Alt+Shift+↓");
   });
 });

@@ -1,74 +1,154 @@
-// Keyboard shortcuts (O8). One table drives the key handling, the menu labels and,
-// from Phase 3, the F1 shortcut list, so they can never disagree.
-// Phases 1–2 cover the File, tab and view commands; editing shortcuts come in Phase 3.
+// Keyboard shortcuts and commands (O8). One table drives the key handling, the
+// menu labels and the F1 shortcut list, so they can never disagree.
+//
+// Each command's label is the translation `commands.<id>`.
 
-export type CommandId =
-  | "file.new"
-  | "file.open"
-  | "file.save"
-  | "file.saveAs"
-  | "file.closeTab"
-  | "file.print"
-  | "file.preferences"
-  | "tab.next"
-  | "tab.previous"
-  | "edit.undo"
-  | "edit.redo"
-  | "edit.cut"
-  | "edit.copy"
-  | "edit.paste"
-  | "edit.selectAll";
+export type CommandGroup = "file" | "edit" | "format" | "paragraph" | "insert" | "table" | "view";
 
-/** Key combinations per command; the first one is shown in menus. */
-export const SHORTCUTS: Record<CommandId, string[]> = {
-  "file.new": ["Ctrl+N"],
-  "file.open": ["Ctrl+O"],
-  "file.save": ["Ctrl+S"],
-  "file.saveAs": ["F12", "Ctrl+Shift+S"],
-  "file.closeTab": ["Ctrl+W", "Ctrl+F4"],
-  "file.print": ["Ctrl+P"],
-  "file.preferences": ["Ctrl+,"],
-  "tab.next": ["Ctrl+Tab"],
-  "tab.previous": ["Ctrl+Shift+Tab"],
-  "edit.undo": ["Ctrl+Z"],
-  "edit.redo": ["Ctrl+Y"],
-  "edit.cut": ["Ctrl+X"],
-  "edit.copy": ["Ctrl+C"],
-  "edit.paste": ["Ctrl+V"],
-  "edit.selectAll": ["Ctrl+A"],
-};
+export interface CommandSpec {
+  /** Key combinations; the first one is shown in menus. */
+  keys: string[];
+  group: CommandGroup;
+  /**
+   * Handled by the source editor while it has focus. Such a command may decline
+   * (Tab outside a list or table), and the key then does what it normally does.
+   */
+  editor?: boolean;
+  /** The browser or CodeMirror already handles the keys; listed for menus and F1 only. */
+  native?: boolean;
+  /** Shown instead of `keys` (a translation key), for gestures such as Ctrl+wheel. */
+  display?: string;
+}
 
-/** Commands the window handles itself; the editor handles the "edit.*" keys. */
-export const WINDOW_COMMANDS: CommandId[] = [
-  "file.new",
-  "file.open",
-  "file.save",
-  "file.saveAs",
-  "file.closeTab",
-  "file.print",
-  "file.preferences",
-  "tab.next",
-  "tab.previous",
-];
+const file = (keys: string[] = []): CommandSpec => ({ keys, group: "file" });
+const edit = (keys: string[] = []): CommandSpec => ({ keys, group: "edit", editor: true });
+const format = (keys: string[] = []): CommandSpec => ({ keys, group: "format", editor: true });
+const paragraph = (keys: string[] = []): CommandSpec => ({
+  keys,
+  group: "paragraph",
+  editor: true,
+});
+const insert = (keys: string[] = []): CommandSpec => ({ keys, group: "insert", editor: true });
+const table = (keys: string[] = []): CommandSpec => ({ keys, group: "table", editor: true });
+const view = (keys: string[] = []): CommandSpec => ({ keys, group: "view" });
+
+export const COMMANDS = {
+  "file.new": file(["Ctrl+N"]),
+  "file.open": file(["Ctrl+O"]),
+  "file.save": file(["Ctrl+S"]),
+  "file.saveAs": file(["F12", "Ctrl+Shift+S"]),
+  "file.print": file(["Ctrl+P"]),
+  "file.closeTab": file(["Ctrl+W", "Ctrl+F4"]),
+  "file.moveToNewWindow": file(),
+  "tab.next": file(["Ctrl+Tab"]),
+  "tab.previous": file(["Ctrl+Shift+Tab"]),
+  "file.preferences": file(["Ctrl+,"]),
+  "file.exit": { ...file(["Alt+F4"]), native: true },
+
+  "edit.undo": { ...edit(["Ctrl+Z"]), native: true },
+  "edit.redo": { ...edit(["Ctrl+Y"]), native: true },
+  "edit.cut": { ...edit(["Ctrl+X"]), native: true },
+  "edit.copy": { ...edit(["Ctrl+C"]), native: true },
+  "edit.paste": { ...edit(["Ctrl+V"]), native: true },
+  "edit.selectAll": { ...edit(["Ctrl+A"]), native: true },
+  // Find and Go To also work while the preview has focus: they bring the editor forward.
+  "edit.find": { keys: ["Ctrl+F"], group: "edit" },
+  "edit.replace": { keys: ["Ctrl+H"], group: "edit" },
+  "edit.goToLine": { keys: ["Ctrl+G"], group: "edit" },
+  "edit.moveLineUp": edit(["Alt+Shift+ArrowUp"]),
+  "edit.moveLineDown": edit(["Alt+Shift+ArrowDown"]),
+
+  "format.bold": format(["Ctrl+B"]),
+  "format.italic": format(["Ctrl+I"]),
+  "format.underline": format(["Ctrl+U"]),
+  "format.strikethrough": format(["Ctrl+Shift+X"]),
+  "format.code": format(["Ctrl+`"]),
+
+  "paragraph.heading1": paragraph(["Ctrl+Alt+1"]),
+  "paragraph.heading2": paragraph(["Ctrl+Alt+2"]),
+  "paragraph.heading3": paragraph(["Ctrl+Alt+3"]),
+  "paragraph.heading4": paragraph(["Ctrl+Alt+4"]),
+  "paragraph.heading5": paragraph(["Ctrl+Alt+5"]),
+  "paragraph.heading6": paragraph(["Ctrl+Alt+6"]),
+  "paragraph.normal": paragraph(["Ctrl+Shift+N"]),
+  "paragraph.bulletList": paragraph(["Ctrl+Shift+L"]),
+  "paragraph.numberedList": paragraph(["Ctrl+Shift+7"]),
+  "paragraph.taskList": paragraph(),
+  "paragraph.quote": paragraph(["Ctrl+Shift+Q"]),
+  "paragraph.codeBlock": paragraph(["Ctrl+Shift+`"]),
+  // Tab is shared: a table cell first, then a list item, otherwise a tab character.
+  "table.nextCell": table(["Tab"]),
+  "table.previousCell": table(["Shift+Tab"]),
+  "paragraph.indent": paragraph(["Tab"]),
+  "paragraph.outdent": paragraph(["Shift+Tab"]),
+
+  "insert.link": insert(["Ctrl+K"]),
+  "insert.image": insert(),
+  "insert.table": insert(),
+  "insert.equation": insert(["Alt+="]),
+  "insert.pageBreak": insert(["Ctrl+Enter"]),
+
+  "table.insertRowAbove": table(),
+  "table.insertRowBelow": table(),
+  "table.insertColumnLeft": table(),
+  "table.insertColumnRight": table(),
+  "table.deleteRow": table(),
+  "table.deleteColumn": table(),
+  "table.delete": table(),
+  "table.alignLeft": table(),
+  "table.alignCenter": table(),
+  "table.alignRight": table(),
+  "table.format": table(),
+
+  "view.split": view(),
+  "view.source": view(),
+  "view.preview": view(),
+  "view.zoomIn": { ...view(), display: "keys.ctrlWheelUp" },
+  "view.zoomOut": { ...view(), display: "keys.ctrlWheelDown" },
+  "view.actualSize": view(),
+  "view.fitWidth": view(),
+  "view.statusBar": view(),
+  "view.shortcuts": view(["F1"]),
+} satisfies Record<string, CommandSpec>;
+
+export type CommandId = keyof typeof COMMANDS;
+
+const spec = (id: CommandId): CommandSpec => COMMANDS[id];
+const ALL_IDS = Object.keys(COMMANDS) as CommandId[];
+
+/** Commands the window handles itself, wherever the focus is. */
+export const WINDOW_COMMANDS = ALL_IDS.filter((id) => !spec(id).editor && !spec(id).native);
+
+/** Commands the source editor handles while it has focus. */
+export const EDITOR_COMMANDS = ALL_IDS.filter((id) => spec(id).editor && !spec(id).native);
 
 type KeyInfo = Pick<KeyboardEvent, "key" | "code" | "ctrlKey" | "shiftKey" | "altKey">;
 
-const KEY_NAMES: Record<string, string> = { ",": "Comma" };
+/** Physical keys whose character changes with Shift or the keyboard layout. */
+const CODE_NAMES: Record<string, string> = {
+  Comma: ",",
+  Backquote: "`",
+  Equal: "=",
+  Minus: "-",
+  BracketLeft: "[",
+  BracketRight: "]",
+  NumpadEnter: "Enter",
+};
 
 /**
  * Letters and digits are read from the physical key (`code`), because with the
- * Korean IME on, `key` holds a Hangul letter (Ctrl+S arrives as "ㄴ").
+ * Korean IME on, `key` holds a Hangul letter (Ctrl+S arrives as "ㄴ"), and with
+ * Shift held, `key` holds the shifted character (Ctrl+Shift+7 arrives as "&").
  */
 function keyName(event: KeyInfo): string {
   const code = event.code ?? "";
   if (/^Key[A-Z]$/.test(code)) return code.slice(3);
   if (/^Digit[0-9]$/.test(code)) return code.slice(5);
-  if (code === "Comma") return "Comma";
-  const key = event.key.length === 1 ? event.key.toUpperCase() : event.key;
-  return KEY_NAMES[key] ?? key;
+  if (CODE_NAMES[code]) return CODE_NAMES[code];
+  return event.key.length === 1 ? event.key.toUpperCase() : event.key;
 }
 
-/** "Ctrl+Shift+S" for a key event, using the same spelling as SHORTCUTS. */
+/** "Ctrl+Shift+S" for a key event, using the same spelling as COMMANDS. */
 export function comboOf(event: KeyInfo) {
   const parts: string[] = [];
   if (event.ctrlKey) parts.push("Ctrl");
@@ -78,15 +158,29 @@ export function comboOf(event: KeyInfo) {
   return parts.join("+");
 }
 
-/** The command bound to a key event, if any. */
-export function commandFor(
-  event: KeyInfo,
-  commands: CommandId[] = WINDOW_COMMANDS,
-): CommandId | undefined {
+/** Every command among `commands` bound to the key event, in table order. */
+export function commandsFor(event: KeyInfo, commands: CommandId[]): CommandId[] {
   const combo = comboOf(event);
-  return commands.find((id) => SHORTCUTS[id].some((s) => s.replace("+,", "+Comma") === combo));
+  return commands.filter((id) => spec(id).keys.includes(combo));
 }
 
-export function shortcutLabel(id: CommandId): string {
-  return SHORTCUTS[id][0];
+/** The window command bound to a key event, if any. */
+export function commandFor(event: KeyInfo): CommandId | undefined {
+  return commandsFor(event, WINDOW_COMMANDS)[0];
+}
+
+const KEY_LABELS: Record<string, string> = { ArrowUp: "↑", ArrowDown: "↓" };
+
+/** How a key combination is written for people: "Alt+Shift+↑". */
+export function keyLabel(combo: string): string {
+  return combo
+    .split("+")
+    .map((part) => KEY_LABELS[part] ?? part)
+    .join("+");
+}
+
+/** The first key combination, as shown next to a menu item. */
+export function shortcutLabel(id: CommandId): string | undefined {
+  const first = spec(id).keys[0];
+  return first ? keyLabel(first) : undefined;
 }

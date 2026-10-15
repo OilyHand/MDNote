@@ -6,6 +6,7 @@ import { api } from "../ipc";
 import { commandFor } from "../shortcuts/registry";
 import { activate, displayName, findByPath, useDocs } from "../state/documents";
 import { useDialog } from "../state/dialog";
+import { isModalOpen } from "../state/modal";
 import { notifyError } from "../state/notices";
 import {
   confirmCloseWindow,
@@ -23,6 +24,7 @@ import { EmptyState } from "./EmptyState";
 import { DiskBanner } from "./DiskBanner";
 import { Notices } from "./Notices";
 import { DialogHost } from "./DialogHost";
+import { ModalHost } from "./ModalHost";
 
 const OPENABLE = /\.(md|markdown|txt)$/i;
 let started = false;
@@ -76,7 +78,7 @@ function useWindowShortcuts() {
         event.preventDefault();
         return;
       }
-      if (useDialog.getState().queue.length > 0) return;
+      if (useDialog.getState().queue.length > 0 || isModalOpen()) return;
       const command = commandFor(event);
       if (!command) return;
       event.preventDefault();
@@ -130,6 +132,7 @@ export function App() {
         {hasActive ? <Workspace /> : <EmptyState />}
       </main>
       <Notices />
+      <ModalHost />
       <DialogHost />
     </div>
   );

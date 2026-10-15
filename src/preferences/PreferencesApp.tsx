@@ -11,6 +11,31 @@ import { notifyError } from "../state/notices";
 import { Notices } from "../app/Notices";
 
 const MAX_RECENT = 30;
+
+type Flag =
+  | "editorWordWrap"
+  | "editorLineNumbers"
+  | "editorListContinuation"
+  | "editorCloseBrackets"
+  | "editorWrapSelection"
+  | "editorRenumberLists"
+  | "editorFormatTables";
+
+/** A checkbox for an on/off preference. */
+function Check({ name, label }: { name: Flag; label: string }) {
+  const checked = usePrefs((s) => s.preferences[name]);
+  const update = usePrefs((s) => s.update);
+  return (
+    <label className="check">
+      <input
+        type="checkbox"
+        checked={checked}
+        onChange={(e) => void update({ [name]: e.target.checked })}
+      />
+      <span>{label}</span>
+    </label>
+  );
+}
 const FONT_SIZE_MIN = 8;
 const FONT_SIZE_MAX = 40;
 
@@ -143,22 +168,14 @@ export function PreferencesApp() {
             }}
           />
         </label>
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={preferences.editorWordWrap}
-            onChange={(e) => void update({ editorWordWrap: e.target.checked })}
-          />
-          <span>{t("prefs.wordWrap")}</span>
-        </label>
-        <label className="check">
-          <input
-            type="checkbox"
-            checked={preferences.editorLineNumbers}
-            onChange={(e) => void update({ editorLineNumbers: e.target.checked })}
-          />
-          <span>{t("prefs.lineNumbers")}</span>
-        </label>
+        <Check name="editorWordWrap" label={t("prefs.wordWrap")} />
+        <Check name="editorLineNumbers" label={t("prefs.lineNumbers")} />
+        <h3>{t("prefs.conveniences")}</h3>
+        <Check name="editorListContinuation" label={t("prefs.listContinuation")} />
+        <Check name="editorRenumberLists" label={t("prefs.renumberLists")} />
+        <Check name="editorCloseBrackets" label={t("prefs.closeBrackets")} />
+        <Check name="editorWrapSelection" label={t("prefs.wrapSelection")} />
+        <Check name="editorFormatTables" label={t("prefs.formatTables")} />
       </section>
 
       <section>

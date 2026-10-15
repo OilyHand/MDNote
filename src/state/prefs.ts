@@ -22,6 +22,11 @@ export const DEFAULT_PREFERENCES: Preferences = {
   editorFontSize: 14,
   editorWordWrap: true,
   editorLineNumbers: false,
+  editorListContinuation: true,
+  editorCloseBrackets: true,
+  editorWrapSelection: true,
+  editorRenumberLists: true,
+  editorFormatTables: true,
 };
 
 export const usePrefs = create<PrefsStore>((_set, get) => ({

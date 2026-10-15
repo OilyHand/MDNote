@@ -41,6 +41,13 @@ export interface Preferences {
   editorFontSize: number;
   editorWordWrap: boolean;
   editorLineNumbers: boolean;
+  /** Editor conveniences (O17). */
+  editorListContinuation: boolean;
+  editorCloseBrackets: boolean;
+  editorWrapSelection: boolean;
+  editorRenumberLists: boolean;
+  /** Line source tables up when the cursor leaves them (O16). */
+  editorFormatTables: boolean;
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }

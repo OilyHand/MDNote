@@ -43,6 +43,13 @@ pub struct Preferences {
     pub editor_font_size: u32,
     pub editor_word_wrap: bool,
     pub editor_line_numbers: bool,
+    /// Editor conveniences (O17), each of which can be turned off.
+    pub editor_list_continuation: bool,
+    pub editor_close_brackets: bool,
+    pub editor_wrap_selection: bool,
+    pub editor_renumber_lists: bool,
+    /// Line source tables up when the cursor leaves them (O16).
+    pub editor_format_tables: bool,
     /// Settings written by a newer MDNote are kept as they are.
     #[serde(flatten)]
     pub unknown: Map<String, Value>,
@@ -61,6 +68,11 @@ impl Default for Preferences {
             editor_font_size: 14,
             editor_word_wrap: true,
             editor_line_numbers: false,
+            editor_list_continuation: true,
+            editor_close_brackets: true,
+            editor_wrap_selection: true,
+            editor_renumber_lists: true,
+            editor_format_tables: true,
             unknown: Map::new(),
         }
     }
