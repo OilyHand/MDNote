@@ -9,6 +9,7 @@ import { openFind, openGoToLine, openReplace } from "../editor/search";
 import { activeDoc } from "../state/documents";
 import { notifyError, notifyInfo } from "../state/notices";
 import { showShortcuts } from "../state/modal";
+import { usePrefs } from "../state/prefs";
 import { fitPageWidth, setViewMode, setZoom, useView, zoomBy } from "../state/view";
 import {
   closeDocument,
@@ -87,6 +88,10 @@ export function runCommand(id: CommandId) {
       return setZoom(1);
     case "view.fitWidth":
       return fitPageWidth();
+    case "view.statusBar": {
+      const { preferences, update } = usePrefs.getState();
+      return void update({ statusBar: !preferences.statusBar });
+    }
     case "view.shortcuts":
       return showShortcuts();
   }

@@ -8,6 +8,7 @@ import {
   applyEditorOptions,
   createEditorState,
   setChangeListener,
+  setCursorListener,
   setEditorCommandRunner,
   setEditorOptions,
   setImagePasteHandler,
@@ -22,6 +23,7 @@ import {
   useDocs,
 } from "../state/documents";
 import { usePrefs } from "../state/prefs";
+import { updateCursor } from "../state/status";
 import { scheduleSessionReport } from "./session";
 import { runEditorCommand } from "./editorCommands";
 import { pasteImages } from "./images";
@@ -84,6 +86,9 @@ export function EditorPane() {
       refreshDirty(id, state.doc);
       notifyDocEdited(id);
     });
+    setCursorListener((state) => {
+      if (shownId.current) updateCursor(shownId.current, state);
+    });
     const onScroll = () => {
       if (shownId.current) {
         scrollTops.set(shownId.current, view.scrollDOM.scrollTop);
@@ -96,6 +101,7 @@ export function EditorPane() {
       const id = shownId.current;
       if (id && editorStates.has(id)) editorStates.set(id, view.state);
       setChangeListener(() => {});
+      setCursorListener(() => {});
       setActiveView(null);
       view.destroy();
       viewRef.current = null;
@@ -118,6 +124,7 @@ export function EditorPane() {
     shownId.current = activeId;
     view.setState(state);
     applyEditorOptions(view);
+    updateCursor(activeId, view.state);
     const top = scrollTops.get(activeId) ?? 0;
     requestAnimationFrame(() => {
       view.scrollDOM.scrollTop = top;

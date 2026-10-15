@@ -10,6 +10,7 @@ import { COMMANDS, shortcutLabel, type CommandId } from "../shortcuts/registry";
 import { useDocs } from "../state/documents";
 import { useRecent } from "../state/recent";
 import { useView } from "../state/view";
+import { usePrefs } from "../state/prefs";
 import { ask } from "../state/dialog";
 import { notifyError } from "../state/notices";
 import { requestOpen } from "./commands";
@@ -52,6 +53,7 @@ function useMenus(): Menu[] {
   const recent = useRecent((s) => s.files);
   const viewMode = useView((s) => s.mode);
   const fitWidth = useView((s) => s.fitWidth);
+  const statusBar = usePrefs((s) => s.preferences.statusBar);
 
   return useMemo(() => {
     const needsDoc = (id: CommandId) => item(id, { disabled: !hasDoc });
@@ -166,6 +168,8 @@ function useMenus(): Menu[] {
           item("view.zoomOut"),
           item("view.actualSize"),
           item("view.fitWidth", { checked: fitWidth }),
+          SEPARATOR,
+          item("view.statusBar", { checked: statusBar }),
         ],
       },
       {
@@ -184,7 +188,7 @@ function useMenus(): Menu[] {
         ],
       },
     ];
-  }, [t, item, hasDoc, recent, viewMode, fitWidth]);
+  }, [t, item, hasDoc, recent, viewMode, fitWidth, statusBar]);
 }
 
 /** The table commands, for the Format menu and the editor's right-click menu. */

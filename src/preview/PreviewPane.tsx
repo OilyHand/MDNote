@@ -22,6 +22,7 @@ import { editorStates, onDocEdited, useDocs } from "../state/documents";
 import { getActiveView } from "../editor/view";
 import { useView, zoomBy, clampZoom } from "../state/view";
 import { resolveImages, useImageUrl } from "./images";
+import { useShownZoom } from "../state/status";
 import { followLink } from "./links";
 import {
   buildAnchors,
@@ -137,6 +138,12 @@ export function PreviewPane() {
   const effectiveZoom = fitWidth ? fitZoom : zoom;
 
   useRenderRequests(docId);
+
+  // The status bar shows the zoom in use, including Fit Page Width's.
+  useEffect(() => {
+    useShownZoom.setState({ zoom: effectiveZoom });
+  }, [effectiveZoom]);
+  useEffect(() => () => useShownZoom.setState({ zoom: null }), []);
 
   // Resolve image files whenever the document's images change.
   useEffect(() => {

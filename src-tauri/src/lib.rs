@@ -102,6 +102,7 @@ pub fn run() {
             documents::read_document,
             documents::write_document,
             documents::default_line_ending,
+            documents::system_code_page,
             prefs::get_preferences,
             prefs::set_preferences,
             recent::get_recent_files,

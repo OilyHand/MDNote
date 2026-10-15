@@ -30,6 +30,16 @@ export interface LoadedFile {
 
 export type ThemePref = "system" | "light" | "dark";
 
+export interface StatusBarItems {
+  words: boolean;
+  characters: boolean;
+  charactersNoSpaces: boolean;
+  cursor: boolean;
+  encoding: boolean;
+  lineEnding: boolean;
+  zoom: boolean;
+}
+
 /** Where pasted and dropped images are saved (O15). */
 export type ImageFolder = "assets" | "noteName" | "noteFolder";
 
@@ -52,6 +62,9 @@ export interface Preferences {
   /** Line source tables up when the cursor leaves them (O16). */
   editorFormatTables: boolean;
   imageFolder: ImageFolder;
+  /** View > Status Bar, and the items it shows (O18). */
+  statusBar: boolean;
+  statusBarItems: StatusBarItems;
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }
@@ -96,6 +109,7 @@ export const api = {
   writeDocument: (path: string, text: string, encoding: TextEncoding, lineEnding: LineEnding) =>
     invoke<FileStamp>("write_document", { path, text, encoding, lineEnding }),
   defaultLineEnding: () => invoke<LineEnding>("default_line_ending"),
+  systemCodePage: () => invoke<number>("system_code_page"),
 
   getPreferences: () => invoke<PreferencesView>("get_preferences"),
   setPreferences: (preferences: Preferences) => invoke<void>("set_preferences", { preferences }),

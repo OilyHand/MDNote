@@ -31,6 +31,33 @@ pub enum ThemePref {
     Dark,
 }
 
+/// Which items the status bar shows (O18); chosen by right-clicking it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase", default)]
+pub struct StatusBarItems {
+    pub words: bool,
+    pub characters: bool,
+    pub characters_no_spaces: bool,
+    pub cursor: bool,
+    pub encoding: bool,
+    pub line_ending: bool,
+    pub zoom: bool,
+}
+
+impl Default for StatusBarItems {
+    fn default() -> Self {
+        Self {
+            words: true,
+            characters: true,
+            characters_no_spaces: true,
+            cursor: true,
+            encoding: true,
+            line_ending: true,
+            zoom: true,
+        }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct Preferences {
@@ -53,6 +80,9 @@ pub struct Preferences {
     pub editor_format_tables: bool,
     /// Where pasted and dropped images are saved (O15).
     pub image_folder: ImageFolder,
+    /// View > Status Bar (O18).
+    pub status_bar: bool,
+    pub status_bar_items: StatusBarItems,
     /// Settings written by a newer MDNote are kept as they are.
     #[serde(flatten)]
     pub unknown: Map<String, Value>,
@@ -77,6 +107,8 @@ impl Default for Preferences {
             editor_renumber_lists: true,
             editor_format_tables: true,
             image_folder: ImageFolder::Assets,
+            status_bar: true,
+            status_bar_items: StatusBarItems::default(),
             unknown: Map::new(),
         }
     }

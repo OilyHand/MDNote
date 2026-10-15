@@ -136,6 +136,33 @@
     "insert": "Insert",
     "cancel": "Cancel"
   },
+  "status": {
+    "words_one": "{{value}} word",
+    "words_other": "{{value}} words",
+    "wordsSelected_one": "{{selected}} / {{value}} word",
+    "wordsSelected_other": "{{selected}} / {{value}} words",
+    "characters_one": "{{value}} character",
+    "characters_other": "{{value}} characters",
+    "charactersSelected_one": "{{selected}} / {{value}} character",
+    "charactersSelected_other": "{{selected}} / {{value}} characters",
+    "charactersNoSpaces_one": "{{value}} without spaces",
+    "charactersNoSpaces_other": "{{value}} without spaces",
+    "charactersNoSpacesSelected_one": "{{selected}} / {{value}} without spaces",
+    "charactersNoSpacesSelected_other": "{{selected}} / {{value}} without spaces",
+    "cursor": "Ln {{line}}, Col {{column}}",
+    "changeEncoding": "Encoding used when saving (click to change)",
+    "changeLineEnding": "Line endings used when saving (click to change)",
+    "resetZoom": "Preview zoom (click for 100%)",
+    "items": {
+      "words": "Word count",
+      "characters": "Character count",
+      "charactersNoSpaces": "Characters without spaces",
+      "cursor": "Line and column",
+      "encoding": "Encoding",
+      "lineEnding": "Line endings",
+      "zoom": "Zoom"
+    }
+  },
   "preview": {
     "linkNotFound": "Can't find the link target “{{target}}”.",
     "renderFailed": "The preview could not be rendered: {{detail}}",

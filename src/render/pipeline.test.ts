@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { toHtml } from "hast-util-to-html";
-import { renderMarkdown } from "./pipeline";
+import { Renderer, renderMarkdown } from "./pipeline";
 
 async function html(markdown: string): Promise<string> {
   const { blocks } = await renderMarkdown(markdown);
@@ -93,5 +93,52 @@ describe("Markdown rendering", () => {
   it("collects image sources for the main thread to resolve", async () => {
     const { images } = await renderMarkdown("![a](assets/one.png) ![b](https://example.com/b.png)");
     expect(images).toEqual(["assets/one.png", "https://example.com/b.png"]);
+  });
+});
+
+describe("counts of the rendered text (O18)", () => {
+  const counts = async (source: string) => (await renderMarkdown(source)).counts;
+
+  it("leaves out Markdown syntax", async () => {
+    // Rendered: "Title" / "Bold and code, E=mc2"
+    expect(await counts("# Title\n\n**Bold** and `code`, $E=mc^2$")).toEqual({
+      words: 5,
+      characters: 25,
+      charactersNoSpaces: 22,
+    });
+  });
+
+  it("counts Korean words by spaces (어절) and characters as syllables", async () => {
+    expect(await counts("한글 문단입니다.\n\n- 목록 하나\n- 둘")).toEqual({
+      words: 5,
+      characters: 15,
+      charactersNoSpaces: 13,
+    });
+  });
+
+  it("reads a soft line break as a space and keeps blocks apart", async () => {
+    expect(await counts("one\ntwo\n\n| a | b |\n|---|---|\n| c | d |")).toEqual({
+      words: 6,
+      characters: 11,
+      charactersNoSpaces: 10,
+    });
+  });
+
+  it("counts a selection from the chunks already rendered", async () => {
+    const renderer = new Renderer();
+    const doc = "First paragraph here.\n\nSecond one.\n";
+    const whole = await renderer.render(doc);
+    expect(await renderer.count(doc)).toEqual(whole.counts);
+    expect(await renderer.count("Second one.")).toEqual({
+      words: 2,
+      characters: 11,
+      charactersNoSpaces: 10,
+    });
+  });
+
+  it("does not count footnote back links or the footnote label", async () => {
+    const { counts: c } = await renderMarkdown("Text[^1]\n\n[^1]: Note.");
+    // "Text1" and "Note."
+    expect(c.words).toBe(2);
   });
 });

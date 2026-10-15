@@ -24,10 +24,16 @@ import { alignTablesOnLeave } from "./table";
 
 type ChangeListener = (state: EditorState) => void;
 let onChange: ChangeListener = () => {};
+let onCursor: ChangeListener = () => {};
 
 /** The editor pane registers the function that handles edits to the visible document. */
 export function setChangeListener(listener: ChangeListener) {
   onChange = listener;
+}
+
+/** Called whenever the cursor or selection moves (for the status bar). */
+export function setCursorListener(listener: ChangeListener) {
+  onCursor = listener;
 }
 
 type CommandRunner = (id: CommandId, view: EditorView) => boolean;
@@ -168,6 +174,7 @@ const fixed: Extension[] = [
   EditorView.contentAttributes.of({ spellcheck: "false", autocapitalize: "off" }),
   EditorView.updateListener.of((update) => {
     if (update.docChanged) onChange(update.state);
+    if (update.docChanged || update.selectionSet) onCursor(update.state);
   }),
 ];
 

@@ -26,6 +26,7 @@ import { EmptyState } from "./EmptyState";
 import { DiskBanner } from "./DiskBanner";
 import { Notices } from "./Notices";
 import { DialogHost } from "./DialogHost";
+import { StatusBar } from "./StatusBar";
 import { ModalHost } from "./ModalHost";
 
 const OPENABLE = /\.(md|markdown|txt)$/i;
@@ -140,6 +141,7 @@ export function App() {
         {active ? <DiskBanner doc={active} /> : null}
         {hasActive ? <Workspace /> : <EmptyState />}
       </main>
+      <StatusBar />
       <Notices />
       <ModalHost />
       <DialogHost />
