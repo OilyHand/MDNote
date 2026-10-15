@@ -799,6 +799,8 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-15 | License | MIT. |
 | 2026-10-15 | New documents | Saved as UTF-8 without a BOM, with Windows (CRLF) line endings, like Notepad. Existing files keep their own encoding and line endings. |
 | 2026-10-15 | Language setting | Preferences offer "Same as Windows" (the default, following the O11 rule), English, and 한국어. |
+| 2026-10-15 | Preview zoom | Fit Page Width is the default, because an A4 page is wider than half a typical window. |
+| 2026-10-15 | Links in the preview | Web links open in the browser and `.md` links open in MDNote. Links to other local files only show the file in File Explorer, so a note can never start a program. |
 
 ## Open decisions
 

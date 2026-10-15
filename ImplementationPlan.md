@@ -213,9 +213,33 @@ Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 it
 
 ---
 
-### Phase 2: Rendering (O2) → v0.2
+### Phase 2: Rendering (O2) → v0.2 — 🔄 built, hands-on test pending
 
 **Goal:** A split view that renders every supported syntax accurately and quickly.
+
+**Status (2026-10-15):** all tasks below are implemented on `phase2/rendering`.
+
+Verified:
+- **Automated:** 33 frontend tests (+3 test files) and 20 Rust tests (+4).
+- **CommonMark:** 562 of 588 spec examples (outside the raw-HTML sections) match exactly. The other 26 are documented deliberate differences:
+  - sanitizing
+  - raw HTML parsed by a real HTML parser
+  - GFM autolinks
+  - code highlighting
+- **Running the app:** screenshots of every section of the sample document.
+
+Still open: the hands-on checklist [docs/testing/phase-2.md](docs/testing/phase-2.md), in particular scroll sync, print and zoom.
+
+**What changed from the plan**
+- **Rendering in cached chunks.** remark's parser slows down faster than linearly with document size: 1 MB took about 21 s in one piece, but about 3.4 s in 90 KB pieces. The document is therefore split into top-level chunks that render on their own and are cached (`src/render/chunks.ts`).
+  - Speed: an edit to a 1 MB document re-renders in about **60 ms**. The first render takes about 7 s in Node for an extreme test file with 5,000 code blocks and 5,000 equations. Typing stays responsive meanwhile, because rendering runs in the worker.
+  - Correctness: tests check that chunked output equals whole-document output for every CommonMark example, and for all of them joined together. Documents with footnotes render in one piece, because footnote numbers span the document.
+- **Own KaTeX step instead of rehype-katex.** Its browser build needs `DOMParser`, which a Web Worker lacks, so the worker died as soon as it loaded and the preview stayed blank. A worker-only Vite plugin also picks the DOM-free build of `decode-named-character-reference` for the same reason. A failed worker now shows an error in the preview.
+- **Worker as an ES module.** This lets Shiki load each language on demand. The worker bundle went from 10.7 MB to 0.8 MB.
+- **GFM example suite.** There is no maintained package of GFM spec examples. GFM features (tables, task lists, strikethrough, autolinks, footnotes) are covered by unit tests instead.
+- **Brought forward from Phase 5 / O12:** the system font list (`fonts.rs`) and the Preferences **Editor** section (font, size, word wrap, line numbers), because task 2.1 needs an editor font setting.
+- **Defaults:** Fit Page Width is the starting zoom, because an A4 page is wider than half a typical window.
+- **Links to local files that aren't Markdown** only open File Explorer at the file. A note must never be able to start a program with one click.
 
 **Tasks**
 - **2.1 Editor:** CodeMirror Markdown mode (GitHub Flavored Markdown), line wrapping, and the editor font from Preferences.
