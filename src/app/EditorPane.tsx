@@ -10,6 +10,7 @@ import {
   setChangeListener,
   setEditorCommandRunner,
   setEditorOptions,
+  setImagePasteHandler,
 } from "../editor/setup";
 import { setActiveView } from "../editor/view";
 import { tableAt } from "../editor/table";
@@ -23,6 +24,7 @@ import {
 import { usePrefs } from "../state/prefs";
 import { scheduleSessionReport } from "./session";
 import { runEditorCommand } from "./editorCommands";
+import { pasteImages } from "./images";
 import { ContextMenu, SEPARATOR, type MenuItem } from "./Menu";
 import { tableItems, useCommandItem } from "./MenuBar";
 
@@ -30,6 +32,7 @@ import { tableItems, useCommandItem } from "./MenuBar";
 const DEFAULT_EDITOR_FONT = '"Cascadia Mono", Consolas';
 
 setEditorCommandRunner(runEditorCommand);
+setImagePasteHandler((files) => void pasteImages(files));
 
 function useEditorOptions(view: React.RefObject<EditorView | null>) {
   const { i18n } = useTranslation();

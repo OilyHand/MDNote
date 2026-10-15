@@ -38,6 +38,29 @@ export function setEditorCommandRunner(runner: CommandRunner) {
   runCommand = runner;
 }
 
+let onPasteImages: (files: File[]) => void = () => {};
+
+/** The app registers what happens to images pasted into the editor (O15). */
+export function setImagePasteHandler(handler: (files: File[]) => void) {
+  onPasteImages = handler;
+}
+
+/**
+ * Ctrl+V with only an image on the clipboard saves the image. Text wins when
+ * both are there: Word, for one, copies a picture of the text along with it.
+ */
+const imagePaste = EditorView.domEventHandlers({
+  paste(event) {
+    const data = event.clipboardData;
+    if (!data || data.getData("text/plain")) return false;
+    const files = [...data.files].filter((file) => file.type.startsWith("image/"));
+    if (files.length === 0) return false;
+    event.preventDefault();
+    onPasteImages(files);
+    return true;
+  },
+});
+
 export interface EditorOptions {
   wordWrap: boolean;
   lineNumbers: boolean;
@@ -138,6 +161,7 @@ const fixed: Extension[] = [
   }),
   syntaxHighlighting(markdownHighlight),
   editorShortcuts,
+  imagePaste,
   searchSupport,
   keymap.of([...defaultKeymap, ...historyKeymap]),
   tabFallback,

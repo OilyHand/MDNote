@@ -20,6 +20,7 @@ import {
 } from "./blocks";
 import { endListOnEmptyItem, renumberLists } from "./lists";
 import { editTable, formatTable, insertTable, moveToCell } from "./table";
+import { imageMarkdown, insertImageLinks, pastedImageName } from "./images";
 
 const language = markdown({ base: markdownLanguage, extensions: [markdownMath] });
 
@@ -256,5 +257,33 @@ describe("source tables", () => {
       "| a | b |\n| --: | --- |\n| ‹c› | d |",
     );
     expect(run(editTable("delete", false), `x\n\n${small}\n\ny`)).toBe("x\n\n¦y");
+  });
+});
+
+describe("image links (O15)", () => {
+  it("names pasted images by local date and time", () => {
+    expect(pastedImageName("image/png", new Date(2026, 9, 15, 14, 30, 12))).toBe(
+      "image-20261015-143012.png",
+    );
+    expect(pastedImageName("image/jpeg", new Date(2026, 0, 2, 3, 4, 5))).toBe(
+      "image-20260102-030405.jpg",
+    );
+  });
+
+  it("writes links other apps can read, with spaces and Korean in the path", () => {
+    expect(imageMarkdown(["assets/회의 사진 (1).png"])).toBe(
+      "![](assets/회의%20사진%20%281%29.png)",
+    );
+  });
+
+  it("puts images dropped on an empty line in a paragraph of their own", () => {
+    const state = stateOf("text\n¦\nmore");
+    expect(show(state.update(insertImageLinks(state, ["a.png"])).state)).toBe(
+      "text\n\n![](a.png)¦\n\nmore",
+    );
+    const inline = stateOf("see ¦ here");
+    expect(show(inline.update(insertImageLinks(inline, ["a.png"])).state)).toBe(
+      "see ![](a.png)¦ here",
+    );
   });
 });

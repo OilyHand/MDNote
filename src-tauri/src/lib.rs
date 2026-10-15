@@ -4,6 +4,7 @@ mod documents;
 mod error;
 mod files;
 mod fonts;
+mod images;
 mod locale;
 mod paths;
 mod prefs;
@@ -90,6 +91,7 @@ pub fn run() {
             });
 
             let state = app.state::<AppState>();
+            images::remove_stale_unsaved(&state, &[]);
             let session = windows::load_session(&state)?;
             prefs::apply_theme(&handle, theme);
             windows::restore_main_window(&handle, &state, &session);
@@ -115,6 +117,11 @@ pub fn run() {
             preview::resolve_images,
             preview::resolve_link,
             fonts::list_fonts,
+            images::save_image,
+            images::import_images,
+            images::adopt_unsaved_images,
+            images::discard_unsaved_images,
+            images::unsaved_document_path,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MDNote");

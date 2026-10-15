@@ -30,6 +30,9 @@ export interface LoadedFile {
 
 export type ThemePref = "system" | "light" | "dark";
 
+/** Where pasted and dropped images are saved (O15). */
+export type ImageFolder = "assets" | "noteName" | "noteFolder";
+
 export interface Preferences {
   language: LanguagePref;
   restoreSession: boolean;
@@ -48,6 +51,7 @@ export interface Preferences {
   editorRenumberLists: boolean;
   /** Line source tables up when the cursor leaves them (O16). */
   editorFormatTables: boolean;
+  imageFolder: ImageFolder;
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }
@@ -117,6 +121,22 @@ export const api = {
   resolveLink: (document: string | null, target: string) =>
     invoke<string | null>("resolve_link", { document, target }),
   listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
+
+  /** Saves a pasted image for the note; returns its path relative to the note. */
+  saveImage: (document: string | null, docId: string, name: string, bytes: Uint8Array) =>
+    invoke<string>("save_image", bytes, {
+      headers: {
+        "x-document": encodeURIComponent(document ?? ""),
+        "x-doc-id": encodeURIComponent(docId),
+        "x-name": encodeURIComponent(name),
+      },
+    }),
+  importImages: (document: string | null, docId: string, paths: string[]) =>
+    invoke<string[]>("import_images", { document, docId, paths }),
+  adoptUnsavedImages: (docId: string, document: string) =>
+    invoke<[string, string][]>("adopt_unsaved_images", { docId, document }),
+  discardUnsavedImages: (docId: string) => invoke<void>("discard_unsaved_images", { docId }),
+  unsavedDocumentPath: (docId: string) => invoke<string>("unsaved_document_path", { docId }),
 };
 
 export interface FontFamily {

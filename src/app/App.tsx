@@ -16,6 +16,8 @@ import {
   restoreSession,
 } from "./commands";
 import { flushSession, startSessionReporting } from "./session";
+import { importImageFiles } from "./images";
+import { isImagePath } from "../editor/images";
 import { runCommand } from "./run";
 import { MenuBar } from "./MenuBar";
 import { TabBar } from "./TabBar";
@@ -46,10 +48,17 @@ async function startWindow() {
     "document-disk-change",
     ({ payload }) => void onDiskChange(payload.path, payload.kind),
   );
+  // Markdown files open in tabs; images are added to the active note (O15).
   await win.onDragDropEvent(({ payload }) => {
     if (payload.type !== "drop") return;
     const files = payload.paths.filter((p) => OPENABLE.test(p));
     if (files.length > 0) void requestOpen(files);
+    const images = payload.paths.filter(isImagePath);
+    if (images.length > 0) {
+      const scale = window.devicePixelRatio;
+      const point = { x: payload.position.x / scale, y: payload.position.y / scale };
+      void importImageFiles(images, point);
+    }
   });
   await win.onCloseRequested(async (event) => {
     event.preventDefault();

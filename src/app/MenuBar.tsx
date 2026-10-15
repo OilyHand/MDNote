@@ -120,6 +120,7 @@ function useMenus(): Menu[] {
         accessKey: "i",
         items: [
           item("insert.link"),
+          item("insert.image"),
           item("insert.table"),
           item("insert.equation"),
           item("insert.pageBreak"),

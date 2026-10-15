@@ -25,6 +25,7 @@ import {
   type TableOperation,
 } from "../editor/table";
 import { askLink, askTableSize } from "../state/modal";
+import { chooseImages } from "./images";
 
 /** Source tables are padded unless automatic alignment is off in Preferences. */
 const padded = () => editorOptions().formatTables;
@@ -75,6 +76,10 @@ const COMMANDS: Partial<Record<CommandId, (view: EditorView) => boolean>> = {
 
   "insert.link": (view) => {
     void insertLinkWithDialog(view);
+    return true;
+  },
+  "insert.image": () => {
+    void chooseImages();
     return true;
   },
   "insert.table": (view) => {

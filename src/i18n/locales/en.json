@@ -179,7 +179,8 @@
   },
   "fileTypes": {
     "markdown": "Markdown documents",
-    "all": "All files"
+    "all": "All files",
+    "images": "Images"
   },
   "disk": {
     "changed": "“{{name}}” was changed by another program.",
@@ -244,6 +245,11 @@
     "themeLight": "Light",
     "themeDark": "Dark",
     "resetAll": "Reset All",
-    "close": "Close"
+    "close": "Close",
+    "files": "Files",
+    "imageFolder": "Save pasted and dropped images in",
+    "imageFolderAssets": "An “assets” folder next to the note",
+    "imageFolderNoteName": "A folder named after the note (name.assets)",
+    "imageFolderNoteFolder": "The note's own folder"
   }
 }

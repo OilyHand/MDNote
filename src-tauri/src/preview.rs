@@ -21,7 +21,7 @@ fn is_web(target: &str) -> bool {
 }
 
 /// Decodes `%XX` sequences (Markdown destinations are percent-encoded).
-fn percent_decode(text: &str) -> String {
+pub(crate) fn percent_decode(text: &str) -> String {
     let hex = |b: u8| (b as char).to_digit(16).map(|d| d as u8);
     let bytes = text.as_bytes();
     let mut out = Vec::with_capacity(bytes.len());
@@ -64,7 +64,7 @@ pub fn resolve(document: &Path, target: &str) -> Option<PathBuf> {
     Some(dunce::canonicalize(&absolute).unwrap_or(absolute))
 }
 
-fn is_image(path: &Path) -> bool {
+pub(crate) fn is_image(path: &Path) -> bool {
     path.extension()
         .and_then(|e| e.to_str())
         .is_some_and(|e| IMAGE_EXTENSIONS.contains(&e.to_ascii_lowercase().as_str()))

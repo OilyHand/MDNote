@@ -27,6 +27,7 @@ import {
 import { ask } from "../state/dialog";
 import { notifyError, notifyInfo } from "../state/notices";
 import { useRecent } from "../state/recent";
+import { adoptUnsavedImages, discardUnsavedImages } from "./images";
 import { setViewMode, useView } from "../state/view";
 
 const t = i18n.t.bind(i18n);
@@ -209,8 +210,11 @@ export async function saveDocumentAs(id: string): Promise<boolean> {
 
 async function writeTo(id: string, path: string, encoding: TextEncoding): Promise<boolean> {
   const doc = getDoc(id);
+  if (!doc) return false;
+  // First save: images pasted so far move next to the note, and their links follow.
+  if (!doc.path) await adoptUnsavedImages(id, path).catch(notifyError);
   const state = editorStates.get(id);
-  if (!doc || !state) return false;
+  if (!state) return false;
   const snapshot = state.doc;
   try {
     const stamp = await api.writeDocument(path, snapshot.toString(), encoding, doc.lineEnding);
@@ -274,6 +278,7 @@ async function confirmDiscard(doc: Doc): Promise<boolean> {
 
 function closeQuietly(doc: Doc) {
   if (doc.path) api.unwatchDocument(doc.path).catch(() => {});
+  else discardUnsavedImages(doc.id);
   removeDoc(doc.id);
 }
 
@@ -291,6 +296,8 @@ export async function confirmCloseWindow(): Promise<boolean> {
     const doc = getDoc(id);
     if (doc && !(await confirmDiscard(doc))) return false;
   }
+  // Notes that were never saved are gone with the window, and so are their images.
+  for (const doc of useDocs.getState().docs) if (!doc.path) discardUnsavedImages(doc.id);
   return true;
 }
 

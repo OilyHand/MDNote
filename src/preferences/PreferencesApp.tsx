@@ -4,7 +4,7 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { api, type FontFamily, type ThemePref } from "../ipc";
+import { api, type FontFamily, type ImageFolder, type ThemePref } from "../ipc";
 import type { LanguagePref } from "../i18n";
 import { DEFAULT_PREFERENCES, usePrefs } from "../state/prefs";
 import { notifyError } from "../state/notices";
@@ -176,6 +176,21 @@ export function PreferencesApp() {
         <Check name="editorCloseBrackets" label={t("prefs.closeBrackets")} />
         <Check name="editorWrapSelection" label={t("prefs.wrapSelection")} />
         <Check name="editorFormatTables" label={t("prefs.formatTables")} />
+      </section>
+
+      <section>
+        <h2>{t("prefs.files")}</h2>
+        <label className="field">
+          <span>{t("prefs.imageFolder")}</span>
+          <select
+            value={preferences.imageFolder}
+            onChange={(e) => void update({ imageFolder: e.target.value as ImageFolder })}
+          >
+            <option value="assets">{t("prefs.imageFolderAssets")}</option>
+            <option value="noteName">{t("prefs.imageFolderNoteName")}</option>
+            <option value="noteFolder">{t("prefs.imageFolderNoteFolder")}</option>
+          </select>
+        </label>
       </section>
 
       <section>

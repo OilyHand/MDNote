@@ -179,7 +179,8 @@
   },
   "fileTypes": {
     "markdown": "Markdown 문서",
-    "all": "모든 파일"
+    "all": "모든 파일",
+    "images": "그림"
   },
   "disk": {
     "changed": "다른 프로그램이 “{{name}}”을(를) 변경했습니다.",
@@ -243,6 +244,11 @@
     "themeLight": "밝게",
     "themeDark": "어둡게",
     "resetAll": "모두 초기화",
-    "close": "닫기"
+    "close": "닫기",
+    "files": "파일",
+    "imageFolder": "붙여넣거나 끌어 놓은 그림 저장 위치",
+    "imageFolderAssets": "노트 옆의 assets 폴더",
+    "imageFolderNoteName": "노트 이름으로 된 폴더 (이름.assets)",
+    "imageFolderNoteFolder": "노트와 같은 폴더"
   }
 }

@@ -27,6 +27,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   editorWrapSelection: true,
   editorRenumberLists: true,
   editorFormatTables: true,
+  imageFolder: "assets",
 };
 
 export const usePrefs = create<PrefsStore>((_set, get) => ({

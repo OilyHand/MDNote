@@ -16,6 +16,7 @@ import { Fragment, jsx, jsxs } from "react/jsx-runtime";
 import { toJsxRuntime } from "hast-util-to-jsx-runtime";
 import type { Element } from "hast";
 import { useTranslation } from "react-i18next";
+import { api } from "../ipc";
 import { getPreview, requestRender, subscribePreview } from "../render/client";
 import { editorStates, onDocEdited, useDocs } from "../state/documents";
 import { getActiveView } from "../editor/view";
@@ -100,10 +101,32 @@ function useRenderRequests(docId: string | null) {
   }, [docId]);
 }
 
+/**
+ * The path relative images and links are resolved against. A note that was
+ * never saved keeps its pasted images in a waiting folder (O15), so the
+ * preview looks there.
+ */
+function useDocumentPath(docId: string | null): string | null {
+  const saved = useDocs((s) => s.docs.find((d) => d.id === docId)?.path ?? null);
+  const [unsaved, setUnsaved] = useState<{ id: string; path: string } | null>(null);
+  useEffect(() => {
+    if (!docId || saved) return;
+    let current = true;
+    api
+      .unsavedDocumentPath(docId)
+      .then((path) => current && setUnsaved({ id: docId, path }))
+      .catch(() => {});
+    return () => {
+      current = false;
+    };
+  }, [docId, saved]);
+  return saved ?? (unsaved?.id === docId ? unsaved.path : null);
+}
+
 export function PreviewPane() {
   const { t } = useTranslation();
   const docId = useDocs((s) => s.activeId);
-  const docPath = useDocs((s) => s.docs.find((d) => d.id === s.activeId)?.path ?? null);
+  const docPath = useDocumentPath(docId);
   const preview = useActivePreview(docId);
   const mode = useView((s) => s.mode);
   const zoom = useView((s) => s.zoom);

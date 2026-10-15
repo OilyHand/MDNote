@@ -6,6 +6,7 @@ use tauri::{AppHandle, Emitter, Manager, State};
 
 use crate::AppState;
 use crate::error::AppResult;
+use crate::images::ImageFolder;
 use crate::locale;
 
 pub const FILE: &str = "preferences.json";
@@ -50,6 +51,8 @@ pub struct Preferences {
     pub editor_renumber_lists: bool,
     /// Line source tables up when the cursor leaves them (O16).
     pub editor_format_tables: bool,
+    /// Where pasted and dropped images are saved (O15).
+    pub image_folder: ImageFolder,
     /// Settings written by a newer MDNote are kept as they are.
     #[serde(flatten)]
     pub unknown: Map<String, Value>,
@@ -73,6 +76,7 @@ impl Default for Preferences {
             editor_wrap_selection: true,
             editor_renumber_lists: true,
             editor_format_tables: true,
+            image_folder: ImageFolder::Assets,
             unknown: Map::new(),
         }
     }
