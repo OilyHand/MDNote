@@ -146,7 +146,7 @@ MDNote/
 
 ---
 
-### Phase 1: Foundation (O1, O11, O12) → v0.1 — 🔄 built, hands-on test pending
+### Phase 1: Foundation (O1, O11, O12) → v0.1 — ✅ complete (2026-10-15)
 
 **Goal:** An installable app that opens `.md` files from Explorer into tabs, edits them as plain text, and saves them safely, with an English and Korean UI.
 
@@ -165,9 +165,12 @@ Verified by running the app:
 - session restore, including window size and position
 - the Korean UI and the light theme
 
-Still open:
-- the hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): installer, file association, dialogs, Preferences window
-- the first CI run on GitHub, after the branch is pushed
+Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 items pass. Still open: the first CI run on GitHub, after the branch is pushed.
+
+**Lessons for later phases**
+- **Windows Notepad is not a neutral test editor for `.md` files.** Its Markdown formatted view rewrites the file on save, adding blank lines between paragraphs and an empty line at the end, and doesn't show those lines. Use a plain-text editor such as Sublime Text or VS Code for outside-change tests.
+- **Check the bytes before fixing.** Two guesses about test 19 were wrong. A hex dump of the file settled it each time.
+- **Keep test runs isolated.** Debug builds started with `MDNOTE_CONFIG_DIR` use their own settings and never hand files to an installed MDNote that is running.
 
 **Tasks**
 - **1.1 Scaffold:**

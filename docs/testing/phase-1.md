@@ -30,12 +30,13 @@ Mark each item ✅ or ❌ and note what happened.
 
 ## Outside changes
 
-19. ❌ (error: The feature itself works fine. However, when saving from an external editor, line break characters appear to be added in mdnote, as shown in the attached image.) Edit an open file in Notepad and save: a yellow bar offers **Reload** / **Keep My Version**. Reload shows the new text, and Ctrl+Z brings back the old text.
-    - **First guess (wrong, reverted):** Notepad wrote CR CR LF. The file's bytes showed only plain CRLF, so that change was undone.
-    - **Cause:** Notepad keeps its own copy of an open file and does not reload it when another program saves. Its `hello.md` tab still held text from the first test, ending in two line breaks. Ctrl+S in Notepad wrote that copy over MDNote's version, which had none. MDNote noticed the change correctly, and Reload showed exactly what was on disk.
-    - **Evidence:** in a controlled test, Notepad saved unmodified files byte for byte. After your Ctrl+S, `hello.md` ended in `0D 0A 0D 0A`, while MDNote's unchanged copy ended right after the emoji.
-    - **Improvement:** when another program saves the file without changing its content, MDNote now updates quietly instead of showing the bar.
-    - **Re-test:** close the `hello.md` tab in Notepad first (or reopen the file there), so Notepad starts from the current file.
+19. ✅ Edit an open file in another editor and save: a yellow bar offers **Reload** / **Keep My Version**. Reload shows the new text, and Ctrl+Z brings back the old text.
+    - **First result (❌):** "The feature itself works fine. However, when saving from an external editor, line break characters appear to be added in mdnote."
+    - **Cause, confirmed (not an MDNote bug):** Windows Notepad (11.2607) opens `.md` files in its **Markdown formatted view**. When it saves, it writes the Markdown back out, adding blank lines between paragraphs and an empty line at the end. Its formatted view doesn't show those lines, but they are really in the file, and even Ctrl+S with no edits can change the bytes. The same test with **Sublime Text** shows no extra line breaks.
+    - **What MDNote does:** reads the bytes exactly as they are. Every file checked contained only plain CRLF, and MDNote showed exactly those lines.
+    - **Wrong guesses along the way:** Notepad writing CR CR LF (the code change was reverted), and a stale Notepad tab.
+    - **Kept improvement:** when another program saves a file without changing its bytes, MDNote updates quietly instead of showing the bar.
+    - **For future tests:** use a plain-text editor (Sublime Text, VS Code), or Notepad with Settings > Formatting turned off.
 20. ✅ Delete an open file in Explorer: the bar says the file was deleted; **Save to Recreate It** writes it again.
 
 ## Tabs and keyboard
