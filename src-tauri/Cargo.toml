@@ -1,0 +1,46 @@
+[package]
+name = "mdnote"
+version = "0.1.0"
+description = "Markdown notes with Word-style formatting"
+authors = ["OilyHand"]
+license = "MIT"
+repository = "https://github.com/OilyHand/MDNote"
+rust-version = "1.85"
+edition = "2024"
+
+[lib]
+# The `_lib` suffix keeps the library name distinct from the binary name,
+# see https://github.com/rust-lang/cargo/issues/8519
+name = "mdnote_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tauri-plugin-dialog = "2"
+tauri-plugin-single-instance = "2"
+tauri-plugin-log = "2"
+encoding_rs = "0.8.42"
+codepage = "0.1.3"
+notify = "8.2.0"
+dunce = "1.0.5"
+thiserror = "2.0.21"
+log = "0.4.34"
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_Globalization", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+
+
+# Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = 3
+panic = "abort"
+strip = true
+
+[dev-dependencies]
+tempfile = "3.27.0"

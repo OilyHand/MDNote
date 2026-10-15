@@ -1,0 +1,118 @@
+{
+  "app": {
+    "name": "MDNote",
+    "untitled": "제목 없음-{{number}}",
+    "windowTitle": "{{name}} - MDNote"
+  },
+  "menu": {
+    "file": "파일",
+    "edit": "편집",
+    "help": "도움말",
+    "new": "새로 만들기",
+    "open": "열기…",
+    "openRecent": "최근 파일",
+    "noRecent": "최근 파일 없음",
+    "clearRecent": "최근 파일 목록 지우기",
+    "save": "저장",
+    "saveAs": "다른 이름으로 저장…",
+    "closeTab": "탭 닫기",
+    "preferences": "환경 설정…",
+    "exit": "끝내기",
+    "undo": "실행 취소",
+    "redo": "다시 실행",
+    "cut": "잘라내기",
+    "copy": "복사",
+    "paste": "붙여넣기",
+    "selectAll": "모두 선택",
+    "makeDefault": "MDNote를 .md 파일의 기본 앱으로 설정…",
+    "about": "MDNote 정보"
+  },
+  "tabs": {
+    "notSaved": "아직 저장하지 않음",
+    "close": "닫기",
+    "newTab": "새 문서",
+    "unsaved": "저장하지 않은 변경 내용"
+  },
+  "empty": {
+    "title": "열린 문서가 없습니다",
+    "subtitle": "새 문서를 만들거나 기존 Markdown 파일을 여세요.",
+    "new": "새 문서",
+    "open": "열기…",
+    "recent": "최근 파일",
+    "makeDefault": "MDNote를 .md 파일의 기본 앱으로 설정"
+  },
+  "dialog": {
+    "unsaved": {
+      "title": "변경 내용을 저장할까요?",
+      "message": "“{{name}}”의 변경 내용을 저장하시겠습니까?",
+      "save": "저장",
+      "dontSave": "저장 안 함",
+      "cancel": "취소"
+    },
+    "unmappable": {
+      "title": "UTF-8로 저장할까요?",
+      "message": "“{{name}}”은(는) {{encoding}} 인코딩을 사용하는데, 이 인코딩으로는 문서의 일부 문자를 저장할 수 없습니다. 대신 UTF-8로 저장하시겠습니까?",
+      "saveUtf8": "UTF-8로 저장",
+      "cancel": "취소"
+    },
+    "about": {
+      "title": "MDNote 정보",
+      "version": "버전 {{version}}",
+      "description": "서식을 Word처럼 자유롭게 바꿀 수 있는 Windows용 Markdown 노트 앱입니다.",
+      "license": "MIT 라이선스 · © 2026 OilyHand",
+      "close": "닫기"
+    }
+  },
+  "fileTypes": {
+    "markdown": "Markdown 문서",
+    "all": "모든 파일"
+  },
+  "disk": {
+    "changed": "다른 프로그램이 “{{name}}”을(를) 변경했습니다.",
+    "removed": "다른 프로그램이 “{{name}}”을(를) 삭제하거나 이동했습니다.",
+    "reload": "다시 불러오기",
+    "keepMine": "내 버전 유지",
+    "save": "저장해서 다시 만들기",
+    "closeTab": "탭 닫기"
+  },
+  "notices": {
+    "ansiFallback": "“{{name}}”은(는) UTF-8이 아니어서 Windows 코드 페이지 {{codepage}}(으)로 읽었습니다. 저장할 때도 같은 방식으로 저장합니다.",
+    "mixedLineEndings": "“{{name}}”의 줄 바꿈 형식이 일정하지 않았습니다. 저장할 때 모두 {{lineEnding}}(으)로 맞춥니다.",
+    "sessionMissing_other": "지난 세션의 파일 {{count}}개를 열 수 없습니다: {{files}}",
+    "recentMissing": "“{{path}}”이(가) 더 이상 없어서 최근 파일 목록에서 제거했습니다.",
+    "pasteBlocked": "붙여넣으려면 Ctrl+V를 누르세요.",
+    "dismiss": "닫기"
+  },
+  "errors": {
+    "notFound": "파일을 찾을 수 없습니다: {{detail}}",
+    "accessDenied": "Windows에서 {{detail}}에 대한 접근을 거부했습니다.",
+    "readOnly": "{{detail}}은(는) 읽기 전용입니다. 다른 이름으로 저장해 사본을 만드세요.",
+    "unmappable": "텍스트에 {{detail}}(으)로 저장할 수 없는 문자가 있습니다.",
+    "io": "파일에 접근할 수 없습니다: {{detail}}",
+    "internal": "문제가 발생했습니다: {{detail}}"
+  },
+  "lineEnding": {
+    "crlf": "CRLF (Windows)",
+    "lf": "LF (Unix)"
+  },
+  "prefs": {
+    "title": "환경 설정",
+    "general": "일반",
+    "appearance": "모양",
+    "language": "언어",
+    "languageSystem": "Windows와 같게 ({{language}})",
+    "english": "English",
+    "korean": "한국어",
+    "restoreSession": "시작할 때 지난 세션의 문서 다시 열기",
+    "recentFilesLimit": "기억할 최근 파일 수",
+    "defaultApp": ".md 파일의 기본 앱",
+    "defaultAppButton": "Windows 설정 열기",
+    "defaultAppHint": "기본 앱은 Windows 설정에서 직접 확인해야 합니다.",
+    "theme": "테마",
+    "themeSystem": "Windows와 같게",
+    "themeLight": "밝게",
+    "themeDark": "어둡게",
+    "resetAll": "모두 초기화",
+    "close": "닫기"
+  }
+}

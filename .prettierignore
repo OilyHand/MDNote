@@ -1,0 +1,9 @@
+dist
+node_modules
+pnpm-lock.yaml
+spikes
+src-tauri/target
+src-tauri/gen
+tests/fixtures
+# Hand-written documents keep their own formatting.
+*.md
