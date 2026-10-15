@@ -26,7 +26,7 @@ A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and
 | `pnpm check` | Type check, lint, formatting check, and frontend tests |
 | `cargo test` (in `src-tauri`) | Rust tests, including byte-exact encoding round-trips |
 
-Debug builds read settings from `MDNOTE_CONFIG_DIR` when it is set, so tests don't touch your real settings in `%APPDATA%\io.github.oilyhand.mdnote`.
+Debug builds started with `MDNOTE_CONFIG_DIR` set are isolated test runs. They keep settings and the session in that folder instead of `%APPDATA%\io.github.oilyhand.mdnote`, and they never hand files to an installed MDNote that is running.
 
 ### Layout
 

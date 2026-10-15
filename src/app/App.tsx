@@ -42,7 +42,7 @@ async function startWindow() {
   });
   await listen<{ path: string; kind: "changed" | "removed" }>(
     "document-disk-change",
-    ({ payload }) => onDiskChange(payload.path, payload.kind),
+    ({ payload }) => void onDiskChange(payload.path, payload.kind),
   );
   await win.onDragDropEvent(({ payload }) => {
     if (payload.type !== "drop") return;

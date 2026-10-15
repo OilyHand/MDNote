@@ -73,7 +73,9 @@ export function toAppError(error: unknown): AppError {
 }
 
 export const api = {
-  readDocument: (path: string) => invoke<LoadedFile>("read_document", { path }),
+  /** `remember: false` reads without adding the file to Recent Files. */
+  readDocument: (path: string, remember = true) =>
+    invoke<LoadedFile>("read_document", { path, remember }),
   writeDocument: (path: string, text: string, encoding: TextEncoding, lineEnding: LineEnding) =>
     invoke<FileStamp>("write_document", { path, text, encoding, lineEnding }),
   defaultLineEnding: () => invoke<LineEnding>("default_line_ending"),

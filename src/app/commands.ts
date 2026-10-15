@@ -14,6 +14,7 @@ import {
   editorStates,
   findByPath,
   getDoc,
+  isSavedText,
   markSaved,
   markUnsaved,
   refreshDirty,
@@ -296,11 +297,31 @@ export async function confirmCloseWindow(): Promise<boolean> {
 // Changes made by other programs
 // ---------------------------------------------------------------------------
 
-export function onDiskChange(path: string, kind: "changed" | "removed") {
+export async function onDiskChange(path: string, kind: "changed" | "removed") {
   const doc = findByPath(path);
   if (!doc) return;
+  if (kind === "changed" && !doc.dirty && (await diskMatchesSaved(doc))) return;
   updateDoc(doc.id, { disk: kind });
   if (kind === "removed") markUnsaved(doc.id);
+}
+
+/**
+ * Another program saved the file without changing it (e.g. Ctrl+S in Notepad with
+ * no edits). Then there is nothing to reload: just note the new version on disk.
+ */
+async function diskMatchesSaved(doc: Doc): Promise<boolean> {
+  if (!doc.path) return false;
+  try {
+    const loaded = await api.readDocument(doc.path, false);
+    const same =
+      isSavedText(doc.id, loaded.text) &&
+      loaded.lineEnding === doc.lineEnding &&
+      JSON.stringify(loaded.encoding) === JSON.stringify(doc.encoding);
+    if (same) updateDoc(doc.id, { stamp: loaded.stamp, disk: "ok" });
+    return same;
+  } catch {
+    return false; // could not read it: show the banner, which offers Reload
+  }
 }
 
 export async function reloadFromDisk(id: string) {

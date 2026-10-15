@@ -29,23 +29,35 @@ pub struct AppState {
     pub watcher: DocumentWatcher,
 }
 
-/// `%APPDATA%\io.github.oilyhand.mdnote`. Debug builds accept `MDNOTE_CONFIG_DIR`,
-/// so tests can run without touching the user's real settings and session.
-fn config_dir(app: &tauri::App) -> tauri::Result<std::path::PathBuf> {
-    #[cfg(debug_assertions)]
-    if let Some(dir) = std::env::var_os("MDNOTE_CONFIG_DIR") {
-        return Ok(dir.into());
+/// A debug build started with `MDNOTE_CONFIG_DIR` is an isolated test run: it keeps
+/// its settings and session in that folder, and it never hands its files to an
+/// installed MDNote that happens to be running.
+fn test_config_dir() -> Option<std::path::PathBuf> {
+    if cfg!(debug_assertions) {
+        std::env::var_os("MDNOTE_CONFIG_DIR").map(Into::into)
+    } else {
+        None
     }
-    app.path().app_config_dir()
+}
+
+/// `%APPDATA%\io.github.oilyhand.mdnote`, unless this is an isolated test run.
+fn config_dir(app: &tauri::App) -> tauri::Result<std::path::PathBuf> {
+    match test_config_dir() {
+        Some(dir) => Ok(dir),
+        None => app.path().app_config_dir(),
+    }
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default();
+    if test_config_dir().is_none() {
         // Must be registered first: a second MDNote.exe hands its files to this one and exits.
-        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+        builder = builder.plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             windows::on_second_instance(app, args, cwd);
-        }))
+        }));
+    }
+    builder
         .plugin(
             tauri_plugin_log::Builder::new()
                 .level(log::LevelFilter::Info)

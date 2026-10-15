@@ -8,18 +8,22 @@ use crate::AppState;
 use crate::error::AppResult;
 use crate::files::{self, FileStamp, LineEnding, LoadedFile, TextEncoding};
 
-/// Reads a document and adds it to the recent files list.
+/// Reads a document. Unless `remember` is false (a background check after another
+/// program touched the file), it is also added to the recent files list.
 #[tauri::command]
 pub async fn read_document(
     app: AppHandle,
     state: State<'_, AppState>,
     path: String,
+    remember: Option<bool>,
 ) -> AppResult<LoadedFile> {
     let path = Path::new(&path);
     let loaded = files::read_document(path)?;
     state.watcher.set_known(path, loaded.stamp);
-    if let Err(error) = crate::recent::add(&app, &state, path) {
-        log::warn!("could not update recent files: {error}");
+    if remember.unwrap_or(true) {
+        if let Err(error) = crate::recent::add(&app, &state, path) {
+            log::warn!("could not update recent files: {error}");
+        }
     }
     Ok(loaded)
 }

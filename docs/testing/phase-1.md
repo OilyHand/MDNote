@@ -31,8 +31,11 @@ Mark each item ✅ or ❌ and note what happened.
 ## Outside changes
 
 19. ❌ (error: The feature itself works fine. However, when saving from an external editor, line break characters appear to be added in mdnote, as shown in the attached image.) Edit an open file in Notepad and save: a yellow bar offers **Reload** / **Keep My Version**. Reload shows the new text, and Ctrl+Z brings back the old text.
-    - **Cause:** the line breaks typed in Notepad were saved as CR CR LF (`0D 0D 0A`). Notepad shows that as one line break, but MDNote read it as two.
-    - **Fix (pending re-test):** MDNote now reads CR CR LF as one line break and shows the "inconsistent line breaks" notice, because saving writes plain CRLF.
+    - **First guess (wrong, reverted):** Notepad wrote CR CR LF. The file's bytes showed only plain CRLF, so that change was undone.
+    - **Cause:** Notepad keeps its own copy of an open file and does not reload it when another program saves. Its `hello.md` tab still held text from the first test, ending in two line breaks. Ctrl+S in Notepad wrote that copy over MDNote's version, which had none. MDNote noticed the change correctly, and Reload showed exactly what was on disk.
+    - **Evidence:** in a controlled test, Notepad saved unmodified files byte for byte. After your Ctrl+S, `hello.md` ended in `0D 0A 0D 0A`, while MDNote's unchanged copy ended right after the emoji.
+    - **Improvement:** when another program saves the file without changing its content, MDNote now updates quietly instead of showing the bar.
+    - **Re-test:** close the `hello.md` tab in Notepad first (or reopen the file there), so Notepad starts from the current file.
 20. ✅ Delete an open file in Explorer: the bar says the file was deleted; **Save to Recreate It** writes it again.
 
 ## Tabs and keyboard

@@ -106,6 +106,12 @@ export function markUnsaved(id: string) {
   updateDoc(id, { dirty: true });
 }
 
+/** Whether `text` is exactly the text last read or saved. */
+export function isSavedText(id: string, text: string): boolean {
+  const saved = savedTexts.get(id);
+  return saved !== undefined && saved !== null && saved.toString() === text;
+}
+
 /** Called after every edit to keep the dirty marker in sync. */
 export function refreshDirty(id: string, text: Text) {
   const saved = savedTexts.get(id);
