@@ -2,7 +2,7 @@
 // its parts, finding the lines and words a command applies to, and running an
 // edit as one Undo step.
 
-import { EditorState, type SelectionRange, type TransactionSpec } from "@codemirror/state";
+import type { EditorState, TransactionSpec } from "@codemirror/state";
 import { isolateHistory } from "@codemirror/commands";
 import { ensureSyntaxTree, syntaxTree } from "@codemirror/language";
 import type { EditorView } from "@codemirror/view";
@@ -129,9 +129,4 @@ const percentEncode = (c: string) =>
  */
 export function encodeLinkTarget(target: string, isPath = false): string {
   return target.replace(isPath ? /[%\s()<>#?[\]]/g : /[\s()<>]/g, percentEncode);
-}
-
-/** Keeps a range's direction when moving it. */
-export function sameDirection(range: SelectionRange, from: number, to: number) {
-  return range.anchor <= range.head ? { anchor: from, head: to } : { anchor: to, head: from };
 }

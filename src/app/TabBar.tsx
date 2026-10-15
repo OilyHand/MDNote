@@ -150,7 +150,7 @@ export function TabBar() {
             type="button"
             className="tab-close"
             aria-label={doc.dirty ? `${t("tabs.unsaved")}, ${t("tabs.close")}` : t("tabs.close")}
-            title={t("tabs.close")}
+            title={`${t("tabs.close")} (${shortcutLabel("file.closeTab")})`}
             onPointerDown={(e) => e.stopPropagation()}
             onClick={() => void closeDocument(doc.id)}
           >
@@ -166,7 +166,7 @@ export function TabBar() {
       <button
         type="button"
         className="tab-new"
-        title={t("tabs.newTab")}
+        title={`${t("tabs.newTab")} (${shortcutLabel("file.new")})`}
         aria-label={t("tabs.newTab")}
         onClick={newDocument}
       >
