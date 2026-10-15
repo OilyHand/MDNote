@@ -167,7 +167,7 @@ Verified by running the app:
 
 Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 items pass.
 
-The first CI runs on GitHub (pull request #2, and `main` after the merge) failed at `pnpm install --frozen-lockfile`: the committed `pnpm-lock.yaml` still had the scaffold's version ranges. The lockfile committed in Phase 2 matches `package.json`.
+The first CI runs on GitHub (pull request #2, and `main` after the merge) failed at `pnpm install --frozen-lockfile`: the committed `pnpm-lock.yaml` still had the scaffold's version ranges. The lockfile committed in Phase 2 matches `package.json`; CI passed on pull request #3 and on `main` after that merge.
 
 **Lessons for later phases**
 - **Windows Notepad is not a neutral test editor for `.md` files.** Its Markdown formatted view rewrites the file on save, adding blank lines between paragraphs and an empty line at the end, and doesn't show those lines. Use a plain-text editor such as Sublime Text or VS Code for outside-change tests.
