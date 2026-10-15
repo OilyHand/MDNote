@@ -16,6 +16,7 @@ import {
   restoreSession,
 } from "./commands";
 import { flushSession, startSessionReporting } from "./session";
+import { offerRecovery, startRecovery } from "./recovery";
 import { importImageFiles } from "./images";
 import { isImagePath } from "../editor/images";
 import { runCommand } from "./run";
@@ -71,6 +72,8 @@ async function startWindow() {
 
   const startup = await api.takeStartup();
   await restoreSession(startup.tabs, startup.active, startup.paths);
+  startRecovery();
+  await offerRecovery();
   startSessionReporting();
   await flushSession();
 }

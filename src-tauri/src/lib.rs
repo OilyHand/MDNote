@@ -10,6 +10,7 @@ mod paths;
 mod prefs;
 mod preview;
 mod recent;
+mod recovery;
 mod shell;
 mod storage;
 mod watch;
@@ -31,6 +32,8 @@ pub struct AppState {
     pub registry: Mutex<Registry>,
     pub watcher: DocumentWatcher,
     pub fonts: fonts::FontCache,
+    /// Recovery copies found at start-up (MDNote closed unexpectedly last time).
+    pub recovered: Mutex<Vec<recovery::RecoveryCopy>>,
 }
 
 /// A debug build started with `MDNOTE_CONFIG_DIR` is an isolated test run: it keeps
@@ -88,10 +91,15 @@ pub fn run() {
                 registry: Mutex::new(registry),
                 watcher: DocumentWatcher::new(handle.clone())?,
                 fonts: fonts::FontCache::default(),
+                recovered: Mutex::new(Vec::new()),
             });
 
             let state = app.state::<AppState>();
-            images::remove_stale_unsaved(&state, &[]);
+            let recovered = recovery::load_left_over(&state);
+            // Waiting images of never-saved notes are kept only if a recovery copy needs them.
+            let keep: Vec<String> = recovered.iter().map(|c| c.doc_id.clone()).collect();
+            images::remove_stale_unsaved(&state, &keep);
+            *state.recovered.lock().unwrap() = recovered;
             let session = windows::load_session(&state)?;
             prefs::apply_theme(&handle, theme);
             windows::restore_main_window(&handle, &state, &session);
@@ -123,6 +131,9 @@ pub fn run() {
             images::adopt_unsaved_images,
             images::discard_unsaved_images,
             images::unsaved_document_path,
+            recovery::write_recovery,
+            recovery::remove_recovery,
+            recovery::take_recovery,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MDNote");

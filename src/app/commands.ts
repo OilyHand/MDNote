@@ -3,13 +3,21 @@
 import { open, save } from "@tauri-apps/plugin-dialog";
 import { redo, selectAll, undo } from "@codemirror/commands";
 import i18n from "../i18n";
-import { api, toAppError, type LineEnding, type TabSession, type TextEncoding } from "../ipc";
+import {
+  api,
+  toAppError,
+  type LineEnding,
+  type RecoveryCopy,
+  type TabSession,
+  type TextEncoding,
+} from "../ipc";
 import { baseName, encodingLabel, nextUntitledNumber, samePath } from "../documents/naming";
 import { createEditorState } from "../editor/setup";
 import { getActiveView } from "../editor/view";
 import {
   activate,
   addDoc,
+  changeDoc,
   displayName,
   editorStates,
   findByPath,
@@ -28,6 +36,7 @@ import { ask } from "../state/dialog";
 import { notifyError, notifyInfo } from "../state/notices";
 import { useRecent } from "../state/recent";
 import { adoptUnsavedImages, discardUnsavedImages } from "./images";
+import { removeRecovery } from "./recovery";
 import { setViewMode, useView } from "../state/view";
 
 const t = i18n.t.bind(i18n);
@@ -279,6 +288,7 @@ async function confirmDiscard(doc: Doc): Promise<boolean> {
 function closeQuietly(doc: Doc) {
   if (doc.path) api.unwatchDocument(doc.path).catch(() => {});
   else discardUnsavedImages(doc.id);
+  removeRecovery(doc.id);
   removeDoc(doc.id);
 }
 
@@ -296,9 +306,57 @@ export async function confirmCloseWindow(): Promise<boolean> {
     const doc = getDoc(id);
     if (doc && !(await confirmDiscard(doc))) return false;
   }
+  // Everything is now saved or deliberately not: no recovery copies are needed.
   // Notes that were never saved are gone with the window, and so are their images.
-  for (const doc of useDocs.getState().docs) if (!doc.path) discardUnsavedImages(doc.id);
+  for (const doc of useDocs.getState().docs) {
+    removeRecovery(doc.id);
+    if (!doc.path) discardUnsavedImages(doc.id);
+  }
   return true;
+}
+
+/**
+ * Brings back a document from a crash recovery copy (O1), as unsaved changes.
+ * A file that still exists is opened (or found, if session restore reopened
+ * it) and gets the recovered text as an edit, so Undo shows the file's text.
+ */
+export async function restoreRecoveryCopy(copy: RecoveryCopy): Promise<Doc | undefined> {
+  if (copy.path) {
+    const doc = await openOne(copy.path, { quiet: true, missing: [] });
+    if (doc) {
+      const differs = !isSavedText(doc.id, copy.text);
+      const encodingDiffers =
+        JSON.stringify(copy.encoding) !== JSON.stringify(doc.encoding) ||
+        copy.lineEnding !== doc.lineEnding;
+      if (differs) {
+        changeDoc(doc.id, (state) => ({
+          changes: { from: 0, to: state.doc.length, insert: copy.text },
+        }));
+      }
+      updateDoc(doc.id, { encoding: copy.encoding, lineEnding: copy.lineEnding });
+      // Text changes show as unsaved by themselves (Undo back to the file clears them).
+      if (encodingDiffers) markUnsaved(doc.id);
+      return getDoc(doc.id);
+    }
+  }
+  // Never saved, or the file is gone: the text comes back in a new document.
+  // A never-saved note keeps its id, so its waiting images still show.
+  const { docs } = useDocs.getState();
+  const used = docs.flatMap((d) => (d.untitled ? [d.untitled] : []));
+  const doc: Doc = {
+    id: docs.some((d) => d.id === copy.docId) ? crypto.randomUUID() : copy.docId,
+    path: null,
+    untitled:
+      copy.untitled && !used.includes(copy.untitled) ? copy.untitled : nextUntitledNumber(used),
+    encoding: copy.encoding,
+    lineEnding: copy.lineEnding,
+    stamp: null,
+    dirty: true,
+    disk: "ok",
+  };
+  addDoc(doc, createEditorState(copy.text), indexAfterActive());
+  markUnsaved(doc.id);
+  return doc;
 }
 
 // ---------------------------------------------------------------------------
@@ -337,13 +395,10 @@ export async function reloadFromDisk(id: string) {
   if (!doc?.path) return;
   try {
     const loaded = await api.readDocument(doc.path);
-    const view = getActiveView();
-    const state = editorStates.get(id);
-    if (!state) return;
     // A normal edit, so Ctrl+Z can bring back the text from before the reload.
-    const spec = { changes: { from: 0, to: state.doc.length, insert: loaded.text } };
-    if (useDocs.getState().activeId === id && view) view.dispatch(spec);
-    else editorStates.set(id, state.update(spec).state);
+    changeDoc(id, (state) => ({
+      changes: { from: 0, to: state.doc.length, insert: loaded.text },
+    }));
     updateDoc(id, {
       encoding: loaded.encoding,
       lineEnding: loaded.lineEnding,

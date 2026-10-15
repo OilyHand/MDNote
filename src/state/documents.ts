@@ -5,11 +5,12 @@
 // because it changes on every keystroke.
 
 import { create } from "zustand";
-import type { EditorState, Text } from "@codemirror/state";
+import type { EditorState, Text, TransactionSpec } from "@codemirror/state";
 import i18n from "../i18n";
 import type { FileStamp, LineEnding, TextEncoding } from "../ipc";
 import { baseName, samePath } from "../documents/naming";
 import { forgetPreview } from "../render/client";
+import { viewShowing } from "../editor/view";
 
 export type DiskStatus = "ok" | "changed" | "removed";
 
@@ -131,6 +132,26 @@ export function refreshDirty(id: string, text: Text) {
   const saved = savedTexts.get(id);
   const dirty = !saved || !saved.eq(text);
   if (getDoc(id)?.dirty !== dirty) updateDoc(id, { dirty });
+}
+
+/**
+ * Changes a document's text from outside the editor (reload, images, recovery).
+ * If the editor shows it, the change goes through the view like typing would;
+ * otherwise it goes to the stored state, which the editor picks up when shown.
+ */
+export function changeDoc(id: string, change: (state: EditorState) => TransactionSpec) {
+  const view = viewShowing(id);
+  const state = view?.state ?? editorStates.get(id);
+  if (!state) return;
+  const spec = change(state);
+  if (view) {
+    view.dispatch(spec);
+    return;
+  }
+  const next = state.update(spec).state;
+  editorStates.set(id, next);
+  refreshDirty(id, next.doc);
+  notifyDocEdited(id);
 }
 
 /** The name shown on the tab and in the title bar. */

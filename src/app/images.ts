@@ -3,43 +3,26 @@
 // written so that other Markdown apps can read them too. Undo removes the link;
 // the image file stays.
 
-import type { ChangeSpec, EditorState } from "@codemirror/state";
+import type { ChangeSpec } from "@codemirror/state";
 import { open } from "@tauri-apps/plugin-dialog";
 import i18n from "../i18n";
 import { api } from "../ipc";
 import { encodeLinkTarget } from "../editor/edits";
 import { IMAGE_EXTENSIONS, insertImageLinks, pastedImageName } from "../editor/images";
-import { getActiveView } from "../editor/view";
-import {
-  activeDoc,
-  editorStates,
-  notifyDocEdited,
-  refreshDirty,
-  useDocs,
-} from "../state/documents";
+import { getActiveView, viewShowing } from "../editor/view";
+import { activeDoc, changeDoc } from "../state/documents";
 import { notifyError } from "../state/notices";
 
 /** Inserts the links into the document (at `at`, or in place of the selection). */
 function insertLinks(docId: string, links: string[], at?: number) {
   if (links.length === 0) return;
-  const spec = (state: EditorState) => ({
+  // The user may have switched tabs while the image was being saved.
+  changeDoc(docId, (state) => ({
     ...insertImageLinks(state, links, at),
     scrollIntoView: true,
     userEvent: "input.paste",
-  });
-  const view = getActiveView();
-  if (view && useDocs.getState().activeId === docId) {
-    view.dispatch(spec(view.state));
-    view.focus();
-    return;
-  }
-  // The user switched tabs while the image was being saved.
-  const state = editorStates.get(docId);
-  if (!state) return;
-  const next = state.update(spec(state)).state;
-  editorStates.set(docId, next);
-  refreshDirty(docId, next.doc);
-  notifyDocEdited(docId);
+  }));
+  viewShowing(docId)?.focus();
 }
 
 /** Ctrl+V with an image on the clipboard (e.g. a Win+Shift+S screenshot). */
@@ -97,25 +80,18 @@ export async function chooseImages() {
 export async function adoptUnsavedImages(docId: string, path: string) {
   const renamed = await api.adoptUnsavedImages(docId, path);
   if (renamed.length === 0) return;
-  const view = getActiveView();
-  const shown = view && useDocs.getState().activeId === docId;
-  const state = shown ? view.state : editorStates.get(docId);
-  if (!state) return;
-  const text = state.doc.toString();
-  const changes: ChangeSpec[] = [];
-  for (const [before, after] of renamed) {
-    const old = `(${encodeLinkTarget(before, true)})`;
-    for (let i = text.indexOf(old); i >= 0; i = text.indexOf(old, i + old.length)) {
-      changes.push({ from: i, to: i + old.length, insert: `(${encodeLinkTarget(after, true)})` });
+  changeDoc(docId, (state) => {
+    const text = state.doc.toString();
+    const changes: ChangeSpec[] = [];
+    for (const [before, after] of renamed) {
+      const old = `(${encodeLinkTarget(before, true)})`;
+      const replacement = `(${encodeLinkTarget(after, true)})`;
+      for (let i = text.indexOf(old); i >= 0; i = text.indexOf(old, i + old.length)) {
+        changes.push({ from: i, to: i + old.length, insert: replacement });
+      }
     }
-  }
-  if (changes.length === 0) return;
-  if (shown) view.dispatch({ changes, userEvent: "input.paste" });
-  else {
-    const next = state.update({ changes }).state;
-    editorStates.set(docId, next);
-    notifyDocEdited(docId);
-  }
+    return { changes, userEvent: "input.paste" };
+  });
 }
 
 /** A never-saved note was closed without saving: its waiting images are removed. */

@@ -74,6 +74,17 @@ export interface PreferencesView {
   systemLanguage: Language;
 }
 
+/** A copy of a document with unsaved changes, kept for crash recovery (O1). */
+export interface RecoveryCopy {
+  docId: string;
+  path: string | null;
+  untitled: number | null;
+  encoding: TextEncoding;
+  lineEnding: LineEnding;
+  text: string;
+  savedMs: number;
+}
+
 export interface TabSession {
   path: string;
   scrollTop: number;
@@ -151,6 +162,10 @@ export const api = {
     invoke<[string, string][]>("adopt_unsaved_images", { docId, document }),
   discardUnsavedImages: (docId: string) => invoke<void>("discard_unsaved_images", { docId }),
   unsavedDocumentPath: (docId: string) => invoke<string>("unsaved_document_path", { docId }),
+
+  writeRecovery: (copy: RecoveryCopy) => invoke<void>("write_recovery", { copy }),
+  removeRecovery: (docId: string) => invoke<void>("remove_recovery", { docId }),
+  takeRecovery: () => invoke<RecoveryCopy[]>("take_recovery"),
 };
 
 export interface FontFamily {

@@ -98,7 +98,7 @@ fn unique_name(dir: &Path, name: &str) -> String {
 }
 
 /// Document ids are UUIDs; anything else could reach outside the folder.
-fn checked_id(doc_id: &str) -> AppResult<&str> {
+pub(crate) fn checked_id(doc_id: &str) -> AppResult<&str> {
     let valid = !doc_id.is_empty() && doc_id.chars().all(|c| c.is_ascii_hexdigit() || c == '-');
     valid
         .then_some(doc_id)

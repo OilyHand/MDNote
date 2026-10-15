@@ -13,7 +13,7 @@ import {
   setEditorOptions,
   setImagePasteHandler,
 } from "../editor/setup";
-import { setActiveView } from "../editor/view";
+import { setActiveView, setShownDocId } from "../editor/view";
 import { tableAt } from "../editor/table";
 import {
   editorStates,
@@ -103,6 +103,7 @@ export function EditorPane() {
       setChangeListener(() => {});
       setCursorListener(() => {});
       setActiveView(null);
+      setShownDocId(null);
       view.destroy();
       viewRef.current = null;
       shownId.current = null;
@@ -123,6 +124,7 @@ export function EditorPane() {
     if (!state) return;
     shownId.current = activeId;
     view.setState(state);
+    setShownDocId(activeId);
     applyEditorOptions(view);
     updateCursor(activeId, view.state);
     const top = scrollTops.get(activeId) ?? 0;

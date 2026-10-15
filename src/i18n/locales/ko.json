@@ -196,6 +196,12 @@
       "description": "서식을 Word처럼 자유롭게 바꿀 수 있는 Windows용 Markdown 노트 앱입니다.",
       "license": "MIT 라이선스 · © 2026 OilyHand",
       "close": "닫기"
+    },
+    "recovery": {
+      "title": "저장하지 않은 변경 내용을 복원할까요?",
+      "message_other": "MDNote가 예기치 않게 종료되었습니다. 저장하지 않은 변경 내용이 있는 문서 {{count}}개: {{files}}",
+      "restore": "복원",
+      "discard": "버리기"
     }
   },
   "fileTypes": {
