@@ -1,0 +1,376 @@
+// Markdown → sanitized HTML tree (O2). Runs in a Web Worker (see worker.ts) and
+// in Node for tests, so it must not touch the DOM.
+//
+// The document is split into chunks (chunks.ts). Each chunk is rendered on its
+// own and cached by its text, so typing re-renders only the chunk being edited.
+// The result is a list of top-level blocks; each has its first source line (for
+// scroll sync) and a stable key (so the preview only rebuilds changed blocks).
+// Elements inside a block carry `data-rl`, their line relative to the block, so
+// a cached block stays valid when lines above it move.
+
+import { unified, type Plugin } from "unified";
+import remarkParse from "remark-parse";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import remarkRehype from "remark-rehype";
+import { raw } from "hast-util-raw";
+import rehypeSanitize, { defaultSchema, type Options as SanitizeSchema } from "rehype-sanitize";
+import katex from "katex";
+import { fromHtml } from "hast-util-from-html";
+import GithubSlugger from "github-slugger";
+import { toString } from "hast-util-to-string";
+import { visit, SKIP } from "unist-util-visit";
+import type { Element, ElementContent, Root } from "hast";
+import type { Definition, Root as MdastRoot } from "mdast";
+import { highlightCode } from "./highlight";
+import { hasFootnotes, splitChunks, type Chunk } from "./chunks";
+
+export interface RenderedBlock {
+  /** Stable while the block's source text (and heading id) stay the same. */
+  key: string;
+  /** 1-based source line where the block starts. */
+  line: number;
+  node: Element;
+}
+
+export interface RenderResult {
+  blocks: RenderedBlock[];
+  /** Image sources as written in the document (resolved by the main thread). */
+  images: string[];
+}
+
+/** One rendered top-level element, with its line relative to the chunk (1-based). */
+interface ChunkBlock {
+  key: string;
+  line: number;
+  node: Element;
+}
+
+interface ChunkOutput {
+  blocks: ChunkBlock[];
+  images: string[];
+}
+
+/** `<!-- pagebreak -->` on its own line (O9). */
+const PAGE_BREAK = /^\s*pagebreak\s*$/i;
+
+const schema: SanitizeSchema = {
+  ...defaultSchema,
+  tagNames: [...(defaultSchema.tagNames ?? []), "u"],
+  attributes: {
+    ...defaultSchema.attributes,
+    code: [["className", /^language-./, "math-inline", "math-display"]],
+    div: [...(defaultSchema.attributes?.div ?? []), ["className", "page-break"]],
+  },
+};
+
+/**
+ * Parses raw HTML only when a chunk has some; it is the slowest step otherwise.
+ * `file` must be passed, or the HTML parser drops the elements' line positions.
+ */
+const rehypeRawIfNeeded: Plugin<[], Root> = () => (tree, file) => {
+  let found = false;
+  visit(tree, "raw", () => {
+    found = true;
+    return false;
+  });
+  return found ? (raw(tree, { file }) as Root) : tree;
+};
+
+/** Turns `<!-- pagebreak -->` comments into a marker before sanitizing drops comments. */
+const rehypePageBreaks: Plugin<[], Root> = () => (tree) => {
+  visit(tree, "comment", (node, index, parent) => {
+    if (!parent || index === undefined || !PAGE_BREAK.test(node.value)) return;
+    const marker: Element = {
+      type: "element",
+      tagName: "div",
+      properties: { className: ["page-break"] },
+      children: [],
+      position: node.position,
+    };
+    parent.children.splice(index, 1, marker);
+    return [SKIP, index + 1];
+  });
+};
+
+function classesOf(node: Element): string[] {
+  const classes = node.properties.className;
+  return Array.isArray(classes) ? classes.map(String) : [];
+}
+
+function renderMath(tex: string, displayMode: boolean): ElementContent[] {
+  const html = katex.renderToString(tex, {
+    displayMode,
+    throwOnError: false, // invalid math shows KaTeX's red error message instead
+    strict: "ignore",
+    output: "htmlAndMathml",
+  });
+  return fromHtml(html, { fragment: true }).children as ElementContent[];
+}
+
+/**
+ * Math with KaTeX (`$…$` and `$$…$$`). Written here rather than using
+ * rehype-katex: its browser build needs `DOMParser`, which a Web Worker lacks,
+ * and the worker died on load (the preview stayed blank). Display math is kept
+ * in a `div` with the source position, so scroll sync can find it.
+ */
+const rehypeMath: Plugin<[], Root> = () => (tree) => {
+  visit(tree, "element", (node, index, parent) => {
+    if (!parent || index === undefined) return;
+    const code =
+      node.tagName === "pre"
+        ? node.children.find((c): c is Element => c.type === "element" && c.tagName === "code")
+        : node.tagName === "code"
+          ? node
+          : undefined;
+    if (!code || !classesOf(code).includes("language-math")) return;
+    const display = node.tagName === "pre" || classesOf(code).includes("math-display");
+    const rendered = renderMath(toString(code), display);
+    if (display) {
+      const block: Element = {
+        type: "element",
+        tagName: "div",
+        properties: { className: ["math-display"] },
+        children: rendered,
+        position: node.position,
+      };
+      parent.children[index] = block;
+    } else {
+      parent.children.splice(index, 1, ...rendered);
+    }
+    return [SKIP, index + 1];
+  });
+};
+
+/** Replaces fenced code with Shiki's highlighted version (math blocks are KaTeX's). */
+const rehypeHighlight: Plugin<[], Root> = () => async (tree) => {
+  const jobs: Promise<void>[] = [];
+  visit(tree, "element", (node, index, parent) => {
+    if (node.tagName !== "pre" || !parent || index === undefined) return;
+    const code = node.children.find(
+      (c): c is Element => c.type === "element" && c.tagName === "code",
+    );
+    const language = languageOf(code);
+    if (!code || !language || language === "math") return;
+    jobs.push(
+      highlightCode(toString(code), language).then((highlighted) => {
+        if (!highlighted) return;
+        highlighted.position = node.position;
+        parent.children[index] = highlighted;
+      }),
+    );
+    return SKIP;
+  });
+  await Promise.all(jobs);
+};
+
+function languageOf(code: Element | undefined): string | undefined {
+  const classes = code?.properties.className;
+  if (!Array.isArray(classes)) return undefined;
+  const language = classes.find((c) => String(c).startsWith("language-"));
+  return language ? String(language).slice("language-".length).toLowerCase() : undefined;
+}
+
+const processor = unified()
+  .use(remarkParse)
+  .use(remarkGfm)
+  .use(remarkMath)
+  // Footnote ids get their "user-content-" prefix from the sanitizer only once.
+  .use(remarkRehype, { allowDangerousHtml: true, clobberPrefix: "" })
+  .use(rehypeRawIfNeeded)
+  .use(rehypePageBreaks)
+  .use(rehypeSanitize, schema)
+  // Trusted output from here on.
+  .use(rehypeMath)
+  .use(rehypeHighlight)
+  .freeze();
+
+const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath).freeze();
+
+/**
+ * The label exactly as written (escapes kept). References match labels as
+ * written, but the parser's `label` field has its escapes removed.
+ */
+function rawLabel(definition: Definition, source: string): string {
+  const text = source.slice(
+    definition.position?.start.offset ?? 0,
+    definition.position?.end.offset ?? 0,
+  );
+  const start = text.indexOf("[");
+  for (let i = start + 1; start >= 0 && i < text.length; i++) {
+    if (text[i] === "\\") i++;
+    else if (text[i] === "]") return text.slice(start + 1, i);
+  }
+  return definition.label ?? definition.identifier;
+}
+
+/** Writes a definition back as one line, so it can be appended to other chunks. */
+function definitionLine(definition: Definition, source: string): string {
+  const label = rawLabel(definition, source).replace(/\s+/g, " ");
+  const url = definition.url.replace(/[\\<>]/g, (c) => `\\${c}`);
+  const title = definition.title ? ` "${definition.title.replace(/[\\"]/g, (c) => `\\${c}`)}"` : "";
+  return `[${label}]: <${url}>${title}`;
+}
+
+/** Block-level elements inside a block get `data-rl` = their line minus the block's line. */
+const LINE_MARKED = new Set([
+  "p",
+  "li",
+  "tr",
+  "pre",
+  "blockquote",
+  "table",
+  "h1",
+  "h2",
+  "h3",
+  "h4",
+  "h5",
+  "h6",
+  "hr",
+  "div",
+]);
+
+function markRelativeLines(block: Element, blockLine: number) {
+  visit(block, "element", (node) => {
+    if (node !== block && node.position && LINE_MARKED.has(node.tagName)) {
+      node.properties.dataRl = node.position.start.line - blockLine;
+    }
+  });
+}
+
+function collectImages(node: Element, into: Set<string>) {
+  visit(node, "element", (child) => {
+    const src = child.tagName === "img" ? child.properties.src : undefined;
+    if (typeof src === "string" && src) into.add(src);
+  });
+}
+
+/** FNV-1a, enough to tell blocks apart. */
+export function hashText(text: string): string {
+  let hash = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    hash ^= text.charCodeAt(i);
+    hash = Math.imul(hash, 0x01000193);
+  }
+  return (hash >>> 0).toString(36);
+}
+
+async function renderChunk(
+  text: string,
+  definitions: string,
+  chunkKey: string,
+): Promise<ChunkOutput> {
+  // Definitions go after the chunk so they cannot shift its line numbers.
+  const input = definitions ? `${text}\n\n${definitions}\n` : text;
+  const tree = (await processor.run(processor.parse(input))) as Root;
+  const chunkLines = text.split("\n").length;
+  const blocks: ChunkBlock[] = [];
+  const images = new Set<string>();
+  let lastLine = 1;
+  tree.children.forEach((child, index) => {
+    if (child.type !== "element") return; // whitespace between blocks
+    // Anything from the appended definitions (e.g. a line that only looked like one).
+    if (child.position && child.position.start.line > chunkLines) return;
+    // Generated elements (the footnotes section) have no position: they follow the last block.
+    const line = child.position?.start.line ?? lastLine;
+    lastLine = child.position?.end.line ?? lastLine;
+    markRelativeLines(child, line);
+    collectImages(child, images);
+    blocks.push({ key: `${chunkKey}.${index}`, line, node: child });
+  });
+  return { blocks, images: [...images] };
+}
+
+/**
+ * Renders documents and remembers the result for each chunk. Keep one Renderer
+ * per document so its cache matches that document.
+ */
+export class Renderer {
+  private cache = new Map<string, Promise<ChunkOutput>>();
+  private definitionCache = new Map<string, string[]>();
+
+  /**
+   * Link reference definitions in a chunk, found by parsing it (only chunks
+   * containing "]:" are parsed). Parsing gets the cases a pattern would miss:
+   * definitions over several lines, escaped brackets, and lines that only look
+   * like a definition because they continue a paragraph.
+   */
+  private definitionsOf(text: string): string[] {
+    if (!text.includes("]:")) return [];
+    const cached = this.definitionCache.get(text);
+    if (cached) return cached;
+    const found: string[] = [];
+    visit(parser.parse(text) as MdastRoot, "definition", (node) => {
+      found.push(definitionLine(node, text));
+    });
+    this.definitionCache.set(text, found);
+    return found;
+  }
+
+  async render(source: string): Promise<RenderResult> {
+    // Footnote numbering spans the whole document, so it is rendered in one piece.
+    const chunks: Chunk[] = hasFootnotes(source)
+      ? [{ text: source, startLine: 0, open: true }]
+      : splitChunks(source);
+    const definitions =
+      chunks.length > 1 ? chunks.flatMap((c) => this.definitionsOf(c.text)).join("\n") : "";
+    const definitionsKey = definitions ? hashText(definitions) : "";
+    if (this.definitionCache.size > 4 * chunks.length + 100) this.definitionCache.clear();
+
+    const previous = this.cache;
+    this.cache = new Map();
+    const outputs = await Promise.all(
+      chunks.map((chunk) => {
+        // An open chunk (unclosed fence) would swallow appended definitions.
+        const defs = chunk.open ? "" : definitions;
+        const key = `${hashText(chunk.text)}${defs ? `~${definitionsKey}` : ""}`;
+        const output =
+          previous.get(key) ?? this.cache.get(key) ?? renderChunk(chunk.text, defs, key);
+        this.cache.set(key, output);
+        return output;
+      }),
+    );
+
+    // Heading ids are unique across the document, so they are assigned here.
+    const slugger = new GithubSlugger();
+    const blocks: RenderedBlock[] = [];
+    const images = new Set<string>();
+    const seen = new Map<string, number>();
+    outputs.forEach((output, i) => {
+      output.images.forEach((src) => images.add(src));
+      for (const block of output.blocks) {
+        let key = block.key;
+        if (/^h[1-6]$/.test(block.node.tagName)) {
+          const id = slugger.slug(toString(block.node));
+          block.node.properties.id = id;
+          key += `#${id}`;
+        }
+        // The same chunk text can occur twice; keep keys unique.
+        const n = seen.get(key) ?? 0;
+        seen.set(key, n + 1);
+        blocks.push({
+          key: n === 0 ? key : `${key}@${n}`,
+          line: chunks[i].startLine + block.line,
+          node: block.node,
+        });
+      }
+    });
+    return { blocks, images: [...images] };
+  }
+}
+
+/** Renders a document once (tests and one-off use). */
+export function renderMarkdown(source: string): Promise<RenderResult> {
+  return new Renderer().render(source);
+}
+
+/** Exposed for tests: render without splitting into chunks. */
+export async function renderWhole(source: string): Promise<RenderResult> {
+  const output = await renderChunk(source, "", "whole");
+  const slugger = new GithubSlugger();
+  for (const block of output.blocks) {
+    if (/^h[1-6]$/.test(block.node.tagName))
+      block.node.properties.id = slugger.slug(toString(block.node));
+  }
+  return { blocks: output.blocks, images: output.images };
+}
