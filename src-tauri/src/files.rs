@@ -198,22 +198,35 @@ pub fn system_ansi_codepage() -> u16 {
 // Line endings
 // ---------------------------------------------------------------------------
 
-/// Returns the line ending to save with, and whether the text mixes several kinds.
+/// "\r\r\n" (CR CR LF) counts as one line break, as Notepad shows it. Notepad has
+/// written it for some line breaks, and other tools produce it by converting
+/// CRLF to CRLF twice; reading it as CR + CRLF would add a blank line.
+const CR_CR_LF: &str = "\r\r\n";
+
+/// Returns the line ending to save with, and whether saving will change any line
+/// break (several kinds are mixed, or CR CR LF becomes CRLF).
 pub fn detect_line_ending(text: &str) -> (LineEnding, bool) {
+    let doubled = text.matches(CR_CR_LF).count();
+    // Each CR CR LF also contains one "\r\n" and one extra '\r'.
     let crlf = text.matches("\r\n").count();
-    let cr = text.matches('\r').count() - crlf;
+    let cr = text.matches('\r').count() - crlf - doubled;
     let lf = text.matches('\n').count() - crlf;
-    let kinds = [crlf, lf, cr].iter().filter(|&&n| n > 0).count();
+    let kinds = [crlf - doubled, doubled, lf, cr]
+        .iter()
+        .filter(|&&n| n > 0)
+        .count();
     let line_ending = match (crlf, lf) {
         (0, 0) => DEFAULT_LINE_ENDING,
         (crlf, lf) if crlf >= lf => LineEnding::Crlf,
         _ => LineEnding::Lf,
     };
-    (line_ending, kinds > 1)
+    (line_ending, kinds > 1 || doubled > 0)
 }
 
 pub fn normalize_line_endings(text: &str) -> String {
-    text.replace("\r\n", "\n").replace('\r', "\n")
+    text.replace(CR_CR_LF, "\n")
+        .replace("\r\n", "\n")
+        .replace('\r', "\n")
 }
 
 // ---------------------------------------------------------------------------
@@ -352,6 +365,40 @@ mod tests {
         assert_eq!(detect_line_ending("a\nb\nc\r\n"), (LineEnding::Lf, true));
         assert_eq!(detect_line_ending("one line"), (DEFAULT_LINE_ENDING, false));
         assert_eq!(normalize_line_endings("a\r\nb\rc\n"), "a\nb\nc\n");
+    }
+
+    /// Phase 1 hands-on test 19: lines typed in Notepad came back with an extra blank line.
+    #[test]
+    fn cr_cr_lf_is_one_line_break_as_in_notepad() {
+        let from_notepad = "Hello\r\n안녕하세요!\r\n🤣\r\r\n하하하\r\r\n";
+        assert_eq!(
+            normalize_line_endings(from_notepad),
+            "Hello\n안녕하세요!\n🤣\n하하하\n"
+        );
+        // Saving changes those bytes, so the user is told.
+        assert_eq!(detect_line_ending(from_notepad), (LineEnding::Crlf, true));
+        assert_eq!(
+            detect_line_ending("a\r\r\nb\r\r\n"),
+            (LineEnding::Crlf, true)
+        );
+
+        let (text, _, _) = decode(from_notepad.as_bytes(), 949);
+        let saved = encode(
+            &normalize_line_endings(&text),
+            TextEncoding::Utf8,
+            LineEnding::Crlf,
+        );
+        assert_eq!(
+            saved.unwrap(),
+            "Hello\r\n안녕하세요!\r\n🤣\r\n하하하\r\n".as_bytes()
+        );
+    }
+
+    #[test]
+    fn plain_crlf_with_emoji_is_unchanged() {
+        let text = "🤣\r\n하하하\r\n";
+        assert_eq!(normalize_line_endings(text), "🤣\n하하하\n");
+        assert_eq!(detect_line_ending(text), (LineEnding::Crlf, false));
     }
 
     #[test]
