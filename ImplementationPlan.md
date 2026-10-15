@@ -165,7 +165,9 @@ Verified by running the app:
 - session restore, including window size and position
 - the Korean UI and the light theme
 
-Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 items pass. Still open: the first CI run on GitHub, after the branch is pushed.
+Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 items pass.
+
+The first CI runs on GitHub (pull request #2, and `main` after the merge) failed at `pnpm install --frozen-lockfile`: the committed `pnpm-lock.yaml` still had the scaffold's version ranges. The lockfile committed in Phase 2 matches `package.json`.
 
 **Lessons for later phases**
 - **Windows Notepad is not a neutral test editor for `.md` files.** Its Markdown formatted view rewrites the file on save, adding blank lines between paragraphs and an empty line at the end, and doesn't show those lines. Use a plain-text editor such as Sublime Text or VS Code for outside-change tests.
@@ -213,7 +215,7 @@ Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 it
 
 ---
 
-### Phase 2: Rendering (O2) → v0.2 — 🔄 built, hands-on test pending
+### Phase 2: Rendering (O2) → v0.2 — ✅ complete (2026-10-15)
 
 **Goal:** A split view that renders every supported syntax accurately and quickly.
 
@@ -228,7 +230,7 @@ Verified:
   - code highlighting
 - **Running the app:** screenshots of every section of the sample document.
 
-Still open: the hands-on checklist [docs/testing/phase-2.md](docs/testing/phase-2.md), in particular scroll sync, print and zoom.
+Hands-on checklist [docs/testing/phase-2.md](docs/testing/phase-2.md): all 23 items pass.
 
 **What changed from the plan**
 - **Rendering in cached chunks.** remark's parser slows down faster than linearly with document size: 1 MB took about 21 s in one piece, but about 3.4 s in 90 KB pieces. The document is therefore split into top-level chunks that render on their own and are cached (`src/render/chunks.ts`).
