@@ -21,7 +21,7 @@ pub async fn open_preferences(app: AppHandle, window: WebviewWindow) -> AppResul
         WebviewUrl::App("index.html?window=preferences".into()),
     )
     .title("MDNote")
-    .inner_size(560.0, 460.0)
+    .inner_size(580.0, 640.0)
     .resizable(false)
     .minimizable(false)
     .maximizable(false)

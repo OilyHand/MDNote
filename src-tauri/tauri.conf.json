@@ -28,8 +28,12 @@
       "csp": {
         "default-src": "'self' ipc: http://ipc.localhost",
         "style-src": "'self' 'unsafe-inline'",
-        "img-src": "'self' data:",
+        "img-src": "'self' data: asset: http://asset.localhost https:",
         "font-src": "'self' data:"
+      },
+      "assetProtocol": {
+        "enable": true,
+        "scope": []
       }
     }
   },
