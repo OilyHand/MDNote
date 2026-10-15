@@ -92,7 +92,7 @@ MDNote/
 | Data validation | `zod` |
 | Translations | `i18next`, `react-i18next` |
 | Table alignment | `string-width` (East Asian character widths) |
-| DOCX | `docx`, `mathml2omml` |
+| DOCX | `docx` (its `docx/math` module converts LaTeX to Word equations; see spike 3) |
 | Tauri plugins | `single-instance`, `dialog`, `store`, `opener`, `clipboard-manager`, `updater` (Phase 8) |
 | Rust crates | `windows` (DirectWrite, file and locale APIs), `webview2-com`, `encoding_rs`, `notify`, `trash`, `serde` |
 | Tests | `vitest`, `@testing-library/react`, WebdriverIO with `tauri-driver` |
@@ -121,13 +121,23 @@ MDNote/
 - **0.3 Spikes.** Each is a small throwaway prototype, 1–2 days, kept out of `main`. Each records "works / needs a different approach" in this plan.
   1. **Tab tear-off:** drag a tab out of one Tauri window into a new window, and onto another window's tab bar.
   2. **PDF:** WebView2's DevTools `Page.printToPDF` with the paper size and margins from CSS `@page`, page numbers from `@page` margin boxes, and bookmarks from headings.
-  3. **Word equations:** KaTeX MathML → `mathml2omml` → `docx`. Confirm the equation is editable in Word.
+  3. **Word equations:** LaTeX → OMML → `docx`. Confirm the equation is editable in Word.
   4. **Fonts:** list fonts through DirectWrite, including fonts installed for the current user only. Get both English and Korean family names, and detect monospaced fonts.
   5. **Korean IME:** composing Korean in CodeMirror inside WebView2. Shortcuts must not fire mid-composition, and auto-closing brackets must not break composition.
 
 **Exit criteria**
 - A "hello world" Tauri app builds and runs on this PC.
 - All five spike results are recorded.
+
+**Results** (details in `spikes/*/RESULTS.md` on the `phase0/spikes` branch)
+
+| Spike | Result | Consequence for the plan |
+|---|---|---|
+| 1. Tab tear-off | Built; waiting for a hands-on test | — |
+| 2. PDF | ✅ Works as planned: A4 page size, margins, `@page` header and page numbers, page breaks, bookmarks, tagged PDF, embedded fonts. About 1 s for 4 pages. | `.otf` (CFF) and variable fonts are embedded as Type3 (they look right but may be less crisp in some viewers): mention this in the user guide. Give every style an explicit Korean fallback font. |
+| 3. Word equations | ✅ Works, but **not** through `mathml2omml`, which needed a dozen fixes and still had errors. The `docx` library's own `docx/math` `latexToMath` was correct on 35 of 36 test equations; the 36th was a deliberately unknown command. | Phase 7 uses `docx/math`, with a KaTeX image as the fallback. `mathml2omml` is dropped. |
+| 4. Fonts | ✅ Works: 243 families including 31 per-user families, Korean names, monospaced and Hangul flags, in about 33 ms. | Use the legacy (WWS) collection so every listed name works in CSS. Cache the list. Refresh with `checkForUpdates`. |
+| 5. Korean IME | Built; waiting for a hands-on test | — |
 
 ---
 
@@ -386,7 +396,7 @@ MDNote/
   - images at their saved sizes
   - code with shading and highlight colors
   - lists, task lists, footnotes, links, page breaks, and a page-number field
-  - equations through `mathml2omml`, with an image fallback
+  - equations through `docx/math`'s `latexToMath`, with a KaTeX-rendered image when a command isn't supported (spike 3)
 - **7.4 Export dialog:**
   - options for page numbers and header
   - a progress indicator
@@ -459,8 +469,9 @@ MDNote/
 | Risk | Impact | Mitigation |
 |---|---|---|
 | Tab tear-off between windows has no built-in support | Phase 3 slips | Spike in Phase 0. **Move to new window** in the right-click menu is the fallback. |
-| Word export quality (equations, code colors) | Exports look wrong in Word | Spike in Phase 0. Image fallback for equations. Manual checks in Word for every milestone. |
-| PDF bookmarks depend on an experimental WebView2/Chromium option | No bookmarks | Fallback: add bookmarks after the PDF is created. |
+| Word export quality (equations, code colors) | Exports look wrong in Word | Spike 3 showed `docx/math` handles equations well. Image fallback for unsupported commands. The spike's 36 test equations become regression tests. Manual checks in Word for every milestone. |
+| Screen (KaTeX) and Word (`docx/math`) parse LaTeX differently | An equation renders on screen but fails in Word | The image fallback covers it. Regression tests on both parsers. |
+| PDF bookmarks depend on an experimental WebView2/Chromium option | No bookmarks | Spike 2 confirmed they work today. A CI check fails if a PDF has no outline. Fallback: add bookmarks after the PDF is created. |
 | Scroll sync drifts with tall images and equations | Annoying, not blocking | Positions anchored to source lines, with interpolation. |
 | Large notes slow down typing | Poor feel | Rendering in a worker, partial re-rendering, and a 1 MB performance test in CI. |
 | Korean IME edge cases | Broken Korean input | Spike in Phase 0. A manual IME checklist for every phase. |
