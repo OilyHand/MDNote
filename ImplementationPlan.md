@@ -101,12 +101,12 @@ MDNote/
 
 ## 3. Phases
 
-### Phase 0: Setup and spikes
+### Phase 0: Setup and spikes — ✅ complete (2026-10-15)
 
 **Goal:** A working toolchain, a tidy repository, and early answers on the five riskiest techniques.
 
 **Tasks**
-- **0.1 Install the toolchain** (none of it is installed yet; the WebView2 runtime is already present):
+- **0.1 Install the toolchain** (installed and verified 2026-10-15: Node.js 24.20, npm 12.2, pnpm 12.11.2, Rust 1.99, VS 2022 Build Tools 17.14, Windows SDK 10.0.26100, WebView2 155):
   - Visual Studio 2022 Build Tools with the "Desktop development with C++" workload (MSVC compiler + Windows SDK). Needs administrator approval.
   - Rust (`rustup`, stable MSVC toolchain).
   - Node.js LTS and pnpm.
@@ -133,11 +133,16 @@ MDNote/
 
 | Spike | Result | Consequence for the plan |
 |---|---|---|
-| 1. Tab tear-off | Built; waiting for a hands-on test | — |
+| 1. Tab tear-off | ✅ Works: tear off to a new window, move to another window's tab bar, reorder, Esc to cancel, a single tab moves its window, an emptied window closes. Undo history travels with the tab. | Phase 3.9 reuses the design: the frontend handles reordering; once a tab leaves the tab bar, Rust follows the mouse globally (`GetCursorPos` / `GetAsyncKeyState`) and decides the drop with `WindowFromPoint`. |
 | 2. PDF | ✅ Works as planned: A4 page size, margins, `@page` header and page numbers, page breaks, bookmarks, tagged PDF, embedded fonts. About 1 s for 4 pages. | `.otf` (CFF) and variable fonts are embedded as Type3 (they look right but may be less crisp in some viewers): mention this in the user guide. Give every style an explicit Korean fallback font. |
 | 3. Word equations | ✅ Works, but **not** through `mathml2omml`, which needed a dozen fixes and still had errors. The `docx` library's own `docx/math` `latexToMath` was correct on 35 of 36 test equations; the 36th was a deliberately unknown command. | Phase 7 uses `docx/math`, with a KaTeX image as the fallback. `mathml2omml` is dropped. |
 | 4. Fonts | ✅ Works: 243 families including 31 per-user families, Korean names, monospaced and Hangul flags, in about 33 ms. | Use the legacy (WWS) collection so every listed name works in CSS. Cache the list. Refresh with `checkForUpdates`. |
-| 5. Korean IME | Built; waiting for a hands-on test | — |
+| 5. Korean IME | ✅ Works: all 7 hands-on checks passed (typing, brackets, list continuation during composition, Ctrl+B guard, Backspace by jamo). | Every MDNote keyboard command checks `view.composing` before acting. |
+
+**Lessons for Phase 1**
+- **Tauri permissions are explicit.** `core:default` does not include opening a window from the web page (`core:webview:allow-create-webview-window`). In the spike, the IME window failed silently until this was added. MDNote lists every permission it needs in its capability files.
+- **Never ignore a failed Tauri call.** Every failure is reported to the user, translated, and logged.
+- **npm 12 blocks install scripts by default.** pnpm itself needed `--allow-scripts=pnpm` to install. Dependencies whose install scripts are required must be listed explicitly in `package.json`.
 
 ---
 
@@ -468,13 +473,13 @@ MDNote/
 
 | Risk | Impact | Mitigation |
 |---|---|---|
-| Tab tear-off between windows has no built-in support | Phase 3 slips | Spike in Phase 0. **Move to new window** in the right-click menu is the fallback. |
+| Tab tear-off between windows has no built-in support | Phase 3 slips | Spike 1 proved the design works. **Move to new window** in the right-click menu stays as a keyboard-friendly alternative. |
 | Word export quality (equations, code colors) | Exports look wrong in Word | Spike 3 showed `docx/math` handles equations well. Image fallback for unsupported commands. The spike's 36 test equations become regression tests. Manual checks in Word for every milestone. |
 | Screen (KaTeX) and Word (`docx/math`) parse LaTeX differently | An equation renders on screen but fails in Word | The image fallback covers it. Regression tests on both parsers. |
 | PDF bookmarks depend on an experimental WebView2/Chromium option | No bookmarks | Spike 2 confirmed they work today. A CI check fails if a PDF has no outline. Fallback: add bookmarks after the PDF is created. |
 | Scroll sync drifts with tall images and equations | Annoying, not blocking | Positions anchored to source lines, with interpolation. |
 | Large notes slow down typing | Poor feel | Rendering in a worker, partial re-rendering, and a 1 MB performance test in CI. |
-| Korean IME edge cases | Broken Korean input | Spike in Phase 0. A manual IME checklist for every phase. |
+| Korean IME edge cases | Broken Korean input | Spike 5 passed all 7 checks. Keep its checklist as a manual test for every phase that touches the editor. |
 | Matching `.mdn` sizes after outside edits | Sizes lost or misplaced | Cautious matching (drop rather than misapply) and tests on edited notes. |
 | No Hyper-V or Sandbox on Windows 11 Home | Hard to test clean installs | VirtualBox, VMware Workstation, or a spare PC. |
 | Code signing needs identity verification and a fee | Unsigned builds trigger SmartScreen warnings | Decide before Phase 8. Unsigned pre-releases until then. |
