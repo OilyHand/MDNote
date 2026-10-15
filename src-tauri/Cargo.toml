@@ -1,6 +1,6 @@
 [package]
 name = "mdnote"
-version = "0.1.0"
+version = "0.2.0"
 description = "Markdown notes with Word-style formatting"
 authors = ["OilyHand"]
 license = "MIT"
