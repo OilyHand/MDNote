@@ -50,6 +50,7 @@ function useMenus(): Menu[] {
   const { t } = useTranslation();
   const item = useCommandItem();
   const hasDoc = useDocs((s) => s.activeId !== null);
+  const tabCount = useDocs((s) => s.docs.length);
   const recent = useRecent((s) => s.files);
   const viewMode = useView((s) => s.mode);
   const fitWidth = useView((s) => s.fitWidth);
@@ -89,6 +90,7 @@ function useMenus(): Menu[] {
           needsDoc("file.print"),
           SEPARATOR,
           needsDoc("file.closeTab"),
+          item("file.moveToNewWindow", { disabled: tabCount < 2 }),
           SEPARATOR,
           item("file.preferences"),
           SEPARATOR,
@@ -188,7 +190,7 @@ function useMenus(): Menu[] {
         ],
       },
     ];
-  }, [t, item, hasDoc, recent, viewMode, fitWidth, statusBar]);
+  }, [t, item, hasDoc, tabCount, recent, viewMode, fitWidth, statusBar]);
 }
 
 /** The table commands, for the Format menu and the editor's right-click menu. */

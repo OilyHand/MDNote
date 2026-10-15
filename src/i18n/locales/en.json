@@ -172,7 +172,10 @@
     "notSaved": "Not saved yet",
     "close": "Close",
     "newTab": "New document",
-    "unsaved": "Unsaved changes"
+    "unsaved": "Unsaved changes",
+    "closeOthers": "Close Other Tabs",
+    "copyPath": "Copy Path",
+    "reveal": "Show in File Explorer"
   },
   "empty": {
     "title": "No document open",

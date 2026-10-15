@@ -22,6 +22,7 @@ import {
   saveDocumentAs,
 } from "./commands";
 import { isTableCommand, runEditorCommand } from "./editorCommands";
+import { moveToNewWindow } from "./tabWindows";
 
 /** The editor, shown and focused, for commands that work on the text. */
 function editorView() {
@@ -49,6 +50,8 @@ export function runCommand(id: CommandId) {
       return void (active && closeDocument(active.id));
     case "file.preferences":
       return void api.openPreferences().catch(notifyError);
+    case "file.moveToNewWindow":
+      return void (active && moveToNewWindow(active.id));
     case "file.exit":
       return void getCurrentWindow().close().catch(notifyError);
     case "tab.next":

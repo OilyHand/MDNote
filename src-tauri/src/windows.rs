@@ -10,7 +10,11 @@ use std::collections::HashMap;
 use std::path::Path;
 
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Emitter, Manager, State, WebviewWindow};
+use serde_json::Value;
+use tauri::{
+    AppHandle, Emitter, Manager, PhysicalPosition, State, WebviewUrl, WebviewWindow,
+    WebviewWindowBuilder,
+};
 
 use crate::AppState;
 use crate::error::AppResult;
@@ -62,6 +66,15 @@ impl Default for Session {
     }
 }
 
+/// What a new window shows once it is ready: tabs from the session, or tabs moved to it.
+#[derive(Default)]
+pub struct PendingWindow {
+    pub tabs: Vec<TabSession>,
+    pub active: usize,
+    /// Tabs moved from another window, with text, metadata and Undo history (opaque to Rust).
+    pub transfers: Vec<Value>,
+}
+
 #[derive(Default)]
 pub struct Registry {
     pub windows: HashMap<String, WindowSession>,
@@ -70,6 +83,9 @@ pub struct Registry {
     pub startup_paths: Vec<String>,
     /// The saved session, handed to the main window once.
     pub restored: Option<WindowSession>,
+    /// Windows that were opened but have not asked for their tabs yet.
+    pub pending: HashMap<String, PendingWindow>,
+    next_window: u32,
 }
 
 impl Registry {
@@ -85,7 +101,59 @@ impl Registry {
             .as_deref()
             .and_then(|label| app.get_webview_window(label))
             .or_else(|| app.get_webview_window(MAIN))
+            .or_else(|| {
+                app.webview_windows()
+                    .into_iter()
+                    .find(|(label, _)| is_document_window(label))
+                    .map(|(_, window)| window)
+            })
     }
+
+    /// A label for a new document window: "w-1", "w-2", …
+    pub fn new_label(&mut self, app: &AppHandle) -> String {
+        loop {
+            self.next_window += 1;
+            let label = format!("w-{}", self.next_window);
+            if app.get_webview_window(&label).is_none() && !self.pending.contains_key(&label) {
+                return label;
+            }
+        }
+    }
+}
+
+/// Document windows, as opposed to Preferences and the tab-drag label.
+pub fn is_document_window(label: &str) -> bool {
+    label == MAIN || label.starts_with("w-")
+}
+
+/// Opens a document window. It asks for its tabs (take_startup) once its page is ready.
+pub fn open_document_window(
+    app: &AppHandle,
+    label: &str,
+    bounds: Option<Bounds>,
+    position: Option<(i32, i32)>,
+) -> tauri::Result<WebviewWindow> {
+    let window = WebviewWindowBuilder::new(app, label, WebviewUrl::App("index.html".into()))
+        .title("MDNote")
+        .inner_size(1100.0, 760.0)
+        .min_inner_size(560.0, 360.0)
+        .visible(false)
+        .build()?;
+    if let Some(bounds) = bounds {
+        if is_on_screen(&window, bounds) {
+            apply_placement(&window, bounds);
+        }
+        if bounds.maximized {
+            let _ = window.maximize();
+        }
+    } else if let Some((x, y)) = position {
+        let _ = window.set_position(PhysicalPosition::new(x, y));
+    }
+    let theme = app.state::<AppState>().prefs.lock().unwrap().theme;
+    crate::prefs::apply_theme(app, theme);
+    let _ = window.show();
+    let _ = window.set_focus();
+    Ok(window)
 }
 
 /// Saves every window's tabs and size to `session.json`.
@@ -104,12 +172,28 @@ pub fn save_session(state: &AppState) {
 // Start-up
 // ---------------------------------------------------------------------------
 
-/// Restores the main window's size and position, then shows it.
-pub fn restore_main_window(app: &AppHandle, state: &AppState, session: &Session) {
+/// Restores the windows of the last session: the main window's size and
+/// position (always) and, with session restore on, every window and its tabs.
+/// If the main window was closed before the others, the first other window's
+/// tabs open in it.
+pub fn restore_windows(app: &AppHandle, state: &AppState, session: &Session) {
     let Some(window) = app.get_webview_window(MAIN) else {
         return;
     };
-    let saved = session.windows.iter().find(|w| w.label == MAIN);
+    let restore_tabs = state.prefs.lock().unwrap().restore_session;
+    let mut others: Vec<WindowSession> = session
+        .windows
+        .iter()
+        .filter(|w| w.label != MAIN && !w.tabs.is_empty())
+        .cloned()
+        .collect();
+    let main_saved = session.windows.iter().find(|w| w.label == MAIN).cloned();
+    let saved = match main_saved {
+        Some(saved) => Some(saved),
+        None if restore_tabs && !others.is_empty() => Some(others.remove(0)),
+        None => None,
+    };
+    let saved = saved.as_ref();
     if let Some(bounds) = saved.and_then(|w| w.bounds) {
         if is_on_screen(&window, bounds) {
             apply_placement(&window, bounds);
@@ -122,18 +206,38 @@ pub fn restore_main_window(app: &AppHandle, state: &AppState, session: &Session)
     let mut registry = state.registry.lock().unwrap();
     if let Some(saved) = saved {
         // Bounds are always remembered; tabs only when session restore is on.
-        let restore_tabs = state.prefs.lock().unwrap().restore_session;
         let mut restored = saved.clone();
         if !restore_tabs {
             restored.tabs.clear();
             restored.active = 0;
         }
+        restored.label = MAIN.to_string();
         registry.windows.insert(MAIN.to_string(), restored.clone());
         registry.restored = Some(restored);
     }
     registry.last_focused = Some(MAIN.to_string());
     drop(registry);
     let _ = window.show();
+    let _ = window.set_focus();
+
+    if !restore_tabs {
+        return;
+    }
+    for saved in others {
+        let label = state.registry.lock().unwrap().new_label(app);
+        state.registry.lock().unwrap().pending.insert(
+            label.clone(),
+            PendingWindow {
+                tabs: saved.tabs,
+                active: saved.active,
+                transfers: Vec::new(),
+            },
+        );
+        if let Err(error) = open_document_window(app, &label, saved.bounds, None) {
+            log::error!("could not reopen a window from the last session: {error}");
+        }
+    }
+    // The main window comes first, as at the end of the last session.
     let _ = window.set_focus();
 }
 
@@ -162,6 +266,8 @@ pub struct Startup {
     pub active: usize,
     /// Files named on the command line; they open after the restored tabs.
     pub paths: Vec<String>,
+    /// Tabs moved here from another window.
+    pub transfers: Vec<Value>,
 }
 
 /// Called once by a window when it is ready.
@@ -169,10 +275,12 @@ pub struct Startup {
 pub fn take_startup(window: WebviewWindow, state: State<AppState>) -> Startup {
     let mut registry = state.registry.lock().unwrap();
     if window.label() != MAIN {
+        let pending = registry.pending.remove(window.label()).unwrap_or_default();
         return Startup {
-            tabs: Vec::new(),
-            active: 0,
+            tabs: pending.tabs,
+            active: pending.active,
             paths: Vec::new(),
+            transfers: pending.transfers,
         };
     }
     let restored = registry.restored.take().unwrap_or_default();
@@ -180,6 +288,7 @@ pub fn take_startup(window: WebviewWindow, state: State<AppState>) -> Startup {
         tabs: restored.tabs,
         active: restored.active,
         paths: std::mem::take(&mut registry.startup_paths),
+        transfers: Vec::new(),
     }
 }
 
@@ -287,7 +396,7 @@ pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
     let app = window.app_handle();
     let state = app.state::<AppState>();
     match event {
-        tauri::WindowEvent::Focused(true) if window.label() != crate::shell::PREFERENCES => {
+        tauri::WindowEvent::Focused(true) if is_document_window(window.label()) => {
             state.registry.lock().unwrap().last_focused = Some(window.label().to_string());
         }
         tauri::WindowEvent::Moved(_)
@@ -297,10 +406,13 @@ pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
         }
         tauri::WindowEvent::Destroyed => {
             // The last window keeps its tabs in the session; others are forgotten.
+            if !is_document_window(window.label()) {
+                return;
+            }
             let others_open = app
                 .webview_windows()
                 .keys()
-                .any(|label| label != window.label() && label != crate::shell::PREFERENCES);
+                .any(|label| label != window.label() && is_document_window(label));
             if others_open {
                 state
                     .registry
@@ -320,7 +432,7 @@ pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
 
 /// Remembers the window's size and position.
 fn remember_bounds(window: &tauri::Window, state: &AppState) {
-    if window.label() == crate::shell::PREFERENCES {
+    if !is_document_window(window.label()) {
         return;
     }
     let Some(bounds) = placement(window) else {

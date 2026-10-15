@@ -11,7 +11,14 @@ import {
   keymap,
   lineNumbers,
 } from "@codemirror/view";
-import { defaultKeymap, history, historyKeymap, indentLess, insertTab } from "@codemirror/commands";
+import {
+  defaultKeymap,
+  history,
+  historyField,
+  historyKeymap,
+  indentLess,
+  insertTab,
+} from "@codemirror/commands";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
 import { HighlightStyle, syntaxHighlighting } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
@@ -186,6 +193,19 @@ export function createEditorState(text: string, cursor = 0): EditorState {
     // The optional keymaps (lists, brackets) go first, so they act before the defaults.
     extensions: [...configurable(options), ...fixed],
   });
+}
+
+/** A document's editor state as JSON, Undo history included, to move it to another window. */
+export function editorStateToJSON(state: EditorState): unknown {
+  return state.toJSON({ history: historyField });
+}
+
+export function editorStateFromJSON(json: unknown): EditorState {
+  return EditorState.fromJSON(
+    json,
+    { extensions: [...configurable(options), ...fixed] },
+    { history: historyField },
+  );
 }
 
 /** Sets the options for documents created or shown from now on. */

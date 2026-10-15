@@ -5,7 +5,7 @@
 // because it changes on every keystroke.
 
 import { create } from "zustand";
-import type { EditorState, Text, TransactionSpec } from "@codemirror/state";
+import { Text, type EditorState, type TransactionSpec } from "@codemirror/state";
 import i18n from "../i18n";
 import type { FileStamp, LineEnding, TextEncoding } from "../ipc";
 import { baseName, samePath } from "../documents/naming";
@@ -59,9 +59,18 @@ export function updateDoc(id: string, changes: Partial<Doc>) {
   }));
 }
 
-export function addDoc(doc: Doc, state: EditorState, index?: number) {
+/**
+ * Adds a tab. `savedText` is the text on disk, for a document arriving from
+ * another window (null: unsaved until saved); by default it is the document's
+ * own text unless it is marked as changed.
+ */
+export function addDoc(doc: Doc, state: EditorState, index?: number, savedText?: string | null) {
   editorStates.set(doc.id, state);
-  savedTexts.set(doc.id, doc.dirty ? null : state.doc);
+  if (savedText !== undefined) {
+    savedTexts.set(doc.id, savedText === null ? null : Text.of(savedText.split("\n")));
+  } else {
+    savedTexts.set(doc.id, doc.dirty ? null : state.doc);
+  }
   useDocs.setState(({ docs }) => {
     const next = [...docs];
     next.splice(index ?? next.length, 0, doc);
@@ -119,6 +128,11 @@ export function markSaved(id: string, text: Text) {
 export function markUnsaved(id: string) {
   savedTexts.set(id, null);
   updateDoc(id, { dirty: true });
+}
+
+/** The text last read or saved, for moving the document to another window. */
+export function savedTextOf(id: string): string | null {
+  return savedTexts.get(id)?.toString() ?? null;
 }
 
 /** Whether `text` is exactly the text last read or saved. */

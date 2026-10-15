@@ -166,7 +166,10 @@
     "notSaved": "아직 저장하지 않음",
     "close": "닫기",
     "newTab": "새 문서",
-    "unsaved": "저장하지 않은 변경 내용"
+    "unsaved": "저장하지 않은 변경 내용",
+    "closeOthers": "다른 탭 닫기",
+    "copyPath": "경로 복사",
+    "reveal": "파일 탐색기에서 보기"
   },
   "empty": {
     "title": "열린 문서가 없습니다",

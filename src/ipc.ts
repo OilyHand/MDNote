@@ -95,6 +95,8 @@ export interface Startup {
   tabs: TabSession[];
   active: number;
   paths: string[];
+  /** Tabs moved to this window from another one (see app/tabWindows.ts). */
+  transfers: unknown[];
 }
 
 export type ErrorCode = "notFound" | "accessDenied" | "readOnly" | "unmappable" | "io" | "internal";

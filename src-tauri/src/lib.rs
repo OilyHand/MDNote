@@ -13,6 +13,7 @@ mod recent;
 mod recovery;
 mod shell;
 mod storage;
+mod tabs;
 mod watch;
 mod windows;
 
@@ -102,7 +103,7 @@ pub fn run() {
             *state.recovered.lock().unwrap() = recovered;
             let session = windows::load_session(&state)?;
             prefs::apply_theme(&handle, theme);
-            windows::restore_main_window(&handle, &state, &session);
+            windows::restore_windows(&handle, &state, &session);
             Ok(())
         })
         .on_window_event(windows::on_window_event)
@@ -121,6 +122,8 @@ pub fn run() {
             windows::take_startup,
             windows::report_tabs,
             windows::open_paths,
+            tabs::move_tab_to_new_window,
+            tabs::start_tab_drag,
             shell::open_preferences,
             shell::open_default_apps_settings,
             preview::resolve_images,
