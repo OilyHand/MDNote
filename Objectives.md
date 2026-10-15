@@ -797,6 +797,8 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-15 | v1 additions | Outline panel, folder sidebar, image paste and drag-and-drop, table tools, editor conveniences, status bar, style sets, and copy as rich text (O13–O20). |
 | 2026-10-15 | Deferred features | The other suggestions are scheduled after the essential implementation (see [After v1](#after-v1)). |
 | 2026-10-15 | License | MIT. |
+| 2026-10-15 | New documents | Saved as UTF-8 without a BOM, with Windows (CRLF) line endings, like Notepad. Existing files keep their own encoding and line endings. |
+| 2026-10-15 | Language setting | Preferences offer "Same as Windows" (the default, following the O11 rule), English, and 한국어. |
 
 ## Open decisions
 

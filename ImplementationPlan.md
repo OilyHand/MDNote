@@ -146,9 +146,28 @@ MDNote/
 
 ---
 
-### Phase 1: Foundation (O1, O11, O12) → v0.1
+### Phase 1: Foundation (O1, O11, O12) → v0.1 — 🔄 built, hands-on test pending
 
 **Goal:** An installable app that opens `.md` files from Explorer into tabs, edits them as plain text, and saves them safely, with an English and Korean UI.
+
+**Status (2026-10-15):** all tasks below are implemented on `phase1/foundation`.
+
+Verified automatically:
+- 14 Rust tests: encoding round-trips for 6 formats, safe saving, read-only protection, settings files (including ones saved with a BOM), and path matching.
+- 11 frontend tests: translation parity, shortcuts (including with the Korean IME on), and naming.
+
+Verified by running the app:
+- opening files from the command line
+- a second `MDNote.exe` handing its file to the running window
+- switching to an already-open file opened with different letter case
+- the code-page and mixed line-ending notices
+- the outside-change banner
+- session restore, including window size and position
+- the Korean UI and the light theme
+
+Still open:
+- the hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): installer, file association, dialogs, Preferences window
+- the first CI run on GitHub, after the branch is pushed
 
 **Tasks**
 - **1.1 Scaffold:**
