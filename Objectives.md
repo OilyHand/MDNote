@@ -801,6 +801,9 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-15 | Language setting | Preferences offer "Same as Windows" (the default, following the O11 rule), English, and 한국어. |
 | 2026-10-15 | Preview zoom | Fit Page Width is the default, because an A4 page is wider than half a typical window. |
 | 2026-10-15 | Links in the preview | Web links open in the browser and `.md` links open in MDNote. Links to other local files only show the file in File Explorer, so a note can never start a program. |
+| 2026-10-16 | Ending a list | Enter on an empty top-level list item ends the list with a blank line, so the next text is a separate paragraph, as in Word. |
+| 2026-10-16 | Pasting | When the clipboard holds both text and a picture, the text is pasted. Only a clipboard with just an image saves an image file (O15). |
+| 2026-10-16 | Restore after a crash | The question offers Restore and Discard; Esc means Restore, so no key press throws work away. |
 
 ## Open decisions
 

@@ -272,9 +272,44 @@ Hands-on checklist [docs/testing/phase-2.md](docs/testing/phase-2.md): all 23 it
 
 ---
 
-### Phase 3: Editing (O1, O8, O15, O16, O17, O18) → v0.3
+### Phase 3: Editing (O1, O8, O15, O16, O17, O18) → v0.3 — 🔄 built, hands-on test pending
 
 **Goal:** Comfortable Word-style editing, and the remaining O1 window features.
+
+**Status (2026-10-16):** all tasks below are implemented on `phase3/editing`.
+
+Verified:
+- **Automated:** 73 frontend tests (+40) and 24 Rust tests (+4).
+- **Running the app:** the debug build was driven through WebView2's DevTools port (see the lessons below). Script-checked:
+  - formatting keys, menus with keyboard navigation, the F1 list, Find and Replace
+  - list continuation and renumbering, brackets, wrapping a selection
+  - Korean IME composition: inside brackets, and Ctrl+B mid-syllable
+  - table Tab navigation and alignment
+  - image paste (saved and never-saved notes), drop, and the move on first save
+  - status bar counts and a line-ending change written on save
+  - a forced quit and the restore
+  - Move to New Window with its Undo history, and two-window session restore
+
+Still open: the hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md), in particular tearing tabs off with the mouse, real screenshots, Word's clipboard, and the IME by hand.
+
+**What changed from the plan**
+- **Tab is shared.** In a table it moves between cells, in a list item it changes the level, and elsewhere it inserts a tab. The shortcut table allows a key to be bound to several commands, tried in order; a test makes sure no other key is bound twice.
+- **Tables line up on Tab too**, not only when the cursor leaves them, so a table being filled in stays readable. With automatic alignment off, Tab only moves (and a new row is written compactly).
+- **Enter on an empty list item leaves a blank line.** Without it, the next line would still belong to the list item above (Markdown's lazy continuation), unlike Word.
+- **Pasting prefers text.** When the clipboard holds both text and a picture (Word copies a picture of the text along with it), the text is pasted.
+- **Image links** percent-encode spaces, parentheses, `#`, `?` and `%`, and keep Korean readable: `assets/회의%20사진.png`. A dropped image that is already in the image folder is linked, not copied.
+- **Counts** come from the render worker's chunk cache (a separate count request), so they also work in Source Only view. Generated text is left out: MathML copies of equations, footnote back links and the footnote label.
+- **Status bar items and visibility are Preferences**, so every window follows a change at once.
+- **Crash recovery:** Esc in the restore question means Restore, so a key press never throws work away.
+- **Text changed from outside the editor** (reload, images, recovery) goes to the document the view really shows. Right after a tab switch the view can briefly still hold the previous document.
+
+**Lessons for later phases**
+- **Drive the real app through WebView2's DevTools port.** A debug build started with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9333` can be scripted over the Chrome DevTools Protocol:
+  - key presses, IME composition, clicks and screenshots
+  - reading the editor state and calling Tauri commands
+  
+  This found two real bugs that unit tests missed: Enter's keymap order, and list ending. Only physical-mouse features (tab tear-off) still need a person.
+- **Simulated mouse clicks use CSS pixels.** Screenshots are in device pixels (125% on this PC), so take click positions from the page (`coordsAtPos`, `getBoundingClientRect`) rather than from a screenshot.
 
 **Tasks**
 - **3.1 Shortcut table** (section 2.2): generates keymaps, menu labels, tooltips, and the F1 list. While an IME is composing, shortcuts are ignored.
