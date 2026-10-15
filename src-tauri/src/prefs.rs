@@ -37,10 +37,18 @@ pub struct Preferences {
     pub restore_session: bool,
     pub recent_files_limit: u32,
     pub theme: ThemePref,
+    /// Source editor font family; empty means the built-in default.
+    pub editor_font_family: String,
+    /// Source editor font size in CSS pixels.
+    pub editor_font_size: u32,
+    pub editor_word_wrap: bool,
+    pub editor_line_numbers: bool,
     /// Settings written by a newer MDNote are kept as they are.
     #[serde(flatten)]
     pub unknown: Map<String, Value>,
 }
+
+pub const EDITOR_FONT_SIZES: std::ops::RangeInclusive<u32> = 8..=40;
 
 impl Default for Preferences {
     fn default() -> Self {
@@ -49,6 +57,10 @@ impl Default for Preferences {
             restore_session: true,
             recent_files_limit: 10,
             theme: ThemePref::System,
+            editor_font_family: String::new(),
+            editor_font_size: 14,
+            editor_word_wrap: true,
+            editor_line_numbers: false,
             unknown: Map::new(),
         }
     }
@@ -57,6 +69,9 @@ impl Default for Preferences {
 impl Preferences {
     pub fn sanitized(mut self) -> Self {
         self.recent_files_limit = self.recent_files_limit.min(MAX_RECENT_FILES);
+        self.editor_font_size = self
+            .editor_font_size
+            .clamp(*EDITOR_FONT_SIZES.start(), *EDITOR_FONT_SIZES.end());
         self
     }
 }

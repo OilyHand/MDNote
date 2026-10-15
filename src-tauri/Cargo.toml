@@ -1,6 +1,6 @@
 [package]
 name = "mdnote"
-version = "0.1.0"
+version = "0.2.0"
 description = "Markdown notes with Word-style formatting"
 authors = ["OilyHand"]
 license = "MIT"
@@ -18,7 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
+tauri = { version = "2", features = ["protocol-asset"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
@@ -31,7 +31,7 @@ notify = "8.2.0"
 dunce = "1.0.5"
 thiserror = "2.0.21"
 log = "0.4.34"
-windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_Globalization", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging"] }
+windows = { version = "0.62", features = ["Win32_Foundation", "Win32_Storage_FileSystem", "Win32_Globalization", "Win32_UI_Shell", "Win32_UI_WindowsAndMessaging", "Win32_Graphics_DirectWrite"] }
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration

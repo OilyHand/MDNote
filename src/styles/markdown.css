@@ -1,0 +1,309 @@
+/* The rendered document on its page (O2). Typography is set with variables so
+   Phase 5 can turn them into per-section styles (O4) without touching this file.
+   Defaults follow O4: Segoe UI 12 pt with Malgun Gothic for Korean, 1.5 line
+   spacing, code in Consolas. */
+
+.page {
+  --md-font: "Segoe UI", "Malgun Gothic", sans-serif;
+  --md-size: 12pt;
+  --md-line: 1.5;
+  --md-code-font: Consolas, "Malgun Gothic", monospace;
+  --md-code-size: 10.5pt;
+  --md-heading-font: var(--md-font);
+
+  box-sizing: content-box;
+  width: 159.2mm; /* A4 (210 mm) minus Normal margins (2 × 25.4 mm) */
+  min-height: 246.2mm;
+  margin: 24px auto;
+  padding: 25.4mm;
+  background: var(--paper);
+  color: var(--paper-text);
+  box-shadow: var(--paper-shadow);
+  font-family: var(--md-font);
+  font-size: var(--md-size);
+  line-height: var(--md-line);
+  overflow-wrap: break-word;
+  user-select: text;
+  text-wrap: pretty;
+}
+
+/* Blocks are wrappers for scroll sync only; they must not affect layout. */
+.md-block {
+  display: contents;
+}
+
+.page > .md-block:first-child > :first-child {
+  margin-top: 0;
+}
+
+.page h1,
+.page h2,
+.page h3,
+.page h4,
+.page h5,
+.page h6 {
+  font-family: var(--md-heading-font);
+  font-weight: 600;
+  line-height: 1.25;
+  margin: 1.2em 0 0.5em;
+  break-after: avoid;
+}
+
+.page h1 {
+  font-size: 20pt;
+}
+.page h2 {
+  font-size: 16pt;
+}
+.page h3 {
+  font-size: 13pt;
+}
+.page h4 {
+  font-size: 12pt;
+}
+.page h5 {
+  font-size: 11pt;
+}
+.page h6 {
+  font-size: 11pt;
+  color: var(--paper-muted);
+}
+
+.page p,
+.page ul,
+.page ol,
+.page blockquote,
+.page table,
+.page pre,
+.page .katex-display {
+  margin: 0 0 0.8em;
+}
+
+.page ul,
+.page ol {
+  padding-left: 1.6em;
+}
+
+.page li > p {
+  margin-bottom: 0.4em;
+}
+
+.page li.task-list-item {
+  list-style: none;
+}
+
+.page li.task-list-item input {
+  margin: 0 0.4em 0 -1.4em;
+  vertical-align: middle;
+}
+
+.page a {
+  color: var(--paper-link);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.page blockquote {
+  padding: 0 1em;
+  border-left: 3px solid var(--paper-rule);
+  color: var(--paper-muted);
+}
+
+.page hr {
+  height: 1px;
+  margin: 1.5em 0;
+  border: none;
+  background: var(--paper-rule);
+}
+
+.page code {
+  font-family: var(--md-code-font);
+  font-size: var(--md-code-size);
+  padding: 0.1em 0.3em;
+  border-radius: 3px;
+  background: var(--paper-code);
+}
+
+.page pre {
+  padding: 0.8em 1em;
+  border-radius: 4px;
+  background: var(--paper-code);
+  overflow-x: auto;
+  line-height: 1.45;
+}
+
+.page pre code {
+  padding: 0;
+  background: none;
+}
+
+/* Shiki writes both themes' colours as variables (no re-render on theme change). */
+.page pre.shiki {
+  background-color: var(--shiki-light-bg);
+}
+.page pre.shiki span {
+  color: var(--shiki-light);
+}
+
+.page table {
+  border-collapse: collapse;
+  display: block;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.page th,
+.page td {
+  padding: 0.3em 0.7em;
+  border: 1px solid var(--paper-rule);
+}
+
+.page th {
+  background: var(--paper-code);
+  font-weight: 600;
+}
+
+.page img {
+  max-width: 100%;
+}
+
+.page del {
+  color: var(--paper-muted);
+}
+
+.page .footnotes {
+  margin-top: 2em;
+  font-size: 0.9em;
+  color: var(--paper-muted);
+}
+
+.page .footnotes h2 {
+  font-size: 1em;
+}
+
+.page sup a {
+  text-decoration: none;
+}
+
+.page .katex-display {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* <!-- pagebreak --> (O9): a dashed line on screen, a new page when printed. */
+.page .page-break {
+  position: relative;
+  height: 0;
+  margin: 1.6em 0;
+  border-top: 1px dashed var(--paper-rule);
+}
+
+.page .page-break::after {
+  content: var(--page-break-label, "Page break");
+  position: absolute;
+  top: -0.7em;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0 0.6em;
+  background: var(--paper);
+  color: var(--paper-muted);
+  font-size: 8pt;
+}
+
+/* ---- Dark theme ------------------------------------------------------------ */
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .page pre.shiki {
+    background-color: var(--shiki-dark-bg);
+  }
+  :root:not([data-theme="light"]) .page pre.shiki span {
+    color: var(--shiki-dark);
+  }
+}
+
+:root[data-theme="dark"] .page pre.shiki {
+  background-color: var(--shiki-dark-bg);
+}
+:root[data-theme="dark"] .page pre.shiki span {
+  color: var(--shiki-dark);
+}
+
+/* ---- Print: only the page, always in light colours ----------------------- */
+
+@media print {
+  @page {
+    size: A4;
+    margin: 25.4mm;
+  }
+
+  :root,
+  :root[data-theme="dark"] {
+    --paper: #ffffff;
+    --paper-text: #000000;
+    --paper-muted: #555555;
+    --paper-rule: #bbbbbb;
+    --paper-code: #f4f4f4;
+    --paper-link: #0b57a8;
+    color-scheme: light;
+  }
+
+  html,
+  body,
+  #root,
+  .app,
+  .workspace,
+  .panes,
+  .pane-preview,
+  .preview-scroll {
+    display: block !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: none !important;
+  }
+
+  .menubar,
+  .tabbar,
+  .banner,
+  .notices,
+  .pane-source,
+  .divider,
+  .zoom-badge,
+  .preview-error {
+    display: none !important;
+  }
+
+  .page {
+    zoom: 1 !important;
+    width: auto;
+    min-height: 0;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+  }
+
+  .page pre.shiki,
+  :root[data-theme="dark"] .page pre.shiki {
+    background-color: var(--shiki-light-bg);
+  }
+  .page pre.shiki span,
+  :root[data-theme="dark"] .page pre.shiki span {
+    color: var(--shiki-light);
+  }
+
+  .page .page-break {
+    break-before: page;
+    border: none;
+    margin: 0;
+  }
+
+  .page .page-break::after {
+    content: none;
+  }
+
+  .page pre,
+  .page table,
+  .page img,
+  .page .katex-display {
+    break-inside: avoid;
+  }
+}

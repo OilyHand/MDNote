@@ -27,6 +27,7 @@ import {
 import { ask } from "../state/dialog";
 import { notifyError, notifyInfo } from "../state/notices";
 import { useRecent } from "../state/recent";
+import { setViewMode, useView } from "../state/view";
 
 const t = i18n.t.bind(i18n);
 let defaultLineEnding: LineEnding = "crlf";
@@ -356,6 +357,18 @@ export function keepMyVersion(id: string) {
 // ---------------------------------------------------------------------------
 // Tabs and editing
 // ---------------------------------------------------------------------------
+
+/**
+ * Prints the rendered view with the print style sheet (O2). In Source Only
+ * mode the preview is shown first, so there is something to print.
+ */
+export async function printDocument() {
+  if (useView.getState().mode === "source") {
+    setViewMode("split");
+    await new Promise((resolve) => setTimeout(resolve, 300));
+  }
+  window.print();
+}
 
 export function cycleTab(step: 1 | -1) {
   const { docs, activeId } = useDocs.getState();

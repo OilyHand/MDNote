@@ -3,9 +3,11 @@
 mod documents;
 mod error;
 mod files;
+mod fonts;
 mod locale;
 mod paths;
 mod prefs;
+mod preview;
 mod recent;
 mod shell;
 mod storage;
@@ -27,6 +29,7 @@ pub struct AppState {
     pub recent: Mutex<Vec<String>>,
     pub registry: Mutex<Registry>,
     pub watcher: DocumentWatcher,
+    pub fonts: fonts::FontCache,
 }
 
 /// A debug build started with `MDNOTE_CONFIG_DIR` is an isolated test run: it keeps
@@ -83,6 +86,7 @@ pub fn run() {
                 recent: Mutex::new(recent),
                 registry: Mutex::new(registry),
                 watcher: DocumentWatcher::new(handle.clone())?,
+                fonts: fonts::FontCache::default(),
             });
 
             let state = app.state::<AppState>();
@@ -108,6 +112,9 @@ pub fn run() {
             windows::open_paths,
             shell::open_preferences,
             shell::open_default_apps_settings,
+            preview::resolve_images,
+            preview::resolve_link,
+            fonts::list_fonts,
         ])
         .run(tauri::generate_context!())
         .expect("error while running MDNote");

@@ -1,6 +1,6 @@
 // Keyboard shortcuts (O8). One table drives the key handling, the menu labels and,
 // from Phase 3, the F1 shortcut list, so they can never disagree.
-// Phase 1 covers the File and tab commands; editing shortcuts come in Phase 3.
+// Phases 1–2 cover the File, tab and view commands; editing shortcuts come in Phase 3.
 
 export type CommandId =
   | "file.new"
@@ -8,6 +8,7 @@ export type CommandId =
   | "file.save"
   | "file.saveAs"
   | "file.closeTab"
+  | "file.print"
   | "file.preferences"
   | "tab.next"
   | "tab.previous"
@@ -25,6 +26,7 @@ export const SHORTCUTS: Record<CommandId, string[]> = {
   "file.save": ["Ctrl+S"],
   "file.saveAs": ["F12", "Ctrl+Shift+S"],
   "file.closeTab": ["Ctrl+W", "Ctrl+F4"],
+  "file.print": ["Ctrl+P"],
   "file.preferences": ["Ctrl+,"],
   "tab.next": ["Ctrl+Tab"],
   "tab.previous": ["Ctrl+Shift+Tab"],
@@ -43,6 +45,7 @@ export const WINDOW_COMMANDS: CommandId[] = [
   "file.save",
   "file.saveAs",
   "file.closeTab",
+  "file.print",
   "file.preferences",
   "tab.next",
   "tab.previous",

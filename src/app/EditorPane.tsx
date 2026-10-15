@@ -3,16 +3,35 @@
 
 import { useEffect, useRef } from "react";
 import { EditorView } from "@codemirror/view";
-import { createEditorState, setChangeListener } from "../editor/setup";
+import {
+  applyEditorOptions,
+  createEditorState,
+  setChangeListener,
+  setEditorOptions,
+} from "../editor/setup";
 import { setActiveView } from "../editor/view";
-import { editorStates, refreshDirty, scrollTops, useDocs } from "../state/documents";
+import {
+  editorStates,
+  notifyDocEdited,
+  refreshDirty,
+  scrollTops,
+  useDocs,
+} from "../state/documents";
+import { usePrefs } from "../state/prefs";
 import { scheduleSessionReport } from "./session";
+
+/** Used when Preferences leave the editor font empty. */
+const DEFAULT_EDITOR_FONT = '"Cascadia Mono", Consolas';
 
 export function EditorPane() {
   const hostRef = useRef<HTMLDivElement>(null);
   const viewRef = useRef<EditorView | null>(null);
   const shownId = useRef<string | null>(null);
   const activeId = useDocs((s) => s.activeId);
+  const fontFamily = usePrefs((s) => s.preferences.editorFontFamily);
+  const fontSize = usePrefs((s) => s.preferences.editorFontSize);
+  const wordWrap = usePrefs((s) => s.preferences.editorWordWrap);
+  const lineNumbers = usePrefs((s) => s.preferences.editorLineNumbers);
 
   // Create the view once.
   useEffect(() => {
@@ -24,6 +43,7 @@ export function EditorPane() {
       if (!id || !editorStates.has(id)) return;
       editorStates.set(id, state);
       refreshDirty(id, state.doc);
+      notifyDocEdited(id);
     });
     const onScroll = () => {
       if (shownId.current) {
@@ -44,6 +64,13 @@ export function EditorPane() {
     };
   }, []);
 
+  // Editor options from Preferences apply to the visible document right away,
+  // and to other tabs when they are shown.
+  useEffect(() => {
+    setEditorOptions({ wordWrap, lineNumbers });
+    if (viewRef.current) applyEditorOptions(viewRef.current);
+  }, [wordWrap, lineNumbers]);
+
   // Show the active document.
   useEffect(() => {
     const view = viewRef.current;
@@ -54,6 +81,7 @@ export function EditorPane() {
     if (!state) return;
     shownId.current = activeId;
     view.setState(state);
+    applyEditorOptions(view);
     const top = scrollTops.get(activeId) ?? 0;
     requestAnimationFrame(() => {
       view.scrollDOM.scrollTop = top;
@@ -61,5 +89,10 @@ export function EditorPane() {
     view.focus();
   }, [activeId]);
 
-  return <div className="editor-pane" ref={hostRef} />;
+  const style = {
+    "--editor-font-family": `${fontFamily ? `"${fontFamily}", ` : ""}${DEFAULT_EDITOR_FONT}, "Malgun Gothic", monospace`,
+    "--editor-font-size": `${fontSize}px`,
+  } as React.CSSProperties;
+
+  return <div className="editor-pane" ref={hostRef} style={style} />;
 }

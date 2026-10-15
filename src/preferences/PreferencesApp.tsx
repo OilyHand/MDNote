@@ -1,16 +1,59 @@
 // The Preferences window (O12). Every change is saved and applied immediately;
 // all windows follow through the "preferences-changed" event.
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { api, type ThemePref } from "../ipc";
+import { api, type FontFamily, type ThemePref } from "../ipc";
 import type { LanguagePref } from "../i18n";
 import { DEFAULT_PREFERENCES, usePrefs } from "../state/prefs";
 import { notifyError } from "../state/notices";
 import { Notices } from "../app/Notices";
 
 const MAX_RECENT = 30;
+const FONT_SIZE_MIN = 8;
+const FONT_SIZE_MAX = 40;
+
+/** The source editor's font, from the fonts installed on this PC (O3). */
+function EditorFontSelect() {
+  const { t, i18n } = useTranslation();
+  const family = usePrefs((s) => s.preferences.editorFontFamily);
+  const update = usePrefs((s) => s.update);
+  const [fonts, setFonts] = useState<FontFamily[]>([]);
+
+  useEffect(() => {
+    api.listFonts().then(setFonts).catch(notifyError);
+  }, []);
+
+  const label = (font: FontFamily) =>
+    i18n.language === "ko" && font.nameKo ? `${font.nameKo} (${font.name})` : font.name;
+  const monospaced = fonts.filter((f) => f.monospaced);
+  const others = fonts.filter((f) => !f.monospaced);
+  const missing = family && fonts.length > 0 && !fonts.some((f) => f.name === family);
+
+  return (
+    <select value={family} onChange={(e) => void update({ editorFontFamily: e.target.value })}>
+      <option value="">{t("prefs.editorFontDefault")}</option>
+      {missing ? (
+        <option value={family}>{t("prefs.fontNotInstalled", { name: family })}</option>
+      ) : null}
+      <optgroup label={t("prefs.monospacedFonts")}>
+        {monospaced.map((font) => (
+          <option key={font.name} value={font.name}>
+            {label(font)}
+          </option>
+        ))}
+      </optgroup>
+      <optgroup label={t("prefs.otherFonts")}>
+        {others.map((font) => (
+          <option key={font.name} value={font.name}>
+            {label(font)}
+          </option>
+        ))}
+      </optgroup>
+    </select>
+  );
+}
 
 export function PreferencesApp() {
   const { t, i18n } = useTranslation();
@@ -77,6 +120,45 @@ export function PreferencesApp() {
             <p className="hint muted">{t("prefs.defaultAppHint")}</p>
           </div>
         </div>
+      </section>
+
+      <section>
+        <h2>{t("prefs.editor")}</h2>
+        <label className="field">
+          <span>{t("prefs.editorFont")}</span>
+          <EditorFontSelect />
+        </label>
+        <label className="field">
+          <span>{t("prefs.editorFontSize")}</span>
+          <input
+            type="number"
+            min={FONT_SIZE_MIN}
+            max={FONT_SIZE_MAX}
+            value={preferences.editorFontSize}
+            onChange={(e) => {
+              const size = Number(e.target.value) || DEFAULT_PREFERENCES.editorFontSize;
+              void update({
+                editorFontSize: Math.max(FONT_SIZE_MIN, Math.min(FONT_SIZE_MAX, size)),
+              });
+            }}
+          />
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={preferences.editorWordWrap}
+            onChange={(e) => void update({ editorWordWrap: e.target.checked })}
+          />
+          <span>{t("prefs.wordWrap")}</span>
+        </label>
+        <label className="check">
+          <input
+            type="checkbox"
+            checked={preferences.editorLineNumbers}
+            onChange={(e) => void update({ editorLineNumbers: e.target.checked })}
+          />
+          <span>{t("prefs.lineNumbers")}</span>
+        </label>
       </section>
 
       <section>

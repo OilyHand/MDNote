@@ -18,6 +18,10 @@ export const DEFAULT_PREFERENCES: Preferences = {
   restoreSession: true,
   recentFilesLimit: 10,
   theme: "system",
+  editorFontFamily: "",
+  editorFontSize: 14,
+  editorWordWrap: true,
+  editorLineNumbers: false,
 };
 
 export const usePrefs = create<PrefsStore>((_set, get) => ({
