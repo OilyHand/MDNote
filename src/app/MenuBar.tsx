@@ -9,6 +9,7 @@ import { api } from "../ipc";
 import { shortcutLabel, type CommandId } from "../shortcuts/registry";
 import { useDocs } from "../state/documents";
 import { useRecent } from "../state/recent";
+import { fitPageWidth, setViewMode, setZoom, useView, zoomBy, type ViewMode } from "../state/view";
 import { ask } from "../state/dialog";
 import { notifyError } from "../state/notices";
 import { requestOpen } from "./commands";
@@ -20,6 +21,8 @@ interface MenuItem {
   shortcut?: string;
   action?: () => void;
   disabled?: boolean;
+  /** Shows a check mark (view modes, Fit Page Width). */
+  checked?: boolean;
   submenu?: MenuItem[];
   separator?: boolean;
 }
@@ -38,8 +41,15 @@ function useMenus(): Menu[] {
   const { t } = useTranslation();
   const hasDoc = useDocs((s) => s.activeId !== null);
   const recent = useRecent((s) => s.files);
+  const viewMode = useView((s) => s.mode);
+  const fitWidth = useView((s) => s.fitWidth);
 
   return useMemo(() => {
+    const mode = (value: ViewMode, label: string): MenuItem => ({
+      label,
+      checked: viewMode === value,
+      action: () => setViewMode(value),
+    });
     const command = (id: CommandId, label: string, needsDoc = false): MenuItem => ({
       label,
       shortcut: shortcutLabel(id),
@@ -75,6 +85,8 @@ function useMenus(): Menu[] {
           command("file.save", t("menu.save"), true),
           command("file.saveAs", t("menu.saveAs"), true),
           SEPARATOR,
+          command("file.print", t("menu.print"), true),
+          SEPARATOR,
           command("file.closeTab", t("menu.closeTab"), true),
           SEPARATOR,
           command("file.preferences", t("menu.preferences")),
@@ -102,6 +114,21 @@ function useMenus(): Menu[] {
         ],
       },
       {
+        id: "view",
+        label: t("menu.view"),
+        accessKey: "v",
+        items: [
+          mode("split", t("menu.splitView")),
+          mode("source", t("menu.sourceOnly")),
+          mode("preview", t("menu.previewOnly")),
+          SEPARATOR,
+          { label: t("menu.zoomIn"), shortcut: t("menu.zoomInKeys"), action: () => zoomBy(0.1) },
+          { label: t("menu.zoomOut"), shortcut: t("menu.zoomOutKeys"), action: () => zoomBy(-0.1) },
+          { label: t("menu.actualSize"), action: () => setZoom(1) },
+          { label: t("menu.fitWidth"), checked: fitWidth, action: fitPageWidth },
+        ],
+      },
+      {
         id: "help",
         label: t("menu.help"),
         accessKey: "h",
@@ -115,7 +142,7 @@ function useMenus(): Menu[] {
         ],
       },
     ];
-  }, [t, hasDoc, recent]);
+  }, [t, hasDoc, recent, viewMode, fitWidth]);
 }
 
 async function showAbout() {
@@ -297,7 +324,8 @@ function MenuList({
         ) : (
           <div
             key={i}
-            role="menuitem"
+            role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"}
+            aria-checked={item.checked}
             aria-disabled={item.disabled || undefined}
             aria-haspopup={item.submenu ? "menu" : undefined}
             className={`menu-item${i === highlight ? " highlighted" : ""}${item.disabled ? " disabled" : ""}`}
@@ -305,6 +333,9 @@ function MenuList({
             onMouseDown={(e) => e.preventDefault()}
             onClick={() => onActivate(item)}
           >
+            <span className="menu-check" aria-hidden>
+              {item.checked ? "✓" : ""}
+            </span>
             <span className="menu-label">{item.label}</span>
             {item.submenu ? (
               <span className="menu-arrow">›</span>

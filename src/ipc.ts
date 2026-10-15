@@ -35,6 +35,12 @@ export interface Preferences {
   restoreSession: boolean;
   recentFilesLimit: number;
   theme: ThemePref;
+  /** Source editor font family; empty means the built-in default. */
+  editorFontFamily: string;
+  /** Source editor font size in CSS pixels (8–40). */
+  editorFontSize: number;
+  editorWordWrap: boolean;
+  editorLineNumbers: boolean;
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }
@@ -97,4 +103,19 @@ export const api = {
 
   openPreferences: () => invoke<void>("open_preferences"),
   openDefaultAppsSettings: () => invoke<void>("open_default_apps_settings"),
+
+  /** For each source: the image file's path (allowed for the page), or null. */
+  resolveImages: (document: string | null, sources: string[]) =>
+    invoke<(string | null)[]>("resolve_images", { document, sources }),
+  resolveLink: (document: string | null, target: string) =>
+    invoke<string | null>("resolve_link", { document, target }),
+  listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
 };
+
+export interface FontFamily {
+  /** en-us name, as stored in settings. */
+  name: string;
+  nameKo: string | null;
+  monospaced: boolean;
+  hasHangul: boolean;
+}

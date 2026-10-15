@@ -1,7 +1,9 @@
 import { createRoot } from "react-dom/client";
 import { initI18n, resolveLanguage } from "./i18n";
 import { initPrefs, usePrefs } from "./state/prefs";
+import "katex/dist/katex.min.css";
 import "./styles/app.css";
+import "./styles/markdown.css";
 
 const isPreferencesWindow = new URLSearchParams(location.search).get("window") === "preferences";
 

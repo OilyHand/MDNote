@@ -10,6 +10,7 @@ import {
   editCommand,
   newDocument,
   openWithDialog,
+  printDocument,
   saveDocument,
   saveDocumentAs,
 } from "./commands";
@@ -31,6 +32,9 @@ export function runCommand(id: CommandId) {
       break;
     case "file.closeTab":
       if (active) void closeDocument(active.id);
+      break;
+    case "file.print":
+      if (active) void printDocument();
       break;
     case "file.preferences":
       api.openPreferences().catch(notifyError);

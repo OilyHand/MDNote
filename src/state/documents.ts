@@ -9,6 +9,7 @@ import type { EditorState, Text } from "@codemirror/state";
 import i18n from "../i18n";
 import type { FileStamp, LineEnding, TextEncoding } from "../ipc";
 import { baseName, samePath } from "../documents/naming";
+import { forgetPreview } from "../render/client";
 
 export type DiskStatus = "ok" | "changed" | "removed";
 
@@ -67,7 +68,20 @@ export function addDoc(doc: Doc, state: EditorState, index?: number) {
   });
 }
 
+const editListeners = new Set<(id: string) => void>();
+
+/** Runs `listener` after every edit to a document shown in the editor. */
+export function onDocEdited(listener: (id: string) => void): () => void {
+  editListeners.add(listener);
+  return () => editListeners.delete(listener);
+}
+
+export function notifyDocEdited(id: string) {
+  editListeners.forEach((listener) => listener(id));
+}
+
 export function removeDoc(id: string) {
+  forgetPreview(id);
   editorStates.delete(id);
   savedTexts.delete(id);
   scrollTops.delete(id);

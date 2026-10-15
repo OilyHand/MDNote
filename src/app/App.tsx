@@ -18,7 +18,7 @@ import { flushSession, startSessionReporting } from "./session";
 import { runCommand } from "./run";
 import { MenuBar } from "./MenuBar";
 import { TabBar } from "./TabBar";
-import { EditorPane } from "./EditorPane";
+import { Workspace } from "./Workspace";
 import { EmptyState } from "./EmptyState";
 import { DiskBanner } from "./DiskBanner";
 import { Notices } from "./Notices";
@@ -88,6 +88,17 @@ function useWindowShortcuts() {
   }, []);
 }
 
+/** The label on page-break lines in the preview comes from CSS, in the UI language. */
+function usePageBreakLabel() {
+  const { t, i18n } = useTranslation();
+  useEffect(() => {
+    document.documentElement.style.setProperty(
+      "--page-break-label",
+      JSON.stringify(t("preview.pageBreak")),
+    );
+  }, [t, i18n.language]);
+}
+
 function useWindowTitle() {
   const { t, i18n } = useTranslation();
   const active = useDocs((s) => s.docs.find((d) => d.id === s.activeId));
@@ -108,6 +119,7 @@ export function App() {
   }, []);
   useWindowShortcuts();
   useWindowTitle();
+  usePageBreakLabel();
 
   return (
     <div className="app">
@@ -115,7 +127,7 @@ export function App() {
       <TabBar />
       <main className="workspace">
         {active ? <DiskBanner doc={active} /> : null}
-        {hasActive ? <EditorPane /> : <EmptyState />}
+        {hasActive ? <Workspace /> : <EmptyState />}
       </main>
       <Notices />
       <DialogHost />
