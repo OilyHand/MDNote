@@ -43,7 +43,8 @@ export const COMMANDS = {
   "tab.next": file(["Ctrl+Tab"]),
   "tab.previous": file(["Ctrl+Shift+Tab"]),
   "file.preferences": file(["Ctrl+,"]),
-  "file.exit": { ...file(["Alt+F4"]), native: true },
+  "file.closeWindow": { ...file(["Alt+F4"]), native: true },
+  "file.exit": file(),
 
   "edit.undo": { ...edit(["Ctrl+Z"]), native: true },
   "edit.redo": { ...edit(["Ctrl+Y"]), native: true },
@@ -63,6 +64,8 @@ export const COMMANDS = {
   "format.underline": format(["Ctrl+U"]),
   "format.strikethrough": format(["Ctrl+Shift+X"]),
   "format.code": format(["Ctrl+`"]),
+  // Word's Unlink.
+  "format.removeLink": format(["Ctrl+Shift+F9"]),
 
   "paragraph.heading1": paragraph(["Ctrl+Alt+1"]),
   "paragraph.heading2": paragraph(["Ctrl+Alt+2"]),

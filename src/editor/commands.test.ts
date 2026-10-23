@@ -4,10 +4,11 @@
 import { describe, expect, it } from "vitest";
 import { EditorSelection, EditorState, type Extension } from "@codemirror/state";
 import { markdown, markdownLanguage } from "@codemirror/lang-markdown";
+import { moveLineDown, moveLineUp } from "@codemirror/commands";
 import { markdownMath } from "./math";
 import type { Edit } from "./edits";
 import { encodeLinkTarget } from "./edits";
-import { insertEquation, insertLink, linkTargetAt, toggleInline } from "./inline";
+import { insertEquation, insertLink, linkTargetAt, removeLinks, toggleInline } from "./inline";
 import {
   indentListItem,
   insertPageBreak,
@@ -147,6 +148,26 @@ describe("paragraph commands", () => {
   });
 });
 
+describe("removing links (Ctrl+Shift+F9)", () => {
+  it("turns the link around the cursor into its text", () => {
+    expect(run(removeLinks, "see [the do¦cs](https://a.b) now")).toBe("see the do¦cs now");
+    expect(run(removeLinks, "mail <https://a.¦b>")).toBe("mail https://a.¦b");
+  });
+
+  it("removes every link in the selection and leaves images", () => {
+    expect(run(removeLinks, "‹[a](x) and [b](y) ![i](p.png)›")).toBe("‹a and b ![i](p.png)›");
+  });
+
+  it("does nothing outside links", () => {
+    expect(run(removeLinks, "plain ¦text")).toBeNull();
+  });
+
+  it("knows when Ctrl+K edits an existing link", () => {
+    expect(linkTargetAt(stateOf("[a](¦x)")).existing).toBe(true);
+    expect(linkTargetAt(stateOf("wo¦rd")).existing).toBe(false);
+  });
+});
+
 describe("equations and links", () => {
   it("inserts inline math, or a block on an empty line", () => {
     expect(run(insertEquation, "x ‹E=mc^2› y")).toBe("x $‹E=mc^2›$ y");
@@ -215,6 +236,21 @@ describe("numbered lists renumber themselves", () => {
     const state = stateOf("1. a\n¦", [renumberLists]);
     const next = state.update({ changes: { from: 5, insert: "7. b" }, userEvent: "undo" });
     expect(next.state.doc.toString()).toBe("1. a\n7. b");
+  });
+
+  it("keeps its start when lines move up and down (Alt+Shift+↑/↓)", () => {
+    let state = stateOf("1. First\n2. Sec¦ond\n3. Third\n4. 안녕", [renumberLists]);
+    const move = (command: typeof moveLineUp) =>
+      command({ state, dispatch: (tr) => (state = tr.state) });
+    move(moveLineUp);
+    expect(state.doc.toString()).toBe("1. Second\n2. First\n3. Third\n4. 안녕");
+    move(moveLineDown);
+    move(moveLineDown);
+    expect(state.doc.toString()).toBe("1. First\n2. Third\n3. Second\n4. 안녕");
+  });
+
+  it("still starts where the first item says when its number is typed", () => {
+    expect(typed("‹1›. a\n2. b", "5")).toBe("5. a\n6. b");
   });
 });
 

@@ -53,6 +53,12 @@ describe("shortcut registry", () => {
     expect(editor(press("Enter", "NumpadEnter", { ctrl: true }))).toEqual(["insert.pageBreak"]);
   });
 
+  it("reads function keys with modifiers, such as Word's Unlink", () => {
+    expect(commandsFor(press("F9", "F9", { ctrl: true, shift: true }), EDITOR_COMMANDS)).toEqual([
+      "format.removeLink",
+    ]);
+  });
+
   it("tries a table cell before a list item for Tab", () => {
     expect(commandsFor(press("Tab", "Tab"), EDITOR_COMMANDS)).toEqual([
       "table.nextCell",

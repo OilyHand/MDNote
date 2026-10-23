@@ -126,8 +126,9 @@ const markdownHighlight = HighlightStyle.define([
 /**
  * The shortcut table's editor commands. Several commands can share a key (Tab
  * moves between table cells, else indents a list item); the first that applies
- * wins, and if none does the key keeps its normal meaning. While the IME is
- * composing, Ctrl and Alt shortcuts are swallowed so they cannot fire by accident.
+ * wins, and if none does the key keeps its normal meaning. (CodeMirror ignores
+ * keys while the IME composes; the window's key handler finishes the syllable
+ * first for Ctrl and Alt shortcuts, see composition.ts.)
  */
 const editorShortcuts = Prec.high(
   keymap.of([

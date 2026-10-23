@@ -10,6 +10,7 @@ import {
   encodeLinkTarget,
   nodeAround,
   prefixLength,
+  treeUpTo,
   wordAround,
   type Edit,
   type SyntaxNode,
@@ -245,6 +246,8 @@ export interface LinkTarget {
   to: number;
   text: string;
   url: string;
+  /** The cursor is in an existing link, which the dialog edits (and can remove). */
+  existing: boolean;
 }
 
 const URL_LIKE = /^(?:https?:\/\/|www\.|mailto:)\S+$/i;
@@ -267,17 +270,67 @@ export function linkTargetAt(state: EditorState): LinkTarget {
         to: link.to,
         text: state.sliceDoc(marks[0].to, marks[1].from),
         url: target,
+        existing: true,
       };
     }
   }
   if (!range.empty) {
     const text = state.sliceDoc(range.from, range.to);
-    return { from: range.from, to: range.to, text, url: URL_LIKE.test(text.trim()) ? text : "" };
+    return {
+      from: range.from,
+      to: range.to,
+      text,
+      url: URL_LIKE.test(text.trim()) ? text : "",
+      existing: false,
+    };
   }
   const word = wordAround(state, range.head);
-  if (word) return { ...word, text: state.sliceDoc(word.from, word.to), url: "" };
-  return { from: range.head, to: range.head, text: "", url: "" };
+  if (word) return { ...word, text: state.sliceDoc(word.from, word.to), url: "", existing: false };
+  return { from: range.head, to: range.head, text: "", url: "", existing: false };
 }
+
+/** Where the text a link shows sits: [text](url) shows "text", <url> shows "url". */
+function linkText(link: SyntaxNode): { from: number; to: number } | null {
+  if (link.name === "Autolink") return link.getChild("URL");
+  const marks = link.getChildren("LinkMark");
+  return marks.length >= 2 ? { from: marks[0].to, to: marks[1].from } : null;
+}
+
+const LINKS = new Set(["Link", "Autolink"]);
+
+/**
+ * Remove Link (Ctrl+Shift+F9, as Word's Unlink): the links in the selection,
+ * or the one around the cursor, become their plain text. Images stay.
+ */
+export const removeLinks: Edit = (state) => {
+  const links = new Map<number, SyntaxNode>();
+  for (const range of state.selection.ranges) {
+    if (range.empty) {
+      const link =
+        nodeAround(state, range.head, "Link") ?? nodeAround(state, range.head, "Autolink");
+      if (link) links.set(link.from, link);
+      continue;
+    }
+    treeUpTo(state, range.to).iterate({
+      from: range.from,
+      to: range.to,
+      enter(node) {
+        if (!LINKS.has(node.name)) return;
+        links.set(node.from, node.node);
+        return false;
+      },
+    });
+  }
+  const changes: ChangeSpec[] = [];
+  // Only the markup around the text goes, so the cursor stays on the same letter.
+  for (const link of links.values()) {
+    const text = linkText(link);
+    if (text) changes.push({ from: link.from, to: text.from }, { from: text.to, to: link.to });
+  }
+  if (changes.length === 0) return null;
+  const set = state.changes(changes);
+  return { changes: set, selection: state.selection.map(set) };
+};
 
 /** `[text](url)` in place of the target. An empty text shows the address. */
 export function insertLink(target: LinkTarget, text: string, url: string): Edit {

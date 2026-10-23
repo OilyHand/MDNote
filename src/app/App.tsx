@@ -3,7 +3,10 @@ import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { api } from "../ipc";
-import { commandFor } from "../shortcuts/registry";
+import { EDITOR_COMMANDS, commandFor, commandsFor } from "../shortcuts/registry";
+import { finishComposition, isModifiedKey } from "../editor/composition";
+import { getActiveView } from "../editor/view";
+import { runEditorCommand } from "./editorCommands";
 import { activate, displayName, findByPath, useDocs } from "../state/documents";
 import { useDialog } from "../state/dialog";
 import { isModalOpen } from "../state/modal";
@@ -68,6 +71,9 @@ async function startWindow() {
     if (await confirmCloseWindow()) {
       await flushSession();
       await win.destroy();
+    } else {
+      // Cancelled: if File > Exit was closing every window, MDNote keeps running.
+      api.cancelQuit().catch(() => {});
     }
   });
 
@@ -88,7 +94,23 @@ function isReloadKey(event: KeyboardEvent) {
 function useWindowShortcuts() {
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.isComposing) return;
+      const view = getActiveView();
+      if (event.isComposing || view?.composing) {
+        // Typing goes to the IME; a Ctrl or Alt shortcut finishes the syllable, then runs.
+        if (!view || !isModifiedKey(event) || !view.contentDOM.contains(event.target as Node)) {
+          return;
+        }
+        const windowCommand = commandFor(event);
+        const editorCommands = commandsFor(event, EDITOR_COMMANDS);
+        if (!windowCommand && editorCommands.length === 0) return;
+        event.preventDefault();
+        event.stopPropagation();
+        void finishComposition(view).then(() => {
+          if (windowCommand) runCommand(windowCommand);
+          else editorCommands.some((id) => runEditorCommand(id, view));
+        });
+        return;
+      }
       if (import.meta.env.PROD && isReloadKey(event)) {
         event.preventDefault();
         return;

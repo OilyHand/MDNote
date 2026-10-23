@@ -138,6 +138,9 @@ export const api = {
   takeStartup: () => invoke<Startup>("take_startup"),
   reportTabs: (tabs: TabSession[], active: number) => invoke<void>("report_tabs", { tabs, active }),
   openPaths: (paths: string[]) => invoke<void>("open_paths", { paths }),
+  /** File > Exit: closes every window; the next start restores them all. */
+  quitApp: () => invoke<void>("quit_app"),
+  cancelQuit: () => invoke<void>("cancel_quit"),
 
   openPreferences: () => invoke<void>("open_preferences"),
   openDefaultAppsSettings: () => invoke<void>("open_default_apps_settings"),

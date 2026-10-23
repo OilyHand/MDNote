@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { COMMANDS, keyLabel, type CommandGroup, type CommandId } from "../shortcuts/registry";
-import { closeModal, useModal, type LinkFields, type Modal } from "../state/modal";
+import { closeModal, useModal, type LinkFields, type LinkResult, type Modal } from "../state/modal";
 
 export function ModalHost() {
   const modal = useModal((s) => s.modal);
@@ -29,7 +29,9 @@ export function ModalHost() {
       }}
     >
       {modal.kind === "shortcuts" ? <ShortcutList /> : null}
-      {modal.kind === "link" ? <LinkDialog initial={modal.initial} onDone={modal.resolve} /> : null}
+      {modal.kind === "link" ? (
+        <LinkDialog initial={modal.initial} existing={modal.existing} onDone={modal.resolve} />
+      ) : null}
       {modal.kind === "table" ? <TablePicker onDone={modal.resolve} /> : null}
     </div>
   );
@@ -98,10 +100,12 @@ function ShortcutList() {
 
 function LinkDialog({
   initial,
+  existing,
   onDone,
 }: {
   initial: LinkFields;
-  onDone(result: LinkFields | null): void;
+  existing: boolean;
+  onDone(result: LinkResult): void;
 }) {
   const { t } = useTranslation();
   const [text, setText] = useState(initial.text);
@@ -138,8 +142,13 @@ function LinkDialog({
         />
       </label>
       <div className="dialog-buttons">
+        {existing ? (
+          <button type="button" className="dialog-button-left" onClick={() => onDone("remove")}>
+            {t("linkDialog.remove")}
+          </button>
+        ) : null}
         <button type="submit" className="primary" disabled={!url.trim()}>
-          {t("linkDialog.insert")}
+          {t(existing ? "linkDialog.update" : "linkDialog.insert")}
         </button>
         <button type="button" onClick={() => onDone(null)}>
           {t("linkDialog.cancel")}

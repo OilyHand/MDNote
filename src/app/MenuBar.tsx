@@ -94,6 +94,7 @@ function useMenus(): Menu[] {
           SEPARATOR,
           item("file.preferences"),
           SEPARATOR,
+          item("file.closeWindow"),
           item("file.exit"),
         ],
       },
@@ -140,6 +141,7 @@ function useMenus(): Menu[] {
           item("format.underline"),
           item("format.strikethrough"),
           item("format.code"),
+          item("format.removeLink"),
           SEPARATOR,
           {
             label: t("menu.heading"),

@@ -8,6 +8,7 @@
 
 use std::collections::HashMap;
 use std::path::Path;
+use std::time::{Duration, Instant};
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -22,6 +23,9 @@ use crate::paths;
 
 pub const SESSION_FILE: &str = "session.json";
 pub const MAIN: &str = "main";
+
+/// Windows closed within this time of the last one count as closed together.
+const CLOSED_TOGETHER: Duration = Duration::from_secs(15);
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
@@ -86,6 +90,10 @@ pub struct Registry {
     /// Windows that were opened but have not asked for their tabs yet.
     pub pending: HashMap<String, PendingWindow>,
     next_window: u32,
+    /// Windows closed while others stayed open, and when (see "Window events").
+    closed: Vec<(Instant, WindowSession)>,
+    /// File > Exit is closing every window.
+    quitting: bool,
 }
 
 impl Registry {
@@ -389,6 +397,28 @@ fn bring_to_front(window: &WebviewWindow) {
 }
 
 // ---------------------------------------------------------------------------
+// Quitting
+// ---------------------------------------------------------------------------
+
+/// File > Exit: every window closes (each asks about its unsaved documents),
+/// and the next start brings them all back.
+#[tauri::command]
+pub fn quit_app(app: AppHandle, state: State<AppState>) {
+    state.registry.lock().unwrap().quitting = true;
+    for (label, window) in app.webview_windows() {
+        if is_document_window(&label) {
+            let _ = window.close();
+        }
+    }
+}
+
+/// A window refused to close (Cancel in a save question): MDNote is not quitting after all.
+#[tauri::command]
+pub fn cancel_quit(state: State<AppState>) {
+    state.registry.lock().unwrap().quitting = false;
+}
+
+// ---------------------------------------------------------------------------
 // Window events
 // ---------------------------------------------------------------------------
 
@@ -405,7 +435,6 @@ pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
             remember_bounds(window, &state);
         }
         tauri::WindowEvent::Destroyed => {
-            // The last window keeps its tabs in the session; others are forgotten.
             if !is_document_window(window.label()) {
                 return;
             }
@@ -413,14 +442,24 @@ pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
                 .webview_windows()
                 .keys()
                 .any(|label| label != window.label() && is_document_window(label));
+            let mut registry = state.registry.lock().unwrap();
             if others_open {
-                state
-                    .registry
-                    .lock()
-                    .unwrap()
-                    .windows
-                    .remove(window.label());
+                // Set aside: it comes back next time only if MDNote is quitting.
+                if let Some(closed) = registry.windows.remove(window.label()) {
+                    registry.closed.push((Instant::now(), closed));
+                }
+            } else {
+                // The last window. The session keeps it, and the windows that closed
+                // together with it: File > Exit, or several closed at once (such as
+                // the taskbar's "Close all windows"). Windows closed earlier are gone.
+                let quitting = registry.quitting;
+                for (when, closed) in std::mem::take(&mut registry.closed) {
+                    if quitting || when.elapsed() <= CLOSED_TOGETHER {
+                        registry.windows.insert(closed.label.clone(), closed);
+                    }
+                }
             }
+            drop(registry);
             save_session(&state);
             if !others_open {
                 app.exit(0);

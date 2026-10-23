@@ -29,6 +29,7 @@
       "closeTab": "탭 닫기",
       "moveToNewWindow": "새 창으로 이동",
       "preferences": "환경 설정…",
+      "closeWindow": "창 닫기",
       "exit": "끝내기"
     },
     "tab": {
@@ -53,7 +54,8 @@
       "italic": "기울임꼴",
       "underline": "밑줄",
       "strikethrough": "취소선",
-      "code": "인라인 코드"
+      "code": "인라인 코드",
+      "removeLink": "링크 제거"
     },
     "paragraph": {
       "heading1": "제목 1",
@@ -127,7 +129,10 @@
     "text": "표시할 텍스트",
     "url": "주소",
     "insert": "삽입",
-    "cancel": "취소"
+    "update": "수정",
+    "cancel": "취소",
+    "remove": "링크 제거",
+    "edit": "링크 편집…"
   },
   "tablePicker": {
     "title": "표 삽입",

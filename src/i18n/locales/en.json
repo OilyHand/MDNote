@@ -29,6 +29,7 @@
       "closeTab": "Close Tab",
       "moveToNewWindow": "Move to New Window",
       "preferences": "Preferences…",
+      "closeWindow": "Close Window",
       "exit": "Exit"
     },
     "tab": {
@@ -53,7 +54,8 @@
       "italic": "Italic",
       "underline": "Underline",
       "strikethrough": "Strikethrough",
-      "code": "Inline Code"
+      "code": "Inline Code",
+      "removeLink": "Remove Link"
     },
     "paragraph": {
       "heading1": "Heading 1",
@@ -127,7 +129,10 @@
     "text": "Text to display",
     "url": "Address",
     "insert": "Insert",
-    "cancel": "Cancel"
+    "update": "Update",
+    "cancel": "Cancel",
+    "remove": "Remove Link",
+    "edit": "Edit Link…"
   },
   "tablePicker": {
     "title": "Insert Table",

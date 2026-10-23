@@ -8,9 +8,18 @@ export interface LinkFields {
   url: string;
 }
 
+/** The link dialog's answer: the new link, "remove" (an existing link), or null (cancelled). */
+export type LinkResult = LinkFields | "remove" | null;
+
 export type Modal =
   | { kind: "shortcuts" }
-  | { kind: "link"; initial: LinkFields; resolve(result: LinkFields | null): void }
+  | {
+      kind: "link";
+      initial: LinkFields;
+      /** Editing an existing link: the dialog offers to remove it. */
+      existing: boolean;
+      resolve(result: LinkResult): void;
+    }
   | { kind: "table"; resolve(size: { rows: number; columns: number } | null): void };
 
 export const useModal = create<{ modal: Modal | null }>(() => ({ modal: null }));
@@ -25,12 +34,13 @@ export function showShortcuts() {
   useModal.setState({ modal: { kind: "shortcuts" } });
 }
 
-export function askLink(initial: LinkFields): Promise<LinkFields | null> {
+export function askLink(initial: LinkFields, existing: boolean): Promise<LinkResult> {
   return new Promise((resolve) => {
     useModal.setState({
       modal: {
         kind: "link",
         initial,
+        existing,
         resolve: (result) => {
           closeModal();
           resolve(result);

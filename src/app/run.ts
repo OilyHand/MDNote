@@ -52,8 +52,10 @@ export function runCommand(id: CommandId) {
       return void api.openPreferences().catch(notifyError);
     case "file.moveToNewWindow":
       return void (active && moveToNewWindow(active.id));
-    case "file.exit":
+    case "file.closeWindow":
       return void getCurrentWindow().close().catch(notifyError);
+    case "file.exit":
+      return void api.quitApp().catch(notifyError);
     case "tab.next":
       return cycleTab(1);
     case "tab.previous":

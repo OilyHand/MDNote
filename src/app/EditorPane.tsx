@@ -15,6 +15,7 @@ import {
 } from "../editor/setup";
 import { setActiveView, setShownDocId } from "../editor/view";
 import { tableAt } from "../editor/table";
+import { nodeAround } from "../editor/edits";
 import {
   editorStates,
   notifyDocEdited,
@@ -73,6 +74,7 @@ export function EditorPane() {
   const fontSize = usePrefs((s) => s.preferences.editorFontSize);
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const item = useCommandItem();
+  const { t } = useTranslation();
 
   // Create the view once.
   useEffect(() => {
@@ -145,13 +147,24 @@ export function EditorPane() {
     if (pos !== null && (pos < selection.from || pos > selection.to)) {
       view.dispatch({ selection: { anchor: pos } });
     }
-    const inTable = tableAt(view.state, view.state.selection.main.head) !== null;
+    const head = view.state.selection.main.head;
+    const inTable = tableAt(view.state, head) !== null;
+    const inLink = Boolean(
+      nodeAround(view.state, head, "Link") ?? nodeAround(view.state, head, "Autolink"),
+    );
     const items: MenuItem[] = [
       item("edit.cut"),
       item("edit.copy"),
       item("edit.paste"),
       SEPARATOR,
       item("edit.selectAll"),
+      ...(inLink
+        ? [
+            SEPARATOR,
+            item("insert.link", { label: t("linkDialog.edit") }),
+            item("format.removeLink"),
+          ]
+        : []),
       ...(inTable ? [SEPARATOR, ...tableItems(item)] : []),
     ];
     setMenu({ x: event.clientX, y: event.clientY, items });

@@ -789,6 +789,11 @@ input:focus-visible,
   gap: 8px;
 }
 
+/* A button set apart from the others, such as Remove Link. */
+.dialog-button-left {
+  margin-right: auto;
+}
+
 .dialog-wide {
   width: min(760px, calc(100vw - 32px));
   max-height: calc(100vh - 48px);

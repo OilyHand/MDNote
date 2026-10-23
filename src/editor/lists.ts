@@ -48,26 +48,44 @@ export const listContinuation = keymap.of([
 
 const ORDERED_ITEM = /^(?:[ \t]*>[ \t]?)*[ \t]*\d{1,9}[.)]/;
 
-/** The numbers an ordered list should have, as changes to the existing ones. */
-export function renumberChanges(state: EditorState, from: number, to: number): ChangeSpec[] {
+/**
+ * The numbers an ordered list should have, as changes to the existing ones.
+ * A list counts on from its first item's number, so typing "5." there makes it
+ * start at 5. After lines are moved, though, the first item may be one that
+ * came from further down: then the list starts at its lowest number, which
+ * is where it started before the move.
+ */
+export function renumberChanges(
+  state: EditorState,
+  from: number,
+  to: number,
+  start: "first" | "lowest" = "first",
+): ChangeSpec[] {
   const changes: ChangeSpec[] = [];
   treeUpTo(state, to).iterate({
     from,
     to,
     enter(node) {
       if (node.name !== "OrderedList") return;
-      let expected: number | null = null;
+      const marks: { from: number; to: number; text: string }[] = [];
       for (let item = node.node.firstChild; item; item = item.nextSibling) {
         const mark = item.name === "ListItem" ? item.getChild("ListMark") : null;
-        if (!mark) continue;
-        const text = state.sliceDoc(mark.from, mark.to);
-        const number = Number.parseInt(text, 10);
-        if (expected === null) expected = number;
-        else if (number !== expected) {
-          changes.push({ from: mark.from, to: mark.to, insert: `${expected}${text.slice(-1)}` });
+        if (mark)
+          marks.push({ from: mark.from, to: mark.to, text: state.sliceDoc(mark.from, mark.to) });
+      }
+      if (marks.length === 0) return;
+      const numbers = marks.map((m) => Number.parseInt(m.text, 10));
+      let expected = start === "lowest" ? Math.min(...numbers) : numbers[0];
+      marks.forEach((mark, i) => {
+        if (numbers[i] !== expected) {
+          changes.push({
+            from: mark.from,
+            to: mark.to,
+            insert: `${expected}${mark.text.slice(-1)}`,
+          });
         }
         expected++;
-      }
+      });
     },
   });
   return changes;
@@ -95,7 +113,7 @@ export const renumberLists = EditorState.transactionFilter.of((tr) => {
     to = Math.max(to, doc.line(last).to);
   });
   if (!nearList) return tr;
-  const changes = renumberChanges(tr.state, from, to);
+  const changes = renumberChanges(tr.state, from, to, tr.isUserEvent("move") ? "lowest" : "first");
   if (changes.length === 0) return tr;
   return [tr, { changes, sequential: true }];
 });

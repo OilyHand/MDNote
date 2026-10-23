@@ -38,8 +38,10 @@ pub struct AppState {
 }
 
 /// A debug build started with `MDNOTE_CONFIG_DIR` is an isolated test run: it keeps
-/// its settings and session in that folder, and it never hands its files to an
-/// installed MDNote that happens to be running.
+/// its settings, session and WebView2 data in that folder, and it never hands its
+/// files to an installed MDNote that happens to be running. (Sharing WebView2's
+/// data folder with a running MDNote fails when the two start WebView2 with
+/// different options, such as a DevTools port.)
 fn test_config_dir() -> Option<std::path::PathBuf> {
     if cfg!(debug_assertions) {
         std::env::var_os("MDNOTE_CONFIG_DIR").map(Into::into)
@@ -58,6 +60,13 @@ fn config_dir(app: &tauri::App) -> tauri::Result<std::path::PathBuf> {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    if let Some(dir) = test_config_dir() {
+        if std::env::var_os("WEBVIEW2_USER_DATA_FOLDER").is_none() {
+            // SAFETY: set before any other thread starts; nothing reads the
+            // environment concurrently this early in start-up.
+            unsafe { std::env::set_var("WEBVIEW2_USER_DATA_FOLDER", dir.join("webview")) };
+        }
+    }
     let mut builder = tauri::Builder::default();
     if test_config_dir().is_none() {
         // Must be registered first: a second MDNote.exe hands its files to this one and exits.
@@ -122,6 +131,8 @@ pub fn run() {
             windows::take_startup,
             windows::report_tabs,
             windows::open_paths,
+            windows::quit_app,
+            windows::cancel_quit,
             tabs::move_tab_to_new_window,
             tabs::start_tab_drag,
             shell::open_preferences,

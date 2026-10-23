@@ -6,7 +6,13 @@ import { moveLineDown, moveLineUp } from "@codemirror/commands";
 import type { CommandId } from "../shortcuts/registry";
 import { editorOptions } from "../editor/setup";
 import { runEdit, type Edit } from "../editor/edits";
-import { insertEquation, insertLink, linkTargetAt, toggleInline } from "../editor/inline";
+import {
+  insertEquation,
+  insertLink,
+  linkTargetAt,
+  removeLinks,
+  toggleInline,
+} from "../editor/inline";
 import {
   indentListItem,
   insertPageBreak,
@@ -36,11 +42,12 @@ const table = (operation: TableOperation) => edit(() => editTable(operation, pad
 async function insertLinkWithDialog(view: EditorView) {
   const target = linkTargetAt(view.state);
   const doc = view.state.doc;
-  const result = await askLink({ text: target.text, url: target.url });
+  const result = await askLink({ text: target.text, url: target.url }, target.existing);
   view.focus();
   // The dialog blocks editing, but a reload from disk could still replace the text.
   if (!result || view.state.doc !== doc) return;
-  runEdit(view, insertLink(target, result.text, result.url));
+  if (result === "remove") runEdit(view, removeLinks);
+  else runEdit(view, insertLink(target, result.text, result.url));
 }
 
 async function insertTableWithDialog(view: EditorView) {
@@ -58,6 +65,7 @@ const COMMANDS: Partial<Record<CommandId, (view: EditorView) => boolean>> = {
   "format.underline": edit(() => toggleInline("underline")),
   "format.strikethrough": edit(() => toggleInline("strikethrough")),
   "format.code": edit(() => toggleInline("code")),
+  "format.removeLink": edit(() => removeLinks),
 
   "paragraph.heading1": edit(() => setHeading(1)),
   "paragraph.heading2": edit(() => setHeading(2)),
