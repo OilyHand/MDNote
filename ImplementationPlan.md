@@ -290,7 +290,12 @@ Verified:
   - a forced quit and the restore
   - Move to New Window with its Undo history, and two-window session restore
 
-Still open: the hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md), in particular tearing tabs off with the mouse, real screenshots, Word's clipboard, and the IME by hand.
+Hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md), first run (2026-10-23): 30 items pass, item 6 partly, item 31 fails. Fixed since, and checked on the debug build by script; the hands-on recheck is listed at the end of the checklist:
+- **Shortcuts right after typing Korean did nothing** (Alt+=, Ctrl+Enter, Alt+Shift+↑/↓). CodeMirror ignores every key while the IME composes, and the last syllable stays composed until the next key. Now a Ctrl or Alt shortcut finishes the syllable first, then runs, as in Word (the O8 rule changed accordingly).
+- **Moving a numbered item with Alt+Shift+↑/↓ raised the numbers each time.** The list took its start from whichever item ended up first. After a move it now starts at its lowest number.
+- **Closing two windows one after the other restored only the last one.** **File > Exit** now closes every window and restores them all. Windows closed within 15 seconds of the last one also come back. **File > Close Window** (Alt+F4) closes one window.
+- **Suggestion: remove a link.** Ctrl+Shift+F9 (Word's Unlink), a **Remove Link** button in the Ctrl+K dialog, and right-click items on a link.
+- **Isolated test runs failed while an installed MDNote was running.** Both used the same WebView2 data folder with different options. Isolated runs (`MDNOTE_CONFIG_DIR`) now keep their own WebView2 data.
 
 **What changed from the plan**
 - **Tab is shared.** In a table it moves between cells, in a list item it changes the level, and elsewhere it inserts a tab. The shortcut table allows a key to be bound to several commands, tried in order; a test makes sure no other key is bound twice.
@@ -304,7 +309,7 @@ Still open: the hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-
 - **Text changed from outside the editor** (reload, images, recovery) goes to the document the view really shows. Right after a tab switch the view can briefly still hold the previous document.
 
 **Lessons for later phases**
-- **Drive the real app through WebView2's DevTools port.** A debug build started with `WEBVIEW2_ADDITIONAL_BROWSER_ARGUMENTS=--remote-debugging-port=9333` can be scripted over the Chrome DevTools Protocol:
+- **Drive the real app through WebView2's DevTools port.** [scripts/devtools.mjs](scripts/devtools.mjs) starts an isolated debug build with the port open and scripts it over the Chrome DevTools Protocol:
   - key presses, IME composition, clicks and screenshots
   - reading the editor state and calling Tauri commands
   
