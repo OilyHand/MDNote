@@ -295,6 +295,10 @@ Hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md), first run
 - **Moving a numbered item with Alt+Shift+↑/↓ raised the numbers each time.** The list took its start from whichever item ended up first. After a move it now starts at its lowest number.
 - **Closing two windows one after the other restored only the last one.** **File > Exit** now closes every window and restores them all. Windows closed within 15 seconds of the last one also come back. **File > Close Window** (Alt+F4) closes one window.
 - **Suggestion: remove a link.** Ctrl+Shift+F9 (Word's Unlink), a **Remove Link** button in the Ctrl+K dialog, and right-click items on a link.
+- **Alt+= still failed with the Microsoft Korean IME, even without typing Korean** (second run, 2026-10-24). The IME appears to keep the key-down of some Alt shortcuts for itself; the script cannot reproduce a real IME, since it sends keys past Windows' input methods. Three changes:
+  - An Alt shortcut whose key comes up without having gone down now runs on the key-up.
+  - Insert Equation also has Ctrl+Shift+M (as in Typora), because Ctrl shortcuts pass the IME.
+  - The F1 window has a **Try a shortcut** box that shows exactly which key events MDNote receives.
 - **Isolated test runs failed while an installed MDNote was running.** Both used the same WebView2 data folder with different options. Isolated runs (`MDNOTE_CONFIG_DIR`) now keep their own WebView2 data.
 
 **What changed from the plan**

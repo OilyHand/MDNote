@@ -79,3 +79,11 @@ Open [phase-3-sample.md](phase-3-sample.md) in MDNote. Mark each item ✅ or ❌
 - **R4.** Item 5 suggestion: Ctrl+Shift+F9 inside a link keeps its text and removes the link. The Ctrl+K dialog on an existing link has **Remove Link**, and right-clicking a link offers **Edit Link…** and **Remove Link**. **Format > Remove Link** works with several links selected.
 - **R5.** Item 31: with two windows open, **File > Exit**, then start MDNote: both windows return. Also close both windows one after the other (or right-click MDNote on the taskbar > **Close all windows**): both return.
 - **R6.** **File > Close Window** (Alt+F4) closes only the current window; a window closed long before the last one does not come back.
+
+## Recheck after the second run (2026-10-24)
+
+R1: Alt+= still did nothing with the Microsoft Korean IME, even without typing Korean.
+
+- **R7.** With the Microsoft Korean IME on, both in Hangul and in English mode, press Alt+= in the editor: `$` is inserted.
+- **R8.** Ctrl+Shift+M inserts an equation too, with the Korean IME on.
+- **R9.** If Alt+= still does nothing: press F1, click the **Try a shortcut** box, press Alt+= once in each IME mode, and copy the lines that appear (or take a screenshot). ▼ is a key going down, ▲ a key coming up; a key that only comes up, or nothing at all, means the IME kept it.
