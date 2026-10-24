@@ -360,6 +360,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 |---|---|---|
 | New | Ctrl+N | Word |
 | Open | Ctrl+O | Word |
+| Open Folder | Ctrl+Shift+O | MDNote |
 | Save (`.md` and `.mdn`) | Ctrl+S | Word |
 | Save As | F12, Ctrl+Shift+S | Word / MDNote |
 | Print | Ctrl+P | Word |
@@ -581,7 +582,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
   - **Show in File Explorer**
   - **Copy path**
 - **Delete** asks for confirmation and moves the note to the Recycle Bin, together with its `.mdn`.
-- **Rename**, and moving a note by dragging it in the tree, also renames or moves its `.mdn` and updates any open tab (O7).
+- **Rename**, and moving a note by dragging it in the tree, also renames or moves its `.mdn` and its `<name>.assets` image folder (O15), and updates any open tab (O7).
 - If a moved note has relative image links that would break in its new folder, MDNote warns and offers to update those links.
 - The tree updates automatically when files are added, renamed, or deleted outside MDNote.
 - The open folder is part of session restore (O1).
@@ -810,6 +811,9 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-23 | Exit and closing windows | File > Exit closes all windows and restores them all next time. Windows closed within 15 seconds of the last one also come back. File > Close Window (Alt+F4) closes one window. |
 | 2026-10-23 | Remove Link | Ctrl+Shift+F9, as Word's Unlink; also a button in the Ctrl+K dialog and an item in the right-click menu. |
 | 2026-10-24 | Alt shortcuts and the Korean IME | The Microsoft Korean IME can keep an Alt shortcut's key-down for itself (Alt+= failed even without typing Korean). An Alt shortcut whose key comes up without having gone down now runs on the key-up, and Insert Equation also has Ctrl+Shift+M (Ctrl shortcuts pass the IME). The F1 window has a key tester that shows what MDNote receives. |
+| 2026-10-24 | What travels with a note | Renaming, moving or deleting a note in the sidebar takes its `<name>.mdn` and its `<name>.assets` image folder along, so its formatting and images stay with it. |
+| 2026-10-24 | Clicking in the folder tree | A click opens a note but keeps the keyboard in the tree, so F2 and Delete act on the tree, not on the text. Double-click or Enter moves on to the editor. Other files are only shown in File Explorer, never started. |
+| 2026-10-24 | Links after a move | MDNote checks a single note's relative links when it is renamed or moved and offers to fix those that would break. Moving a whole folder keeps the links inside it working and is not checked. |
 
 ## Open decisions
 

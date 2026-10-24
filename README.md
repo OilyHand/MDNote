@@ -5,7 +5,7 @@ A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and
 - What MDNote does: [Objectives.md](Objectives.md)
 - How and in what order it is built: [ImplementationPlan.md](ImplementationPlan.md)
 
-> **Status:** Phase 3 (editing). MDNote edits Markdown with Word-style shortcuts, renders it beside the source, pastes images, keeps recovery copies, and moves tabs between windows, in English and Korean. Navigation (outline, folder sidebar) arrives in Phase 4.
+> **Status:** Phase 4 (navigation). MDNote edits Markdown with Word-style shortcuts, renders it beside the source, pastes images, keeps recovery copies, moves tabs between windows, and browses a folder of notes with an outline of the current one, in English and Korean. Styles and page setup arrive in Phase 5.
 
 ## Development
 
@@ -46,7 +46,7 @@ The comment at the top of the script lists every command.
 ### Layout
 
 ```
-src/              React + TypeScript: window UI, editor, translations (src/i18n/locales)
+src/              React + TypeScript: window UI, editor, sidebar, translations (src/i18n/locales)
 src-tauri/src/    Rust: file reading and safe saving, settings, session, file watching
 tests/fixtures/   Byte-exact sample files (Git never converts them)
 scripts/          Developer tools (driving the app for tests)

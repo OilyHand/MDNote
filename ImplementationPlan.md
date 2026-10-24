@@ -364,9 +364,28 @@ Fixes after the first run:
 
 ---
 
-### Phase 4: Navigation (O13, O14) → v0.4
+### Phase 4: Navigation (O13, O14) → v0.4 — 🔄 built, hands-on test pending
 
 **Goal:** Browse a folder of notes and move around inside a note.
+
+**Status (2026-10-24):** all tasks below are implemented on `phase4/navigation`.
+
+Verified:
+- **Automated:** 86 frontend tests (+6, link rewriting) and 27 Rust tests (+3: names, companions, numbering).
+- **Running the app** (scripted through the DevTools port):
+  - the Outline: nesting, rendered text, a `#` line in a code block left out, clicking a heading, the highlight following scrolling, Preview Only view
+  - the Files tab: listing, hidden `.mdn` and non-Markdown files, a file created outside MDNote appearing, renaming in place (F2), New Note, dragging a note into a folder with its link updated, Delete into the Recycle Bin together with the `.mdn`
+  - restoring the window's folder
+
+Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-4.md), in particular Open Folder's dialog, real mouse drags, and two windows with different folders.
+
+**What changed from the plan**
+- **Headings come from the render worker's summary**, the same request that counts words for the status bar. They are the rendered text and also update in Source Only view.
+- **A note's `<name>.assets` folder travels with it**, as its `.mdn` does (images pasted under the "<note name>.assets" choice of O15 would otherwise be left behind).
+- **Link fixing covers links to other files too**, not only images, and runs for single notes. Moving a folder keeps the links inside it working, so it is not checked.
+- **A click in the folder tree keeps the keyboard there.** In the first scripted run, a click opened the note and moved the focus to the editor, so Delete deleted text instead of the file. Now F2 and Delete act on the tree, and double-click or Enter moves on to the editor.
+- **Deleting an open note** closes its tab, unless it has unsaved changes; that text stays, with the "deleted" notice.
+- **Open Folder** has the shortcut Ctrl+Shift+O.
 
 **Tasks**
 - **4.1 Sidebar:** **Files** and **Outline** tabs, resizable width, **View > Sidebar**.
