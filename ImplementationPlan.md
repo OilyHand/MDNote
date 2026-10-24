@@ -272,14 +272,14 @@ Hands-on checklist [docs/testing/phase-2.md](docs/testing/phase-2.md): all 23 it
 
 ---
 
-### Phase 3: Editing (O1, O8, O15, O16, O17, O18) → v0.3 — 🔄 built, hands-on test pending
+### Phase 3: Editing (O1, O8, O15, O16, O17, O18) → v0.3 — ✅ complete (2026-10-24)
 
 **Goal:** Comfortable Word-style editing, and the remaining O1 window features.
 
 **Status (2026-10-16):** all tasks below are implemented on `phase3/editing`.
 
 Verified:
-- **Automated:** 73 frontend tests (+40) and 24 Rust tests (+4).
+- **Automated:** 80 frontend tests (+47) and 24 Rust tests (+4).
 - **Running the app:** the debug build was driven through WebView2's DevTools port (see the lessons below). Script-checked:
   - formatting keys, menus with keyboard navigation, the F1 list, Find and Replace
   - list continuation and renumbering, brackets, wrapping a selection
@@ -290,7 +290,9 @@ Verified:
   - a forced quit and the restore
   - Move to New Window with its Undo history, and two-window session restore
 
-Hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md), first run (2026-10-23): 30 items pass, item 6 partly, item 31 fails. Fixed since, and checked on the debug build by script; the hands-on recheck is listed at the end of the checklist:
+Hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md): the first run (2026-10-23) passed 30 items, item 6 partly, and item 31 failed. After the fixes below, the rechecks R1–R9 (2026-10-23 and 10-24) all pass. Alt+= now works with the Microsoft Korean IME, which confirms that the IME keeps the key-down of Alt+= for itself.
+
+Fixes after the first run:
 - **Shortcuts right after typing Korean did nothing** (Alt+=, Ctrl+Enter, Alt+Shift+↑/↓). CodeMirror ignores every key while the IME composes, and the last syllable stays composed until the next key. Now a Ctrl or Alt shortcut finishes the syllable first, then runs, as in Word (the O8 rule changed accordingly).
 - **Moving a numbered item with Alt+Shift+↑/↓ raised the numbers each time.** The list took its start from whichever item ended up first. After a move it now starts at its lowest number.
 - **Closing two windows one after the other restored only the last one.** **File > Exit** now closes every window and restores them all. Windows closed within 15 seconds of the last one also come back. **File > Close Window** (Alt+F4) closes one window.
