@@ -13,6 +13,7 @@
 //   node scripts/devtools.mjs ime "ㅎ,하,한"   compose step by step, then commit the last step
 //   node scripts/devtools.mjs click <x> <y> [right]
 //   node scripts/devtools.mjs move <x> <y>     move the mouse (hover)
+//   node scripts/devtools.mjs drag <x1> <y1> <x2> <y2>  press, move and release the left button
 //
 // Coordinates are CSS pixels; screenshots are device pixels (×1.25 at 125%).
 // In the page, `window.V` is the editor view once `wait` has run.
@@ -92,6 +93,7 @@ const KEYS = {
   Tab: { key: "Tab", code: "Tab", vk: 9 },
   Escape: { key: "Escape", code: "Escape", vk: 27 },
   Backspace: { key: "Backspace", code: "Backspace", vk: 8 },
+  Delete: { key: "Delete", code: "Delete", vk: 46 },
   ArrowUp: { key: "ArrowUp", code: "ArrowUp", vk: 38 },
   ArrowDown: { key: "ArrowDown", code: "ArrowDown", vk: 40 },
   ArrowLeft: { key: "ArrowLeft", code: "ArrowLeft", vk: 37 },
@@ -111,6 +113,8 @@ function keyInfo(name) {
   if (/^[A-Z]$/.test(name))
     return { key: name.toLowerCase(), code: `Key${name}`, vk: name.charCodeAt(0) };
   if (/^[0-9]$/.test(name)) return { key: name, code: `Digit${name}`, vk: name.charCodeAt(0) };
+  if (/^F([1-9]|1[0-2])$/.test(name))
+    return { key: name, code: name, vk: 111 + Number(name.slice(1)) };
   throw new Error(`unknown key ${name}`);
 }
 
@@ -233,6 +237,39 @@ try {
         await send("Input.dispatchMouseEvent", { type, x, y, button, clickCount: 1 });
       }
       console.log(`clicked ${button} ${x},${y}`);
+      break;
+    }
+    case "drag": {
+      // Press at the first point, move in steps to the second, release there.
+      const [x1, y1, x2, y2] = args.map(Number);
+      await send("Input.dispatchMouseEvent", {
+        type: "mousePressed",
+        x: x1,
+        y: y1,
+        button: "left",
+        buttons: 1,
+        clickCount: 1,
+      });
+      for (let i = 1; i <= 10; i++) {
+        const x = x1 + ((x2 - x1) * i) / 10;
+        const y = y1 + ((y2 - y1) * i) / 10;
+        await send("Input.dispatchMouseEvent", {
+          type: "mouseMoved",
+          x,
+          y,
+          button: "left",
+          buttons: 1,
+        });
+      }
+      await send("Input.dispatchMouseEvent", {
+        type: "mouseReleased",
+        x: x2,
+        y: y2,
+        button: "left",
+        buttons: 0,
+        clickCount: 1,
+      });
+      console.log(`dragged ${x1},${y1} to ${x2},${y2}`);
       break;
     }
     case "move":
