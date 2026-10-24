@@ -11,6 +11,7 @@ import { useDocs } from "../state/documents";
 import { useRecent } from "../state/recent";
 import { useView } from "../state/view";
 import { usePrefs } from "../state/prefs";
+import { isModalOpen } from "../state/modal";
 import { ask } from "../state/dialog";
 import { notifyError } from "../state/notices";
 import { requestOpen } from "./commands";
@@ -239,6 +240,7 @@ export function MenuBar() {
   // Alt+F, Alt+E, … open a menu; clicking elsewhere closes it.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || isModalOpen()) return;
       if (event.altKey && !event.ctrlKey && !event.shiftKey) {
         const index = menus.findIndex((m) => `Key${m.accessKey.toUpperCase()}` === event.code);
         if (index >= 0) {

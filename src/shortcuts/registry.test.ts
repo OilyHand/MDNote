@@ -46,6 +46,7 @@ describe("shortcut registry", () => {
     ]);
     expect(editor(press("`", "Backquote", { ctrl: true }))).toEqual(["format.code"]);
     expect(editor(press("=", "Equal", { alt: true }))).toEqual(["insert.equation"]);
+    expect(editor(press("M", "KeyM", { ctrl: true, shift: true }))).toEqual(["insert.equation"]);
     expect(editor(press("1", "Digit1", { ctrl: true, alt: true }))).toEqual(["paragraph.heading1"]);
     expect(editor(press("ArrowUp", "ArrowUp", { alt: true, shift: true }))).toEqual([
       "edit.moveLineUp",

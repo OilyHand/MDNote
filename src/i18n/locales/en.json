@@ -122,7 +122,10 @@
       "insert": "Insert",
       "table": "Tables",
       "view": "View and help"
-    }
+    },
+    "testTitle": "Try a shortcut",
+    "testHint": "Click here and press keys. This shows exactly what MDNote receives, which helps when an input method (IME) or another program takes a shortcut.",
+    "testNone": "not a shortcut"
   },
   "linkDialog": {
     "title": "Insert Link",

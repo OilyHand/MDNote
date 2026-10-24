@@ -6,6 +6,7 @@ import { api } from "../ipc";
 import { EDITOR_COMMANDS, commandFor, commandsFor } from "../shortcuts/registry";
 import { finishComposition, isModifiedKey } from "../editor/composition";
 import { getActiveView } from "../editor/view";
+import type { EditorView } from "@codemirror/view";
 import { runEditorCommand } from "./editorCommands";
 import { activate, displayName, findByPath, useDocs } from "../state/documents";
 import { useDialog } from "../state/dialog";
@@ -91,24 +92,40 @@ function isReloadKey(event: KeyboardEvent) {
   return event.key === "F5" || (event.ctrlKey && event.code === "KeyR");
 }
 
+/** The editor, if the key event happened in it. */
+function editorOf(event: KeyboardEvent): EditorView | null {
+  const view = getActiveView();
+  return view && view.contentDOM.contains(event.target as Node) ? view : null;
+}
+
+/** Runs the shortcut for a key event in the editor, after `ready`. False if it is not one. */
+function runEditorShortcut(event: KeyboardEvent, view: EditorView, ready: () => Promise<void>) {
+  const windowCommand = commandFor(event);
+  const editorCommands = commandsFor(event, EDITOR_COMMANDS);
+  if (!windowCommand && editorCommands.length === 0) return false;
+  void ready().then(() => {
+    if (windowCommand) runCommand(windowCommand);
+    else editorCommands.some((id) => runEditorCommand(id, view));
+  });
+  return true;
+}
+
 function useWindowShortcuts() {
   useEffect(() => {
+    /** Physical keys whose key-down reached the page, to notice key-downs an IME kept. */
+    const down = new Set<string>();
+
     const onKeyDown = (event: KeyboardEvent) => {
+      down.add(event.code);
       const view = getActiveView();
       if (event.isComposing || view?.composing) {
         // Typing goes to the IME; a Ctrl or Alt shortcut finishes the syllable, then runs.
-        if (!view || !isModifiedKey(event) || !view.contentDOM.contains(event.target as Node)) {
-          return;
+        const editor = editorOf(event);
+        if (!editor || !isModifiedKey(event)) return;
+        if (runEditorShortcut(event, editor, () => finishComposition(editor))) {
+          event.preventDefault();
+          event.stopPropagation();
         }
-        const windowCommand = commandFor(event);
-        const editorCommands = commandsFor(event, EDITOR_COMMANDS);
-        if (!windowCommand && editorCommands.length === 0) return;
-        event.preventDefault();
-        event.stopPropagation();
-        void finishComposition(view).then(() => {
-          if (windowCommand) runCommand(windowCommand);
-          else editorCommands.some((id) => runEditorCommand(id, view));
-        });
         return;
       }
       if (import.meta.env.PROD && isReloadKey(event)) {
@@ -122,8 +139,26 @@ function useWindowShortcuts() {
       event.stopPropagation();
       runCommand(command);
     };
+    // The Microsoft Korean IME keeps some Alt shortcuts for itself (Alt+= among
+    // them): the page gets their key-up but never their key-down. An Alt
+    // shortcut whose key comes up without having gone down runs on the key-up.
+    const onKeyUp = (event: KeyboardEvent) => {
+      if (down.delete(event.code) || !event.altKey || event.isComposing) return;
+      if (useDialog.getState().queue.length > 0 || isModalOpen()) return;
+      const editor = editorOf(event);
+      if (editor && runEditorShortcut(event, editor, () => Promise.resolve())) {
+        event.preventDefault();
+      }
+    };
+    const forget = () => down.clear();
     window.addEventListener("keydown", onKeyDown, { capture: true });
-    return () => window.removeEventListener("keydown", onKeyDown, { capture: true });
+    window.addEventListener("keyup", onKeyUp, { capture: true });
+    window.addEventListener("blur", forget);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown, { capture: true });
+      window.removeEventListener("keyup", onKeyUp, { capture: true });
+      window.removeEventListener("blur", forget);
+    };
   }, []);
 }
 

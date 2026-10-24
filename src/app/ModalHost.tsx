@@ -2,7 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { COMMANDS, keyLabel, type CommandGroup, type CommandId } from "../shortcuts/registry";
+import {
+  COMMANDS,
+  comboOf,
+  commandsFor,
+  keyLabel,
+  type CommandGroup,
+  type CommandId,
+} from "../shortcuts/registry";
 import { closeModal, useModal, type LinkFields, type LinkResult, type Modal } from "../state/modal";
 
 export function ModalHost() {
@@ -85,12 +92,57 @@ function ShortcutList() {
           );
         })}
       </div>
+      <KeyTester />
       <div className="dialog-buttons">
         <button type="button" className="primary" ref={closeRef} onClick={closeModal}>
           {t("shortcuts.close")}
         </button>
       </div>
     </div>
+  );
+}
+
+const ALL_COMMANDS = Object.keys(COMMANDS) as CommandId[];
+const MODIFIERS = new Set(["Control", "Alt", "Shift", "Meta"]);
+
+/**
+ * Shows exactly which keys MDNote receives, and which command they run. An
+ * input method (IME) or another program can keep a shortcut for itself;
+ * this shows when that happens (for example, a key-up without its key-down).
+ */
+function KeyTester() {
+  const { t } = useTranslation();
+  const [events, setEvents] = useState<string[]>([]);
+
+  const record = (event: React.KeyboardEvent) => {
+    const native = event.nativeEvent;
+    if (event.key !== "Tab" && event.key !== "Escape") event.preventDefault();
+    if (MODIFIERS.has(event.key)) return;
+    const ids = commandsFor(native, ALL_COMMANDS);
+    const command = ids.length
+      ? ids.map((id) => t(`commands.${id}`)).join(" / ")
+      : t("shortcuts.testNone");
+    const details = [
+      event.type === "keydown" ? "▼" : "▲",
+      keyLabel(comboOf(native)),
+      `key="${event.key}" code=${event.code || "?"} keyCode=${native.keyCode}`,
+      native.isComposing ? "IME" : "",
+      `→ ${command}`,
+    ];
+    setEvents((list) => [details.filter(Boolean).join("  "), ...list].slice(0, 6));
+  };
+
+  return (
+    <section className="key-tester">
+      <h3>{t("shortcuts.testTitle")}</h3>
+      <div className="key-tester-box" tabIndex={0} onKeyDown={record} onKeyUp={record}>
+        {events.length === 0 ? (
+          <span className="muted">{t("shortcuts.testHint")}</span>
+        ) : (
+          events.map((line, i) => <div key={i}>{line}</div>)
+        )}
+      </div>
+    </section>
   );
 }
 

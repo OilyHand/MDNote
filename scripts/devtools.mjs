@@ -7,6 +7,7 @@
 //   node scripts/devtools.mjs eval "<js>"      evaluate in the page (promises are awaited)
 //   node scripts/devtools.mjs shot <file.png>  screenshot of the page
 //   node scripts/devtools.mjs key <combo> [n]  e.g. Ctrl+B, Alt+Shift+ArrowUp, Enter, F1
+//   node scripts/devtools.mjs keyup <combo>    only the key-up (as when an IME keeps the key-down)
 //   node scripts/devtools.mjs type "<text>"    insert text as if typed
 //   node scripts/devtools.mjs compose "<text>" start or update an IME composition
 //   node scripts/devtools.mjs ime "ㅎ,하,한"   compose step by step, then commit the last step
@@ -175,6 +176,25 @@ try {
       const { data } = await send("Page.captureScreenshot", { format: "png" });
       writeFileSync(args[0], Buffer.from(data, "base64"));
       console.log(`saved ${args[0]}`);
+      break;
+    }
+    case "keyup": {
+      // Only the key-up, as when an IME keeps the key-down for itself.
+      const combo = args[0].split("+");
+      const name = combo.pop();
+      const info = keyInfo(name);
+      const modifiers =
+        (combo.includes("Alt") ? 1 : 0) |
+        (combo.includes("Ctrl") ? 2 : 0) |
+        (combo.includes("Shift") ? 8 : 0);
+      await send("Input.dispatchKeyEvent", {
+        type: "keyUp",
+        modifiers,
+        key: info.key,
+        code: info.code,
+        windowsVirtualKeyCode: info.vk,
+      });
+      console.log(`released ${args[0]}`);
       break;
     }
     case "key":

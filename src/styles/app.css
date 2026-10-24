@@ -851,6 +851,34 @@ input:focus-visible,
   padding-left: 12px;
 }
 
+.key-tester {
+  margin-bottom: 16px;
+}
+
+.key-tester h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.key-tester-box {
+  min-height: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--font-editor);
+  font-size: 12px;
+  white-space: pre;
+  overflow-x: auto;
+  outline: none;
+}
+
+.key-tester-box:focus {
+  border-color: var(--accent);
+}
+
 kbd {
   font-family: var(--font-ui);
   font-size: 12px;

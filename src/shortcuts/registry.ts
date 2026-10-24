@@ -88,7 +88,8 @@ export const COMMANDS = {
   "insert.link": insert(["Ctrl+K"]),
   "insert.image": insert(),
   "insert.table": insert(),
-  "insert.equation": insert(["Alt+="]),
+  // Alt+= as in Word; Ctrl+Shift+M (as in Typora) for when an IME keeps Alt+=.
+  "insert.equation": insert(["Alt+=", "Ctrl+Shift+M"]),
   "insert.pageBreak": insert(["Ctrl+Enter"]),
 
   "table.insertRowAbove": table(),
