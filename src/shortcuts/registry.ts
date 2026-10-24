@@ -35,6 +35,8 @@ const view = (keys: string[] = []): CommandSpec => ({ keys, group: "view" });
 export const COMMANDS = {
   "file.new": file(["Ctrl+N"]),
   "file.open": file(["Ctrl+O"]),
+  "file.openFolder": file(["Ctrl+Shift+O"]),
+  "file.closeFolder": file(),
   "file.save": file(["Ctrl+S"]),
   "file.saveAs": file(["F12", "Ctrl+Shift+S"]),
   "file.print": file(["Ctrl+P"]),
@@ -111,6 +113,7 @@ export const COMMANDS = {
   "view.zoomOut": { ...view(), display: "keys.ctrlWheelDown" },
   "view.actualSize": view(),
   "view.fitWidth": view(),
+  "view.sidebar": view(),
   "view.statusBar": view(),
   "view.shortcuts": view(["F1"]),
 } satisfies Record<string, CommandSpec>;

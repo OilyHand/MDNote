@@ -125,6 +125,38 @@ impl DocumentWatcher {
         }
     }
 
+    /// A watched document (or a folder holding some) was renamed or moved by
+    /// MDNote: it stays watched under its new path, and the old path is not
+    /// reported as deleted.
+    pub fn moved(&self, from: &Path, to: &Path) {
+        let from_key = paths::key(from);
+        let inside = format!("{from_key}\\");
+        let affected: Vec<(PathBuf, Option<FileStamp>)> = {
+            let watches = self.watches.lock().unwrap();
+            watches
+                .documents
+                .iter()
+                .filter(|(key, _)| **key == from_key || key.starts_with(&inside))
+                .map(|(_, w)| (w.path.clone(), w.known))
+                .collect()
+        };
+        for (old, known) in affected {
+            let rest = old
+                .strip_prefix(from)
+                .map(Path::to_path_buf)
+                .unwrap_or_default();
+            let new = if rest.as_os_str().is_empty() {
+                to.to_path_buf()
+            } else {
+                to.join(rest)
+            };
+            self.unwatch(&old);
+            if let Err(error) = self.watch(&new, known) {
+                log::warn!("could not watch {}: {error}", new.display());
+            }
+        }
+    }
+
     /// Records a version MDNote itself wrote or read, so it isn't reported as a change.
     pub fn set_known(&self, path: &Path, stamp: FileStamp) {
         let key = paths::key(path);

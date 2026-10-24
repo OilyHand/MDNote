@@ -22,7 +22,7 @@ import { editorStates, onDocEdited, useDocs } from "../state/documents";
 import { getActiveView } from "../editor/view";
 import { useView, zoomBy, clampZoom } from "../state/view";
 import { resolveImages, useImageUrl } from "./images";
-import { useShownZoom } from "../state/status";
+import { setReadingLine, useShownZoom } from "../state/status";
 import { followLink } from "./links";
 import {
   buildAnchors,
@@ -179,6 +179,7 @@ export function PreviewPane() {
   }, [fitZoom]);
 
   useScrollSync(scrollerRef, pageRef, mode === "split", preview, effectiveZoom);
+  useReadingLineFromPreview(scrollerRef, docId, mode === "preview");
 
   const onClick = (event: React.MouseEvent) => {
     const link = (event.target as HTMLElement).closest("a[href]");
@@ -206,6 +207,41 @@ export function PreviewPane() {
       <ZoomBadge zoom={effectiveZoom} />
     </>
   );
+}
+
+/**
+ * In Preview Only view the editor does not scroll, so the Outline's highlight
+ * (O13) follows the preview: the last block whose top has scrolled past.
+ */
+function useReadingLineFromPreview(
+  scrollerRef: React.RefObject<HTMLDivElement | null>,
+  docId: string | null,
+  enabled: boolean,
+) {
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    if (!scroller || !docId || !enabled) return;
+    let frame = 0;
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const top = scroller.getBoundingClientRect().top + 4;
+        let line = 1;
+        for (const block of scroller.querySelectorAll<HTMLElement>(".md-block")) {
+          const first = block.firstElementChild;
+          if (!first) continue;
+          if (first.getBoundingClientRect().top > top) break;
+          line = Number(block.dataset.line);
+        }
+        setReadingLine(docId, line);
+      });
+    };
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      scroller.removeEventListener("scroll", onScroll);
+    };
+  }, [scrollerRef, docId, enabled]);
 }
 
 /** Shows the zoom level for a moment after it changes (not when the preview opens). */

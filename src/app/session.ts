@@ -3,6 +3,7 @@
 
 import { api, type TabSession } from "../ipc";
 import { editorStates, scrollTops, useDocs } from "../state/documents";
+import { useFolder } from "../state/folder";
 
 const DELAY_MS = 400;
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -28,7 +29,7 @@ function currentTabs(): { tabs: TabSession[]; active: number } {
 export async function flushSession() {
   clearTimeout(timer);
   const { tabs, active } = currentTabs();
-  await api.reportTabs(tabs, active).catch(() => {});
+  await api.reportTabs(tabs, active, useFolder.getState().root).catch(() => {});
 }
 
 function schedule() {
@@ -39,6 +40,9 @@ function schedule() {
 export function startSessionReporting() {
   useDocs.subscribe((now, before) => {
     if (now.docs !== before.docs || now.activeId !== before.activeId) schedule();
+  });
+  useFolder.subscribe((now, before) => {
+    if (now.root !== before.root) schedule();
   });
 }
 

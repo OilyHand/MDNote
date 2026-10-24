@@ -1,7 +1,7 @@
 // Messages between the window and the render worker.
 
 import type { Element } from "hast";
-import type { TextCounts } from "./pipeline";
+import type { OutlineHeading, TextCounts } from "./pipeline";
 
 export type WorkerRequest =
   | {
@@ -44,5 +44,6 @@ export type WorkerReply =
       requestId: number;
       total: TextCounts;
       selection: TextCounts | null;
+      headings: OutlineHeading[];
     }
   | { type: "failed"; docId: string; requestId: number; message: string };

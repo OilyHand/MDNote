@@ -62,6 +62,8 @@ export interface Preferences {
   /** Line source tables up when the cursor leaves them (O16). */
   editorFormatTables: boolean;
   imageFolder: ImageFolder;
+  /** Show non-Markdown files in the folder sidebar (O14). */
+  sidebarShowAllFiles: boolean;
   /** View > Status Bar, and the items it shows (O18). */
   statusBar: boolean;
   statusBarItems: StatusBarItems;
@@ -95,6 +97,8 @@ export interface Startup {
   tabs: TabSession[];
   active: number;
   paths: string[];
+  /** The folder the sidebar showed last time (O14). */
+  folder: string | null;
   /** Tabs moved to this window from another one (see app/tabWindows.ts). */
   transfers: unknown[];
 }
@@ -119,8 +123,13 @@ export const api = {
   /** `remember: false` reads without adding the file to Recent Files. */
   readDocument: (path: string, remember = true) =>
     invoke<LoadedFile>("read_document", { path, remember }),
-  writeDocument: (path: string, text: string, encoding: TextEncoding, lineEnding: LineEnding) =>
-    invoke<FileStamp>("write_document", { path, text, encoding, lineEnding }),
+  writeDocument: (
+    path: string,
+    text: string,
+    encoding: TextEncoding,
+    lineEnding: LineEnding,
+    remember = true,
+  ) => invoke<FileStamp>("write_document", { path, text, encoding, lineEnding, remember }),
   defaultLineEnding: () => invoke<LineEnding>("default_line_ending"),
   systemCodePage: () => invoke<number>("system_code_page"),
 
@@ -136,7 +145,8 @@ export const api = {
   unwatchDocument: (path: string) => invoke<void>("unwatch_document", { path }),
 
   takeStartup: () => invoke<Startup>("take_startup"),
-  reportTabs: (tabs: TabSession[], active: number) => invoke<void>("report_tabs", { tabs, active }),
+  reportTabs: (tabs: TabSession[], active: number, folder: string | null) =>
+    invoke<void>("report_tabs", { tabs, active, folder }),
   openPaths: (paths: string[]) => invoke<void>("open_paths", { paths }),
   /** File > Exit: closes every window; the next start restores them all. */
   quitApp: () => invoke<void>("quit_app"),
@@ -151,6 +161,20 @@ export const api = {
   resolveLink: (document: string | null, target: string) =>
     invoke<string | null>("resolve_link", { document, target }),
   listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
+
+  // The folder sidebar (O14)
+  listFolder: (path: string, showAll: boolean) =>
+    invoke<FolderEntry[]>("list_folder", { path, showAll }),
+  watchFolder: (path: string) => invoke<void>("watch_folder", { path }),
+  unwatchFolder: () => invoke<void>("unwatch_folder"),
+  /** Returns the new path; a note's .mdn and .assets go with it. */
+  renameEntry: (path: string, name: string) => invoke<string>("rename_entry", { path, name }),
+  moveEntry: (path: string, folder: string) => invoke<string>("move_entry", { path, folder }),
+  createNote: (folder: string, name: string) => invoke<string>("create_note", { folder, name }),
+  createFolder: (folder: string, name: string) => invoke<string>("create_folder", { folder, name }),
+  /** To the Recycle Bin, a note with its .mdn and .assets. */
+  deleteEntry: (path: string) => invoke<void>("delete_entry", { path }),
+  existingFiles: (paths: string[]) => invoke<boolean[]>("existing_files", { paths }),
 
   /** Saves a pasted image for the note; returns its path relative to the note. */
   saveImage: (document: string | null, docId: string, name: string, bytes: Uint8Array) =>
@@ -172,6 +196,14 @@ export const api = {
   removeRecovery: (docId: string) => invoke<void>("remove_recovery", { docId }),
   takeRecovery: () => invoke<RecoveryCopy[]>("take_recovery"),
 };
+
+export interface FolderEntry {
+  name: string;
+  path: string;
+  isDir: boolean;
+  isNote: boolean;
+  modifiedMs: number;
+}
 
 export interface FontFamily {
   /** en-us name, as stored in settings. */

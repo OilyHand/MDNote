@@ -30,7 +30,9 @@
       "moveToNewWindow": "Move to New Window",
       "preferences": "Preferences…",
       "closeWindow": "Close Window",
-      "exit": "Exit"
+      "exit": "Exit",
+      "openFolder": "Open Folder…",
+      "closeFolder": "Close Folder"
     },
     "tab": {
       "next": "Next Tab",
@@ -104,7 +106,8 @@
       "actualSize": "Actual Size (100%)",
       "fitWidth": "Fit Page Width",
       "statusBar": "Status Bar",
-      "shortcuts": "Keyboard Shortcuts"
+      "shortcuts": "Keyboard Shortcuts",
+      "sidebar": "Sidebar"
     }
   },
   "keys": {
@@ -185,6 +188,37 @@
     "copyPath": "Copy Path",
     "reveal": "Show in File Explorer"
   },
+  "sidebar": {
+    "files": "Files",
+    "outline": "Outline",
+    "noFolder": "No folder is open.",
+    "noDocument": "No document is open.",
+    "noHeadings": "This note has no headings."
+  },
+  "folder": {
+    "open": "Open",
+    "newNote": "New Note",
+    "newFolder": "New Folder",
+    "newNoteName": "New note",
+    "newFolderName": "New folder",
+    "rename": "Rename",
+    "delete": "Delete",
+    "reveal": "Show in File Explorer",
+    "copyPath": "Copy Path",
+    "refresh": "Refresh",
+    "sortByName": "Sort by Name",
+    "sortByModified": "Sort by Date Modified",
+    "more": "More actions",
+    "cancel": "Cancel",
+    "deleteTitle": "Delete “{{name}}”?",
+    "deleteNoteMessage": "The note moves to the Recycle Bin, together with its formatting (.mdn) and image (.assets) files. You can restore it from there.",
+    "deleteFolderMessage": "The folder and everything in it move to the Recycle Bin. You can restore them from there.",
+    "relinkTitle": "Update links?",
+    "relinkMessage_one": "After this, one link in “{{name}}” to an image or file would no longer be found. Update it?",
+    "relinkMessage_other": "After this, {{count}} links in “{{name}}” to images or files would no longer be found. Update them?",
+    "relinkUpdate": "Update Links",
+    "relinkKeep": "Don't Update"
+  },
   "empty": {
     "title": "No document open",
     "subtitle": "Create a new document or open an existing Markdown file.",
@@ -251,7 +285,10 @@
     "readOnly": "{{detail}} is read-only. Use Save As to save a copy.",
     "unmappable": "The text contains characters that {{detail}} can't store.",
     "io": "Could not access the file: {{detail}}",
-    "internal": "Something went wrong: {{detail}}"
+    "internal": "Something went wrong: {{detail}}",
+    "invalidName": "“{{detail}}” can't be used as a name.",
+    "exists": "“{{detail}}” already exists.",
+    "intoItself": "A folder can't be moved into itself."
   },
   "lineEnding": {
     "crlf": "CRLF (Windows)",
@@ -295,6 +332,7 @@
     "imageFolder": "Save pasted and dropped images in",
     "imageFolderAssets": "An “assets” folder next to the note",
     "imageFolderNoteName": "A folder named after the note (name.assets)",
-    "imageFolderNoteFolder": "The note's own folder"
+    "imageFolderNoteFolder": "The note's own folder",
+    "showAllFiles": "Show other files (such as images) in the folder sidebar"
   }
 }

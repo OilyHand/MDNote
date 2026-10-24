@@ -20,6 +20,20 @@ export const useCursor = create<CursorInfo>(() => ({
   selected: false,
 }));
 
+/**
+ * The source line being read or edited, for the Outline's highlight (O13): the
+ * cursor's line after the cursor moves, the top visible line after scrolling.
+ */
+export const useReadingLine = create<{ docId: string | null; line: number }>(() => ({
+  docId: null,
+  line: 1,
+}));
+
+export function setReadingLine(docId: string, line: number) {
+  const current = useReadingLine.getState();
+  if (current.docId !== docId || current.line !== line) useReadingLine.setState({ docId, line });
+}
+
 export function updateCursor(docId: string, state: EditorState) {
   const head = state.selection.main.head;
   const line = state.doc.lineAt(head);
@@ -35,6 +49,7 @@ export function updateCursor(docId: string, state: EditorState) {
     return;
   }
   useCursor.setState({ docId, line: line.number, column, selected });
+  setReadingLine(docId, line.number);
 }
 
 /** The zoom the preview shows right now (Fit Page Width included); null while it is hidden. */

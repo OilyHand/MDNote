@@ -28,7 +28,9 @@ pub async fn read_document(
     Ok(loaded)
 }
 
-/// Saves a document with the given encoding and line ending.
+/// Saves a document with the given encoding and line ending. Unless `remember`
+/// is false (links updated in a note that is not open), it also becomes a
+/// recent file.
 #[tauri::command]
 pub async fn write_document(
     app: AppHandle,
@@ -37,13 +39,16 @@ pub async fn write_document(
     text: String,
     encoding: TextEncoding,
     line_ending: LineEnding,
+    remember: Option<bool>,
 ) -> AppResult<FileStamp> {
     let path = Path::new(&path);
     let stamp = files::write_document(path, &text, encoding, line_ending)?;
     // Our own write must not be reported as a change by another program.
     state.watcher.set_known(path, stamp);
-    if let Err(error) = crate::recent::add(&app, &state, path) {
-        log::warn!("could not update recent files: {error}");
+    if remember.unwrap_or(true) {
+        if let Err(error) = crate::recent::add(&app, &state, path) {
+            log::warn!("could not update recent files: {error}");
+        }
     }
     Ok(stamp)
 }

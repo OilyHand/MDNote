@@ -28,6 +28,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   editorRenumberLists: true,
   editorFormatTables: true,
   imageFolder: "assets",
+  sidebarShowAllFiles: false,
   statusBar: true,
   statusBarItems: {
     words: true,

@@ -12,6 +12,7 @@ import { useRecent } from "../state/recent";
 import { useView } from "../state/view";
 import { usePrefs } from "../state/prefs";
 import { isModalOpen } from "../state/modal";
+import { useFolder } from "../state/folder";
 import { ask } from "../state/dialog";
 import { notifyError } from "../state/notices";
 import { requestOpen } from "./commands";
@@ -56,6 +57,8 @@ function useMenus(): Menu[] {
   const viewMode = useView((s) => s.mode);
   const fitWidth = useView((s) => s.fitWidth);
   const statusBar = usePrefs((s) => s.preferences.statusBar);
+  const sidebar = useView((s) => s.sidebar);
+  const folderOpen = useFolder((s) => s.root !== null);
 
   return useMemo(() => {
     const needsDoc = (id: CommandId) => item(id, { disabled: !hasDoc });
@@ -83,6 +86,7 @@ function useMenus(): Menu[] {
         items: [
           item("file.new"),
           item("file.open"),
+          item("file.openFolder"),
           { label: t("menu.openRecent"), submenu: recentItems },
           SEPARATOR,
           needsDoc("file.save"),
@@ -92,6 +96,7 @@ function useMenus(): Menu[] {
           SEPARATOR,
           needsDoc("file.closeTab"),
           item("file.moveToNewWindow", { disabled: tabCount < 2 }),
+          item("file.closeFolder", { disabled: !folderOpen }),
           SEPARATOR,
           item("file.preferences"),
           SEPARATOR,
@@ -174,6 +179,7 @@ function useMenus(): Menu[] {
           item("view.actualSize"),
           item("view.fitWidth", { checked: fitWidth }),
           SEPARATOR,
+          item("view.sidebar", { checked: sidebar }),
           item("view.statusBar", { checked: statusBar }),
         ],
       },
@@ -193,7 +199,7 @@ function useMenus(): Menu[] {
         ],
       },
     ];
-  }, [t, item, hasDoc, tabCount, recent, viewMode, fitWidth, statusBar]);
+  }, [t, item, hasDoc, tabCount, recent, viewMode, fitWidth, statusBar, sidebar, folderOpen]);
 }
 
 /** The table commands, for the Format menu and the editor's right-click menu. */

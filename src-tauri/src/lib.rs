@@ -3,6 +3,7 @@
 mod documents;
 mod error;
 mod files;
+mod folders;
 mod fonts;
 mod images;
 mod locale;
@@ -33,6 +34,7 @@ pub struct AppState {
     pub registry: Mutex<Registry>,
     pub watcher: DocumentWatcher,
     pub fonts: fonts::FontCache,
+    pub folders: folders::FolderWatchers,
     /// Recovery copies found at start-up (MDNote closed unexpectedly last time).
     pub recovered: Mutex<Vec<recovery::RecoveryCopy>>,
 }
@@ -101,6 +103,7 @@ pub fn run() {
                 registry: Mutex::new(registry),
                 watcher: DocumentWatcher::new(handle.clone())?,
                 fonts: fonts::FontCache::default(),
+                folders: folders::FolderWatchers::default(),
                 recovered: Mutex::new(Vec::new()),
             });
 
@@ -140,6 +143,15 @@ pub fn run() {
             preview::resolve_images,
             preview::resolve_link,
             fonts::list_fonts,
+            folders::list_folder,
+            folders::watch_folder,
+            folders::unwatch_folder,
+            folders::rename_entry,
+            folders::move_entry,
+            folders::create_note,
+            folders::create_folder,
+            folders::delete_entry,
+            folders::existing_files,
             images::save_image,
             images::import_images,
             images::adopt_unsaved_images,

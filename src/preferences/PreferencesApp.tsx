@@ -19,7 +19,8 @@ type Flag =
   | "editorCloseBrackets"
   | "editorWrapSelection"
   | "editorRenumberLists"
-  | "editorFormatTables";
+  | "editorFormatTables"
+  | "sidebarShowAllFiles";
 
 /** A checkbox for an on/off preference. */
 function Check({ name, label }: { name: Flag; label: string }) {
@@ -191,6 +192,7 @@ export function PreferencesApp() {
             <option value="noteFolder">{t("prefs.imageFolderNoteFolder")}</option>
           </select>
         </label>
+        <Check name="sidebarShowAllFiles" label={t("prefs.showAllFiles")} />
       </section>
 
       <section>

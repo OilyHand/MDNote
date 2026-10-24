@@ -80,6 +80,8 @@ pub struct Preferences {
     pub editor_format_tables: bool,
     /// Where pasted and dropped images are saved (O15).
     pub image_folder: ImageFolder,
+    /// Show non-Markdown files in the folder sidebar (O14).
+    pub sidebar_show_all_files: bool,
     /// View > Status Bar (O18).
     pub status_bar: bool,
     pub status_bar_items: StatusBarItems,
@@ -107,6 +109,7 @@ impl Default for Preferences {
             editor_renumber_lists: true,
             editor_format_tables: true,
             image_folder: ImageFolder::Assets,
+            sidebar_show_all_files: false,
             status_bar: true,
             status_bar_items: StatusBarItems::default(),
             unknown: Map::new(),

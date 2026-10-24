@@ -16,6 +16,12 @@ pub enum AppError {
     ReadOnly(String),
     #[error("the text contains characters that {0} cannot store")]
     Unmappable(String),
+    #[error("not a valid file name: {0}")]
+    InvalidName(String),
+    #[error("already exists: {0}")]
+    Exists(String),
+    #[error("a folder cannot be moved into itself: {0}")]
+    IntoItself(String),
     #[error("{0}")]
     Io(String),
     #[error("{0}")]
@@ -29,6 +35,9 @@ impl AppError {
             AppError::AccessDenied(_) => "accessDenied",
             AppError::ReadOnly(_) => "readOnly",
             AppError::Unmappable(_) => "unmappable",
+            AppError::InvalidName(_) => "invalidName",
+            AppError::Exists(_) => "exists",
+            AppError::IntoItself(_) => "intoItself",
             AppError::Io(_) => "io",
             AppError::Internal(_) => "internal",
         }
@@ -53,6 +62,9 @@ impl Serialize for AppError {
             | AppError::AccessDenied(s)
             | AppError::ReadOnly(s)
             | AppError::Unmappable(s)
+            | AppError::InvalidName(s)
+            | AppError::Exists(s)
+            | AppError::IntoItself(s)
             | AppError::Io(s)
             | AppError::Internal(s) => s,
         };

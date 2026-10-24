@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
@@ -34,6 +34,11 @@ import { Notices } from "./Notices";
 import { DialogHost } from "./DialogHost";
 import { StatusBar } from "./StatusBar";
 import { ModalHost } from "./ModalHost";
+import { Sidebar } from "../sidebar/Sidebar";
+import { followMoves } from "../sidebar/fileOps";
+import { openFolder, refreshFolders, reloadFolders } from "../state/folder";
+import { useSummaryUpdates } from "../state/summary";
+import { usePrefs } from "../state/prefs";
 
 const OPENABLE = /\.(md|markdown|txt)$/i;
 let started = false;
@@ -46,6 +51,14 @@ async function startWindow() {
 
   await win.listen<{ paths: string[] }>("open-documents", ({ payload }) => {
     void openDocuments(payload.paths);
+  });
+  // The folder sidebar (O14): changes made outside MDNote, and renames and
+  // moves made in any window, which open tabs follow.
+  await win.listen<{ dirs: string[] }>("folder-changed", ({ payload }) => {
+    refreshFolders(payload.dirs);
+  });
+  await listen<{ moves: [string, string][] }>("paths-moved", ({ payload }) => {
+    followMoves(payload.moves);
   });
   await win.listen<{ path: string }>("focus-document", ({ payload }) => {
     const doc = findByPath(payload.path);
@@ -80,6 +93,7 @@ async function startWindow() {
 
   const startup = await api.takeStartup();
   await restoreSession(startup.tabs, startup.active, startup.paths);
+  if (startup.folder) await openFolder(startup.folder);
   startRecovery();
   await startTabWindows(startup.transfers as TabTransfer[]);
   await offerRecovery();
@@ -162,6 +176,19 @@ function useWindowShortcuts() {
   }, []);
 }
 
+/** Preferences can show other files in the folder tree: the tree is listed again. */
+function useFolderPreferences() {
+  const showAll = usePrefs((s) => s.preferences.sidebarShowAllFiles);
+  const first = useRef(true);
+  useEffect(() => {
+    if (first.current) {
+      first.current = false;
+      return;
+    }
+    reloadFolders();
+  }, [showAll]);
+}
+
 /** The label on page-break lines in the preview comes from CSS, in the UI language. */
 function usePageBreakLabel() {
   const { t, i18n } = useTranslation();
@@ -192,17 +219,24 @@ export function App() {
     startWindow().catch(notifyError);
   }, []);
   useWindowShortcuts();
+  useSummaryUpdates();
+  useFolderPreferences();
   useWindowTitle();
   usePageBreakLabel();
 
   return (
     <div className="app">
       <MenuBar />
-      <TabBar />
-      <main className="workspace">
-        {active ? <DiskBanner doc={active} /> : null}
-        {hasActive ? <Workspace /> : <EmptyState />}
-      </main>
+      <div className="window-body">
+        <Sidebar />
+        <div className="window-main">
+          <TabBar />
+          <main className="workspace">
+            {active ? <DiskBanner doc={active} /> : null}
+            {hasActive ? <Workspace /> : <EmptyState />}
+          </main>
+        </div>
+      </div>
       <StatusBar />
       <Notices />
       <ModalHost />

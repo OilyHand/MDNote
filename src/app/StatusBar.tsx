@@ -7,51 +7,13 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { api, type LineEnding, type StatusBarItems, type TextEncoding } from "../ipc";
 import { encodingLabel } from "../documents/naming";
-import { getActiveView } from "../editor/view";
-import { requestCounts, type Counts } from "../render/client";
-import { markUnsaved, onDocEdited, updateDoc, useDocs, type Doc } from "../state/documents";
+import { markUnsaved, updateDoc, useDocs, type Doc } from "../state/documents";
 import { usePrefs } from "../state/prefs";
+import { useActiveSummary } from "../state/summary";
+import type { TextCounts } from "../render/pipeline";
 import { useCursor, useShownZoom } from "../state/status";
 import { setZoom } from "../state/view";
 import { ContextMenu, type MenuItem } from "./Menu";
-
-/** Counts follow typing after a short pause, so typing never waits for them. */
-const COUNT_DELAY_MS = 300;
-
-/** Counts for the active document, refreshed after edits and selection changes. */
-function useCounts(docId: string | null): Counts | null {
-  const [counts, setCounts] = useState<{ docId: string; counts: Counts } | null>(null);
-  // The selection's position matters only while text is selected.
-  const selection = useCursor((s) => (s.selected ? `${s.line}:${s.column}` : ""));
-
-  useEffect(() => {
-    if (!docId) return;
-    let timer: ReturnType<typeof setTimeout> | undefined;
-    let current = true;
-    const schedule = () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        const state = getActiveView()?.state;
-        if (!state) return;
-        const selection = state.selection.ranges.some((r) => !r.empty)
-          ? state.selection.ranges.map((r) => state.sliceDoc(r.from, r.to)).join("\n\n")
-          : null;
-        void requestCounts(docId, state.doc.toString(), selection).then((result) => {
-          if (current && result) setCounts({ docId, counts: result });
-        });
-      }, COUNT_DELAY_MS);
-    };
-    schedule();
-    const off = onDocEdited((id) => id === docId && schedule());
-    return () => {
-      current = false;
-      clearTimeout(timer);
-      off();
-    };
-  }, [docId, selection]);
-
-  return counts?.docId === docId ? counts.counts : null;
-}
 
 const ENCODINGS: TextEncoding["kind"][] = ["utf8", "utf8Bom", "utf16Le", "utf16Be", "ansi"];
 
@@ -97,7 +59,7 @@ export function StatusBar() {
   const update = usePrefs((s) => s.update);
   const doc = useDocs((s) => s.docs.find((d) => d.id === s.activeId));
   const cursor = useCursor();
-  const counts = useCounts(doc?.id ?? null);
+  const counts = useActiveSummary();
   const zoom = useShownZoom((s) => s.zoom);
   const codepage = useSystemCodePage();
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
@@ -105,7 +67,7 @@ export function StatusBar() {
 
   if (!visible) return null;
   const number = (n: number) => n.toLocaleString(i18n.language);
-  const count = (key: string, name: keyof Counts["total"]) => {
+  const count = (key: string, name: keyof TextCounts) => {
     if (!counts) return "";
     const total = counts.total[name];
     const selection = counts.selection?.[name];
