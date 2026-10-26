@@ -1,30 +1,22 @@
-/* The rendered document on its page (O2). Typography is set with variables so
-   Phase 5 can turn them into per-section styles (O4) without touching this file.
-   Defaults follow O4: Segoe UI 12 pt with Malgun Gothic for Korean, 1.5 line
-   spacing, code in Consolas. */
+/* The rendered document on its page (O2). Fonts, sizes, line spacing, spacing,
+   alignment and chosen colours come from the document's styles (O4), written
+   by styles/css.ts; the page's size and margins from its page setup (O9).
+   This file holds the rest: layout, borders, backgrounds, and the colours
+   that follow the light or dark page. */
 
 .page {
-  --md-font: "Segoe UI", "Malgun Gothic", sans-serif;
-  --md-size: 12pt;
-  --md-line: 1.5;
-  --md-code-font: Consolas, "Malgun Gothic", monospace;
-  --md-code-size: 10.5pt;
-  --md-heading-font: var(--md-font);
-
   box-sizing: content-box;
-  width: 159.2mm; /* A4 (210 mm) minus Normal margins (2 × 25.4 mm) */
-  min-height: 246.2mm;
   margin: 24px auto;
-  padding: 25.4mm;
   background: var(--paper);
   color: var(--paper-text);
   box-shadow: var(--paper-shadow);
-  font-family: var(--md-font);
-  font-size: var(--md-size);
-  line-height: var(--md-line);
   overflow-wrap: break-word;
   user-select: text;
   text-wrap: pretty;
+  /* A column of blocks whose spacing adds up, as in Word: space after one
+     paragraph plus space before the next (CSS margins would overlap). */
+  display: flex;
+  flex-direction: column;
 }
 
 /* Blocks are wrappers for scroll sync only; they must not affect layout. */
@@ -42,41 +34,16 @@
 .page h4,
 .page h5,
 .page h6 {
-  font-family: var(--md-heading-font);
-  font-weight: 600;
-  line-height: 1.25;
-  margin: 1.2em 0 0.5em;
   break-after: avoid;
 }
 
-.page h1 {
-  font-size: 20pt;
-}
-.page h2 {
-  font-size: 16pt;
-}
-.page h3 {
-  font-size: 13pt;
-}
-.page h4 {
-  font-size: 12pt;
-}
-.page h5 {
-  font-size: 11pt;
-}
 .page h6 {
-  font-size: 11pt;
   color: var(--paper-muted);
 }
 
-.page p,
-.page ul,
-.page ol,
-.page blockquote,
 .page table,
-.page pre,
-.page .katex-display {
-  margin: 0 0 0.8em;
+.page hr {
+  margin: 0 0 10pt;
 }
 
 .page ul,
@@ -84,8 +51,19 @@
   padding-left: 1.6em;
 }
 
+/* Inside lists and quotes, spacing is the block's own, not each paragraph's. */
+.page li ul,
+.page li ol {
+  margin: 0;
+}
+
 .page li > p {
-  margin-bottom: 0.4em;
+  margin: 0 0 0.4em;
+}
+
+.page blockquote > :last-child,
+.page li > :last-child {
+  margin-bottom: 0;
 }
 
 .page li.task-list-item {
@@ -99,7 +77,6 @@
 
 .page a {
   color: var(--paper-link);
-  text-decoration: underline;
   cursor: pointer;
 }
 
@@ -111,14 +88,12 @@
 
 .page hr {
   height: 1px;
-  margin: 1.5em 0;
+  margin-top: 6pt;
   border: none;
   background: var(--paper-rule);
 }
 
-.page code {
-  font-family: var(--md-code-font);
-  font-size: var(--md-code-size);
+.page :not(pre) > code {
   padding: 0.1em 0.3em;
   border-radius: 3px;
   background: var(--paper-code);
@@ -129,12 +104,10 @@
   border-radius: 4px;
   background: var(--paper-code);
   overflow-x: auto;
-  line-height: 1.45;
 }
 
 .page pre code {
-  padding: 0;
-  background: none;
+  font: inherit;
 }
 
 /* Shiki writes both themes' colours as variables (no re-render on theme change). */
@@ -160,7 +133,6 @@
 
 .page th {
   background: var(--paper-code);
-  font-weight: 600;
 }
 
 .page img {
@@ -172,8 +144,6 @@
 }
 
 .page .footnotes {
-  margin-top: 2em;
-  font-size: 0.9em;
   color: var(--paper-muted);
 }
 
@@ -230,12 +200,8 @@
 
 /* ---- Print: only the page, always in light colours ----------------------- */
 
+/* The paper size and margins come from the document's page setup (styles/look.ts). */
 @media print {
-  @page {
-    size: A4;
-    margin: 25.4mm;
-  }
-
   :root,
   :root[data-theme="dark"] {
     --paper: #ffffff;
@@ -251,6 +217,8 @@
   body,
   #root,
   .app,
+  .window-body,
+  .window-main,
   .workspace,
   .panes,
   .pane-preview,
@@ -263,6 +231,10 @@
 
   .menubar,
   .tabbar,
+  .sidebar,
+  .sidebar-edge,
+  .statusbar,
+  .ruler,
   .banner,
   .notices,
   .pane-source,
@@ -272,12 +244,13 @@
     display: none !important;
   }
 
+  /* The page's size and margins are inline styles on screen; the printer's page has them. */
   .page {
     zoom: 1 !important;
-    width: auto;
-    min-height: 0;
+    width: auto !important;
+    min-height: 0 !important;
     margin: 0;
-    padding: 0;
+    padding: 0 !important;
     box-shadow: none;
   }
 

@@ -24,6 +24,9 @@ import { useView, zoomBy, clampZoom } from "../state/view";
 import { resolveImages, useImageUrl } from "./images";
 import { setReadingLine, useShownZoom } from "../state/status";
 import { followLink } from "./links";
+import { useDocumentLook } from "../styles/look";
+import { pageSize, PX_PER_MM } from "../page/page";
+import type { CodeTheme, PageSetup } from "../mdmeta/schema";
 import {
   buildAnchors,
   editorTopLine,
@@ -33,8 +36,6 @@ import {
   type Anchor,
 } from "./scrollSync";
 
-/** Page width in CSS px: A4 (210 mm) until Page Setup arrives in Phase 5. */
-const PAGE_WIDTH_PX = (210 * 96) / 25.4;
 const RENDER_DELAY_MS = 30;
 const ZOOM_STEP = 0.1;
 
@@ -80,13 +81,13 @@ function useActivePreview(docId: string | null) {
   return useSyncExternalStore(subscribe, () => getPreview(docId));
 }
 
-/** Asks the worker to render the active document, now and after each edit. */
-function useRenderRequests(docId: string | null) {
+/** Asks the worker to render the active document, now, after each edit, and in another code theme. */
+function useRenderRequests(docId: string | null, codeTheme: CodeTheme) {
   useEffect(() => {
     if (!docId) return;
     const render = () => {
       const state = editorStates.get(docId);
-      if (state) requestRender(docId, state.doc.toString());
+      if (state) requestRender(docId, state.doc.toString(), codeTheme);
     };
     render();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -99,7 +100,19 @@ function useRenderRequests(docId: string | null) {
       clearTimeout(timer);
       off();
     };
-  }, [docId]);
+  }, [docId, codeTheme]);
+}
+
+/** The page's size and margins (O9): the text column is the page width minus the margins. */
+function pageStyle(page: PageSetup, zoom: number): React.CSSProperties {
+  const { width, height } = pageSize(page);
+  const m = page.margins;
+  return {
+    zoom,
+    width: `${width - m.left - m.right}mm`,
+    minHeight: `${height - m.top - m.bottom}mm`,
+    padding: `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm`,
+  };
 }
 
 /**
@@ -136,8 +149,10 @@ export function PreviewPane() {
   const pageRef = useRef<HTMLElement>(null);
   const [fitZoom, setFitZoom] = useState(1);
   const effectiveZoom = fitWidth ? fitZoom : zoom;
+  const look = useDocumentLook(docId);
+  const pageWidthPx = pageSize(look.page).width * PX_PER_MM;
 
-  useRenderRequests(docId);
+  useRenderRequests(docId, look.codeTheme);
 
   // The status bar shows the zoom in use, including Fit Page Width's.
   useEffect(() => {
@@ -156,12 +171,12 @@ export function PreviewPane() {
     if (!scroller) return;
     // Rounded down, so the fitted page never overflows by a fraction of a pixel.
     const update = () =>
-      setFitZoom(clampZoom(Math.floor(((scroller.clientWidth - 48) / PAGE_WIDTH_PX) * 100) / 100));
+      setFitZoom(clampZoom(Math.floor(((scroller.clientWidth - 48) / pageWidthPx) * 100) / 100));
     update();
     const observer = new ResizeObserver(update);
     observer.observe(scroller);
     return () => observer.disconnect();
-  }, []);
+  }, [pageWidthPx]);
 
   // Ctrl+mouse wheel zooms the page (O8). Not a React handler: it must be able
   // to cancel the browser's own zoom.
@@ -191,8 +206,9 @@ export function PreviewPane() {
   return (
     <>
       <div className="preview-scroll" ref={scrollerRef} onClick={onClick}>
+        <style>{look.css}</style>
         <DocumentPath.Provider value={docPath}>
-          <article className="page" ref={pageRef} style={{ zoom: effectiveZoom }}>
+          <article className="page" ref={pageRef} style={pageStyle(look.page, effectiveZoom)}>
             {preview?.blocks.map((block) => (
               <Block key={block.key} line={block.line} node={block.node} />
             ))}

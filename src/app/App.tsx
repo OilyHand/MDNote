@@ -39,6 +39,7 @@ import { followMoves } from "../sidebar/fileOps";
 import { openFolder, refreshFolders, reloadFolders } from "../state/folder";
 import { useSummaryUpdates } from "../state/summary";
 import { usePrefs } from "../state/prefs";
+import { ensureFonts } from "../state/fonts";
 
 const OPENABLE = /\.(md|markdown|txt)$/i;
 let started = false;
@@ -48,6 +49,8 @@ async function startWindow() {
   if (started) return;
   started = true;
   const win = getCurrentWebviewWindow();
+  // Styles need the installed fonts: their line heights, and which are missing (O3, O4).
+  void ensureFonts();
 
   await win.listen<{ paths: string[] }>("open-documents", ({ payload }) => {
     void openDocuments(payload.paths);

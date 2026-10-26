@@ -23,6 +23,7 @@ import { visit, SKIP } from "unist-util-visit";
 import type { Element, ElementContent, Root } from "hast";
 import type { Definition, Root as MdastRoot } from "mdast";
 import { highlightCode } from "./highlight";
+import type { CodeTheme } from "../mdmeta/schema";
 import { hasFootnotes, splitChunks, type Chunk } from "./chunks";
 
 export interface RenderedBlock {
@@ -173,8 +174,12 @@ const rehypeMath: Plugin<[], Root> = () => (tree) => {
   });
 };
 
-/** Replaces fenced code with Shiki's highlighted version (math blocks are KaTeX's). */
-const rehypeHighlight: Plugin<[], Root> = () => async (tree) => {
+/**
+ * Replaces fenced code with Shiki's highlighted version (math blocks are
+ * KaTeX's), in the code block style's colour theme (O4).
+ */
+const rehypeHighlight: Plugin<[], Root> = () => async (tree, file) => {
+  const theme = (file.data as { codeTheme?: CodeTheme }).codeTheme;
   const jobs: Promise<void>[] = [];
   visit(tree, "element", (node, index, parent) => {
     if (node.tagName !== "pre" || !parent || index === undefined) return;
@@ -184,7 +189,7 @@ const rehypeHighlight: Plugin<[], Root> = () => async (tree) => {
     const language = languageOf(code);
     if (!code || !language || language === "math") return;
     jobs.push(
-      highlightCode(toString(code), language).then((highlighted) => {
+      highlightCode(toString(code), language, theme).then((highlighted) => {
         if (!highlighted) return;
         highlighted.position = node.position;
         parent.children[index] = highlighted;
@@ -381,10 +386,11 @@ async function renderChunk(
   text: string,
   definitions: string,
   chunkKey: string,
+  codeTheme?: CodeTheme,
 ): Promise<ChunkOutput> {
   // Definitions go after the chunk so they cannot shift its line numbers.
   const input = definitions ? `${text}\n\n${definitions}\n` : text;
-  const tree = (await processor.run(processor.parse(input))) as Root;
+  const tree = (await processor.run(processor.parse(input), { data: { codeTheme } })) as Root;
   const chunkLines = text.split("\n").length;
   const blocks: ChunkBlock[] = [];
   const images = new Set<string>();
@@ -410,9 +416,11 @@ async function renderChunk(
 
 /**
  * Renders documents and remembers the result for each chunk. Keep one Renderer
- * per document so its cache matches that document.
+ * per document (and code colour theme) so its cache matches that document.
  */
 export class Renderer {
+  constructor(readonly codeTheme?: CodeTheme) {}
+
   private cache = new Map<string, Promise<ChunkOutput>>();
   private definitionCache = new Map<string, string[]>();
   private definitionsKey = "";
@@ -456,7 +464,9 @@ export class Renderer {
         const defs = chunk.open ? "" : definitions;
         const key = `${hashText(chunk.text)}${defs ? `~${definitionsKey}` : ""}`;
         const output =
-          previous.get(key) ?? this.cache.get(key) ?? renderChunk(chunk.text, defs, key);
+          previous.get(key) ??
+          this.cache.get(key) ??
+          renderChunk(chunk.text, defs, key, this.codeTheme);
         this.cache.set(key, output);
         return output;
       }),

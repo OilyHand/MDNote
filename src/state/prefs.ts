@@ -10,6 +10,8 @@ import { notifyError } from "./notices";
 interface PrefsStore {
   preferences: Preferences;
   systemLanguage: Language;
+  systemUnits: PreferencesView["systemUnits"];
+  systemPaper: PreferencesView["systemPaper"];
   update(changes: Partial<Preferences>): Promise<void>;
 }
 
@@ -39,11 +41,18 @@ export const DEFAULT_PREFERENCES: Preferences = {
     lineEnding: true,
     zoom: true,
   },
+  defaultStyles: {},
+  defaultStyleSet: "",
+  defaultPage: null,
+  units: "system",
+  recentFonts: [],
 };
 
 export const usePrefs = create<PrefsStore>((_set, get) => ({
   preferences: DEFAULT_PREFERENCES,
   systemLanguage: "en",
+  systemUnits: "cm",
+  systemPaper: "A4",
   async update(changes) {
     try {
       await api.setPreferences({ ...get().preferences, ...changes });
@@ -64,8 +73,17 @@ function applyTheme(theme: Preferences["theme"]) {
   else document.documentElement.dataset.theme = theme;
 }
 
+function store(view: PreferencesView) {
+  usePrefs.setState({
+    preferences: view.preferences,
+    systemLanguage: view.systemLanguage,
+    systemUnits: view.systemUnits,
+    systemPaper: view.systemPaper,
+  });
+}
+
 function apply(view: PreferencesView) {
-  usePrefs.setState({ preferences: view.preferences, systemLanguage: view.systemLanguage });
+  store(view);
   applyTheme(view.preferences.theme);
   void setLanguage(resolveLanguage(view.preferences.language, view.systemLanguage));
 }
@@ -73,7 +91,7 @@ function apply(view: PreferencesView) {
 /** Loads preferences and follows changes made in any window. */
 export async function initPrefs(): Promise<void> {
   const view = await api.getPreferences();
-  usePrefs.setState({ preferences: view.preferences, systemLanguage: view.systemLanguage });
+  store(view);
   applyTheme(view.preferences.theme);
   await listen<PreferencesView>("preferences-changed", ({ payload }) => apply(payload));
 }

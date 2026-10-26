@@ -238,6 +238,16 @@ function splitStyleSet(value: unknown): Split<StyleSetCopy> {
   };
 }
 
+/** The usable part of a "styles" object stored elsewhere (Preferences, style set files). */
+export function parseStyleMap(value: unknown): StyleMap {
+  return splitStyles(value).known ?? {};
+}
+
+/** A "page" object stored elsewhere (Preferences), if it is usable. */
+export function parsePage(value: unknown): PageSetup | undefined {
+  return value === null || value === undefined ? undefined : splitPage(value).known;
+}
+
 export type ParseResult =
   { ok: true; meta: DocMeta; newer: boolean } | { ok: false; problem: string };
 

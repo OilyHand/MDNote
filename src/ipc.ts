@@ -40,6 +40,8 @@ export interface StatusBarItems {
   zoom: boolean;
 }
 
+export type UnitsPref = "system" | "cm" | "in";
+
 /** Where pasted and dropped images are saved (O15). */
 export type ImageFolder = "assets" | "noteName" | "noteFolder";
 
@@ -67,6 +69,15 @@ export interface Preferences {
   /** View > Status Bar, and the items it shows (O18). */
   statusBar: boolean;
   statusBarItems: StatusBarItems;
+  /** Styles documents start with (O4): differences from the built-in styles, unchecked. */
+  defaultStyles: Record<string, unknown>;
+  /** The style set the default styles came from, for display (O19). */
+  defaultStyleSet: string;
+  /** Page setup for documents without their own (O9), unchecked; null: by Windows region. */
+  defaultPage: unknown;
+  units: UnitsPref;
+  /** The font picker's recently used fonts, newest first (O3). */
+  recentFonts: string[];
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }
@@ -74,6 +85,9 @@ export interface Preferences {
 export interface PreferencesView {
   preferences: Preferences;
   systemLanguage: Language;
+  /** What Windows' region settings stand for (O9). */
+  systemUnits: "cm" | "in";
+  systemPaper: "A4" | "Letter";
 }
 
 /** A copy of a document with unsaved changes, kept for crash recovery (O1). */
@@ -218,4 +232,6 @@ export interface FontFamily {
   nameKo: string | null;
   monospaced: boolean;
   hasHangul: boolean;
+  /** Single line height as a multiple of the font size (Word's "Single"). */
+  lineHeight: number;
 }

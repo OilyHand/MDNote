@@ -23,6 +23,28 @@ pub struct FontFamily {
     pub name_ko: Option<String>,
     pub monospaced: bool,
     pub has_hangul: bool,
+    /// The font's single line height as a multiple of its size (ascent,
+    /// descent and line gap): Word's "Single" line spacing (O4).
+    pub line_height: f32,
+}
+
+/// When a font reports no usable metrics.
+const DEFAULT_LINE_HEIGHT: f32 = 1.2;
+
+fn line_height(font: &IDWriteFont) -> f32 {
+    let mut metrics = DWRITE_FONT_METRICS::default();
+    // SAFETY: GetMetrics fills the struct it is given.
+    unsafe { font.GetMetrics(&mut metrics) };
+    if metrics.designUnitsPerEm == 0 {
+        return DEFAULT_LINE_HEIGHT;
+    }
+    let height = metrics.ascent as f32 + metrics.descent as f32 + metrics.lineGap as f32;
+    let ratio = height / metrics.designUnitsPerEm as f32;
+    if (0.5..=4.0).contains(&ratio) {
+        (ratio * 1000.0).round() / 1000.0
+    } else {
+        DEFAULT_LINE_HEIGHT
+    }
 }
 
 #[derive(Default)]
@@ -85,7 +107,7 @@ fn read_fonts(check_for_updates: bool) -> AppResult<Vec<FontFamily>> {
                 DWRITE_FONT_STRETCH_NORMAL,
                 DWRITE_FONT_STYLE_NORMAL,
             );
-            let (monospaced, has_hangul) = match font {
+            let (monospaced, has_hangul, line_height) = match font {
                 Ok(font) => (
                     windows::core::Interface::cast::<IDWriteFont1>(&font)
                         .map(|f| f.IsMonospacedFont().as_bool())
@@ -93,14 +115,16 @@ fn read_fonts(check_for_updates: bool) -> AppResult<Vec<FontFamily>> {
                     font.HasCharacter(HANGUL_GA)
                         .map(|b| b.as_bool())
                         .unwrap_or(false),
+                    line_height(&font),
                 ),
-                Err(_) => (false, false),
+                Err(_) => (false, false, DEFAULT_LINE_HEIGHT),
             };
             families.push(FontFamily {
                 name_ko: pick("ko-kr").filter(|ko| *ko != name),
                 name,
                 monospaced,
                 has_hangul,
+                line_height,
             });
         }
         families.sort_by_key(|f| f.name.to_lowercase());
@@ -137,5 +161,15 @@ mod tests {
             .expect("Malgun Gothic");
         assert_eq!(malgun.name_ko.as_deref(), Some("맑은 고딕"));
         assert!(malgun.has_hangul);
+        // Segoe UI's single line is about 1.33 times its size, as Word shows it.
+        let segoe = fonts
+            .iter()
+            .find(|f| f.name == "Segoe UI")
+            .expect("Segoe UI");
+        assert!(
+            (1.25..1.4).contains(&segoe.line_height),
+            "{}",
+            segoe.line_height
+        );
     }
 }
