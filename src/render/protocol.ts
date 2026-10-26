@@ -1,6 +1,7 @@
 // Messages between the window and the render worker.
 
 import type { Element } from "hast";
+import type { TextCounts } from "./pipeline";
 
 export type WorkerRequest =
   | {
@@ -10,6 +11,14 @@ export type WorkerRequest =
       text: string;
       /** Forget what was sent before (the window dropped its copy). */
       reset?: boolean;
+    }
+  | {
+      /** Counts for the status bar (O18): the whole text and, if any, the selected text. */
+      type: "count";
+      docId: string;
+      requestId: number;
+      text: string;
+      selection: string | null;
     }
   | { type: "forget"; docId: string };
 
@@ -27,5 +36,13 @@ export type WorkerReply =
       requestId: number;
       blocks: WireBlock[];
       images: string[];
+      counts: TextCounts;
+    }
+  | {
+      type: "counted";
+      docId: string;
+      requestId: number;
+      total: TextCounts;
+      selection: TextCounts | null;
     }
   | { type: "failed"; docId: string; requestId: number; message: string };

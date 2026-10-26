@@ -5,11 +5,12 @@
 // because it changes on every keystroke.
 
 import { create } from "zustand";
-import type { EditorState, Text } from "@codemirror/state";
+import { Text, type EditorState, type TransactionSpec } from "@codemirror/state";
 import i18n from "../i18n";
 import type { FileStamp, LineEnding, TextEncoding } from "../ipc";
 import { baseName, samePath } from "../documents/naming";
 import { forgetPreview } from "../render/client";
+import { viewShowing } from "../editor/view";
 
 export type DiskStatus = "ok" | "changed" | "removed";
 
@@ -58,9 +59,18 @@ export function updateDoc(id: string, changes: Partial<Doc>) {
   }));
 }
 
-export function addDoc(doc: Doc, state: EditorState, index?: number) {
+/**
+ * Adds a tab. `savedText` is the text on disk, for a document arriving from
+ * another window (null: unsaved until saved); by default it is the document's
+ * own text unless it is marked as changed.
+ */
+export function addDoc(doc: Doc, state: EditorState, index?: number, savedText?: string | null) {
   editorStates.set(doc.id, state);
-  savedTexts.set(doc.id, doc.dirty ? null : state.doc);
+  if (savedText !== undefined) {
+    savedTexts.set(doc.id, savedText === null ? null : Text.of(savedText.split("\n")));
+  } else {
+    savedTexts.set(doc.id, doc.dirty ? null : state.doc);
+  }
   useDocs.setState(({ docs }) => {
     const next = [...docs];
     next.splice(index ?? next.length, 0, doc);
@@ -120,6 +130,11 @@ export function markUnsaved(id: string) {
   updateDoc(id, { dirty: true });
 }
 
+/** The text last read or saved, for moving the document to another window. */
+export function savedTextOf(id: string): string | null {
+  return savedTexts.get(id)?.toString() ?? null;
+}
+
 /** Whether `text` is exactly the text last read or saved. */
 export function isSavedText(id: string, text: string): boolean {
   const saved = savedTexts.get(id);
@@ -131,6 +146,26 @@ export function refreshDirty(id: string, text: Text) {
   const saved = savedTexts.get(id);
   const dirty = !saved || !saved.eq(text);
   if (getDoc(id)?.dirty !== dirty) updateDoc(id, { dirty });
+}
+
+/**
+ * Changes a document's text from outside the editor (reload, images, recovery).
+ * If the editor shows it, the change goes through the view like typing would;
+ * otherwise it goes to the stored state, which the editor picks up when shown.
+ */
+export function changeDoc(id: string, change: (state: EditorState) => TransactionSpec) {
+  const view = viewShowing(id);
+  const state = view?.state ?? editorStates.get(id);
+  if (!state) return;
+  const spec = change(state);
+  if (view) {
+    view.dispatch(spec);
+    return;
+  }
+  const next = state.update(spec).state;
+  editorStates.set(id, next);
+  refreshDirty(id, next.doc);
+  notifyDocEdited(id);
 }
 
 /** The name shown on the tab and in the title bar. */

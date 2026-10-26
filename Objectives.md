@@ -84,6 +84,7 @@ Features planned for after the essential implementation are listed under [After 
 - This is on by default and can be turned off in Preferences (O12).
 - Files that were moved or deleted since the last session are skipped, with a notice.
 - If MDNote is started by opening a file from Explorer, the previous session is restored first, and the new file opens as the active tab.
+- **File > Exit** closes every window, and the next start restores them all. Windows closed together (for example with the taskbar's **Close all windows**) come back together too. A window closed earlier, while others stayed open, does not.
 
 **Text encoding**
 - Reads UTF-8 (with or without BOM) and UTF-16 (with BOM). Other files fall back to the system ANSI code page, with a notice.
@@ -348,7 +349,7 @@ The `.md` file may be edited in other programs, so saved table and image sizes m
 **Behavior rules**
 - **Formatting shortcuts toggle.** For example, Ctrl+B on bold text removes the bold markers.
 - **No selection:** if the cursor is inside a word, the shortcut applies to that whole word, as in Word. Otherwise it inserts the markers and places the cursor between them.
-- Shortcuts do not fire while an IME is composing text (for example, during Korean input).
+- Keys typed into an IME never trigger shortcuts. A Ctrl or Alt shortcut pressed while a syllable is still being composed (for example, right after typing Korean) first finishes the syllable, then runs, as in Word.
 - Every shortcut is shown next to its menu item and in tooltips. F1 opens the full list of shortcuts.
 
 The **Source** column shows whether a shortcut is Word's default ("Word") or MDNote's own choice where Word has none ("MDNote").
@@ -386,7 +387,8 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 | Strikethrough | Ctrl+Shift+X | `~~text~~` | MDNote |
 | Inline code | Ctrl+` | `` `text` `` | MDNote |
 | Insert link | Ctrl+K | `[text](url)` | Word |
-| Insert equation | Alt+= | `$…$` inside a line, `$$` block on an empty line | Word |
+| Remove link | Ctrl+Shift+F9 | keeps the link's text, removes `[ ](url)` | Word (Unlink) |
+| Insert equation | Alt+=, Ctrl+Shift+M | `$…$` inside a line, `$$` block on an empty line | Word / MDNote (Typora's math key, for when an IME keeps Alt+=) |
 
 **Paragraphs and blocks**
 
@@ -801,6 +803,13 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-15 | Language setting | Preferences offer "Same as Windows" (the default, following the O11 rule), English, and 한국어. |
 | 2026-10-15 | Preview zoom | Fit Page Width is the default, because an A4 page is wider than half a typical window. |
 | 2026-10-15 | Links in the preview | Web links open in the browser and `.md` links open in MDNote. Links to other local files only show the file in File Explorer, so a note can never start a program. |
+| 2026-10-16 | Ending a list | Enter on an empty top-level list item ends the list with a blank line, so the next text is a separate paragraph, as in Word. |
+| 2026-10-16 | Pasting | When the clipboard holds both text and a picture, the text is pasted. Only a clipboard with just an image saves an image file (O15). |
+| 2026-10-16 | Restore after a crash | The question offers Restore and Discard; Esc means Restore, so no key press throws work away. |
+| 2026-10-23 | Shortcuts during IME composition | A Ctrl or Alt shortcut pressed mid-syllable finishes the syllable, then runs (as in Word), instead of being ignored. Found in Phase 3 testing: Alt+= right after typing Korean did nothing. Plain keys still go to the IME. |
+| 2026-10-23 | Exit and closing windows | File > Exit closes all windows and restores them all next time. Windows closed within 15 seconds of the last one also come back. File > Close Window (Alt+F4) closes one window. |
+| 2026-10-23 | Remove Link | Ctrl+Shift+F9, as Word's Unlink; also a button in the Ctrl+K dialog and an item in the right-click menu. |
+| 2026-10-24 | Alt shortcuts and the Korean IME | The Microsoft Korean IME can keep an Alt shortcut's key-down for itself (Alt+= failed even without typing Korean). An Alt shortcut whose key comes up without having gone down now runs on the key-up, and Insert Equation also has Ctrl+Shift+M (Ctrl shortcuts pass the IME). The F1 window has a key tester that shows what MDNote receives. |
 
 ## Open decisions
 

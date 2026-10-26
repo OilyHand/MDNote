@@ -4,6 +4,7 @@
 
 import type { Element } from "hast";
 import type { WorkerReply, WorkerRequest } from "./protocol";
+import type { TextCounts } from "./pipeline";
 
 export interface PreviewBlock {
   key: string;
@@ -36,7 +37,21 @@ function stateOf(docId: string): DocState {
   return state;
 }
 
+export interface Counts {
+  total: TextCounts;
+  selection: TextCounts | null;
+}
+
+const countRequests = new Map<number, (counts: Counts | null) => void>();
+
 function onReply(reply: WorkerReply) {
+  const counted = countRequests.get(reply.requestId);
+  if (counted) {
+    countRequests.delete(reply.requestId);
+    counted(reply.type === "counted" ? { total: reply.total, selection: reply.selection } : null);
+    return;
+  }
+  if (reply.type === "counted") return;
   const state = docs.get(reply.docId);
   if (!state) return; // the document was closed meanwhile
   if (reply.type === "failed") {
@@ -65,6 +80,8 @@ function onReply(reply: WorkerReply) {
 function onWorkerError(message: string) {
   worker?.terminate();
   worker = undefined;
+  countRequests.forEach((resolve) => resolve(null));
+  countRequests.clear();
   for (const state of docs.values()) {
     state.nodes = new Map();
     state.preview = { blocks: [], images: [], error: message };
@@ -92,6 +109,19 @@ export function requestRender(docId: string, text: string) {
   // A document seen for the first time (or forgotten) starts from scratch on both sides.
   const reset = state.nodes.size === 0 && !state.preview;
   send({ type: "render", docId, requestId: nextRequestId++, text, reset });
+}
+
+/** Word and character counts of the rendered text (O18); null if counting failed. */
+export function requestCounts(
+  docId: string,
+  text: string,
+  selection: string | null,
+): Promise<Counts | null> {
+  const requestId = nextRequestId++;
+  return new Promise((resolve) => {
+    countRequests.set(requestId, resolve);
+    send({ type: "count", docId, requestId, text, selection });
+  });
 }
 
 export function getPreview(docId: string | null): DocPreview | undefined {

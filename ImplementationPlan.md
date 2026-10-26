@@ -167,7 +167,7 @@ Verified by running the app:
 
 Hands-on checklist [docs/testing/phase-1.md](docs/testing/phase-1.md): all 30 items pass.
 
-The first CI runs on GitHub (pull request #2, and `main` after the merge) failed at `pnpm install --frozen-lockfile`: the committed `pnpm-lock.yaml` still had the scaffold's version ranges. The lockfile committed in Phase 2 matches `package.json`.
+The first CI runs on GitHub (pull request #2, and `main` after the merge) failed at `pnpm install --frozen-lockfile`: the committed `pnpm-lock.yaml` still had the scaffold's version ranges. The lockfile committed in Phase 2 matches `package.json`; CI passed on pull request #3 and on `main` after that merge.
 
 **Lessons for later phases**
 - **Windows Notepad is not a neutral test editor for `.md` files.** Its Markdown formatted view rewrites the file on save, adding blank lines between paragraphs and an empty line at the end, and doesn't show those lines. Use a plain-text editor such as Sublime Text or VS Code for outside-change tests.
@@ -272,9 +272,55 @@ Hands-on checklist [docs/testing/phase-2.md](docs/testing/phase-2.md): all 23 it
 
 ---
 
-### Phase 3: Editing (O1, O8, O15, O16, O17, O18) → v0.3
+### Phase 3: Editing (O1, O8, O15, O16, O17, O18) → v0.3 — ✅ complete (2026-10-24)
 
 **Goal:** Comfortable Word-style editing, and the remaining O1 window features.
+
+**Status (2026-10-16):** all tasks below are implemented on `phase3/editing`.
+
+Verified:
+- **Automated:** 80 frontend tests (+47) and 24 Rust tests (+4).
+- **Running the app:** the debug build was driven through WebView2's DevTools port (see the lessons below). Script-checked:
+  - formatting keys, menus with keyboard navigation, the F1 list, Find and Replace
+  - list continuation and renumbering, brackets, wrapping a selection
+  - Korean IME composition: inside brackets, and Ctrl+B mid-syllable
+  - table Tab navigation and alignment
+  - image paste (saved and never-saved notes), drop, and the move on first save
+  - status bar counts and a line-ending change written on save
+  - a forced quit and the restore
+  - Move to New Window with its Undo history, and two-window session restore
+
+Hands-on checklist [docs/testing/phase-3.md](docs/testing/phase-3.md): the first run (2026-10-23) passed 30 items, item 6 partly, and item 31 failed. After the fixes below, the rechecks R1–R9 (2026-10-23 and 10-24) all pass. Alt+= now works with the Microsoft Korean IME, which confirms that the IME keeps the key-down of Alt+= for itself.
+
+Fixes after the first run:
+- **Shortcuts right after typing Korean did nothing** (Alt+=, Ctrl+Enter, Alt+Shift+↑/↓). CodeMirror ignores every key while the IME composes, and the last syllable stays composed until the next key. Now a Ctrl or Alt shortcut finishes the syllable first, then runs, as in Word (the O8 rule changed accordingly).
+- **Moving a numbered item with Alt+Shift+↑/↓ raised the numbers each time.** The list took its start from whichever item ended up first. After a move it now starts at its lowest number.
+- **Closing two windows one after the other restored only the last one.** **File > Exit** now closes every window and restores them all. Windows closed within 15 seconds of the last one also come back. **File > Close Window** (Alt+F4) closes one window.
+- **Suggestion: remove a link.** Ctrl+Shift+F9 (Word's Unlink), a **Remove Link** button in the Ctrl+K dialog, and right-click items on a link.
+- **Alt+= still failed with the Microsoft Korean IME, even without typing Korean** (second run, 2026-10-24). The IME appears to keep the key-down of some Alt shortcuts for itself; the script cannot reproduce a real IME, since it sends keys past Windows' input methods. Three changes:
+  - An Alt shortcut whose key comes up without having gone down now runs on the key-up.
+  - Insert Equation also has Ctrl+Shift+M (as in Typora), because Ctrl shortcuts pass the IME.
+  - The F1 window has a **Try a shortcut** box that shows exactly which key events MDNote receives.
+- **Isolated test runs failed while an installed MDNote was running.** Both used the same WebView2 data folder with different options. Isolated runs (`MDNOTE_CONFIG_DIR`) now keep their own WebView2 data.
+
+**What changed from the plan**
+- **Tab is shared.** In a table it moves between cells, in a list item it changes the level, and elsewhere it inserts a tab. The shortcut table allows a key to be bound to several commands, tried in order; a test makes sure no other key is bound twice.
+- **Tables line up on Tab too**, not only when the cursor leaves them, so a table being filled in stays readable. With automatic alignment off, Tab only moves (and a new row is written compactly).
+- **Enter on an empty list item leaves a blank line.** Without it, the next line would still belong to the list item above (Markdown's lazy continuation), unlike Word.
+- **Pasting prefers text.** When the clipboard holds both text and a picture (Word copies a picture of the text along with it), the text is pasted.
+- **Image links** percent-encode spaces, parentheses, `#`, `?` and `%`, and keep Korean readable: `assets/회의%20사진.png`. A dropped image that is already in the image folder is linked, not copied.
+- **Counts** come from the render worker's chunk cache (a separate count request), so they also work in Source Only view. Generated text is left out: MathML copies of equations, footnote back links and the footnote label.
+- **Status bar items and visibility are Preferences**, so every window follows a change at once.
+- **Crash recovery:** Esc in the restore question means Restore, so a key press never throws work away.
+- **Text changed from outside the editor** (reload, images, recovery) goes to the document the view really shows. Right after a tab switch the view can briefly still hold the previous document.
+
+**Lessons for later phases**
+- **Drive the real app through WebView2's DevTools port.** [scripts/devtools.mjs](scripts/devtools.mjs) starts an isolated debug build with the port open and scripts it over the Chrome DevTools Protocol:
+  - key presses, IME composition, clicks and screenshots
+  - reading the editor state and calling Tauri commands
+  
+  This found two real bugs that unit tests missed: Enter's keymap order, and list ending. Only physical-mouse features (tab tear-off) still need a person.
+- **Simulated mouse clicks use CSS pixels.** Screenshots are in device pixels (125% on this PC), so take click positions from the page (`coordsAtPos`, `getBoundingClientRect`) rather than from a screenshot.
 
 **Tasks**
 - **3.1 Shortcut table** (section 2.2): generates keymaps, menu labels, tooltips, and the F1 list. While an IME is composing, shortcuts are ignored.

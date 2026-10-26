@@ -1,31 +1,23 @@
 // The menu bar, drawn in React so it follows the theme and the UI language.
+// Labels and shortcuts come from the shortcut table (O8).
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getVersion } from "@tauri-apps/api/app";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import i18n from "../i18n";
 import { api } from "../ipc";
-import { shortcutLabel, type CommandId } from "../shortcuts/registry";
+import { COMMANDS, shortcutLabel, type CommandId } from "../shortcuts/registry";
 import { useDocs } from "../state/documents";
 import { useRecent } from "../state/recent";
-import { fitPageWidth, setViewMode, setZoom, useView, zoomBy, type ViewMode } from "../state/view";
+import { useView } from "../state/view";
+import { usePrefs } from "../state/prefs";
+import { isModalOpen } from "../state/modal";
 import { ask } from "../state/dialog";
 import { notifyError } from "../state/notices";
 import { requestOpen } from "./commands";
 import { runCommand } from "./run";
 import { baseName } from "../documents/naming";
-
-interface MenuItem {
-  label?: string;
-  shortcut?: string;
-  action?: () => void;
-  disabled?: boolean;
-  /** Shows a check mark (view modes, Fit Page Width). */
-  checked?: boolean;
-  submenu?: MenuItem[];
-  separator?: boolean;
-}
+import { MenuList, SEPARATOR, type MenuExit, type MenuItem } from "./Menu";
 
 interface Menu {
   id: string;
@@ -35,27 +27,38 @@ interface Menu {
   items: MenuItem[];
 }
 
-const SEPARATOR: MenuItem = { separator: true };
+/** A menu item for a command: its label and shortcut come from the table. */
+export function useCommandItem() {
+  const { t } = useTranslation();
+  const hasDoc = useDocs((s) => s.activeId !== null);
+  return useCallback(
+    (id: CommandId, extra: Partial<MenuItem> = {}): MenuItem => {
+      const spec = COMMANDS[id] as { display?: string; group: string };
+      const needsDoc = spec.group !== "file" && spec.group !== "view";
+      return {
+        label: t(`commands.${id}`),
+        shortcut: spec.display ? t(spec.display) : shortcutLabel(id),
+        action: () => runCommand(id),
+        disabled: needsDoc && !hasDoc,
+        ...extra,
+      };
+    },
+    [t, hasDoc],
+  );
+}
 
 function useMenus(): Menu[] {
   const { t } = useTranslation();
+  const item = useCommandItem();
   const hasDoc = useDocs((s) => s.activeId !== null);
+  const tabCount = useDocs((s) => s.docs.length);
   const recent = useRecent((s) => s.files);
   const viewMode = useView((s) => s.mode);
   const fitWidth = useView((s) => s.fitWidth);
+  const statusBar = usePrefs((s) => s.preferences.statusBar);
 
   return useMemo(() => {
-    const mode = (value: ViewMode, label: string): MenuItem => ({
-      label,
-      checked: viewMode === value,
-      action: () => setViewMode(value),
-    });
-    const command = (id: CommandId, label: string, needsDoc = false): MenuItem => ({
-      label,
-      shortcut: shortcutLabel(id),
-      action: () => runCommand(id),
-      disabled: needsDoc && !hasDoc,
-    });
+    const needsDoc = (id: CommandId) => item(id, { disabled: !hasDoc });
     const recentItems: MenuItem[] =
       recent.length === 0
         ? [{ label: t("menu.noRecent"), disabled: true }]
@@ -78,24 +81,22 @@ function useMenus(): Menu[] {
         label: t("menu.file"),
         accessKey: "f",
         items: [
-          command("file.new", t("menu.new")),
-          command("file.open", t("menu.open")),
+          item("file.new"),
+          item("file.open"),
           { label: t("menu.openRecent"), submenu: recentItems },
           SEPARATOR,
-          command("file.save", t("menu.save"), true),
-          command("file.saveAs", t("menu.saveAs"), true),
+          needsDoc("file.save"),
+          needsDoc("file.saveAs"),
           SEPARATOR,
-          command("file.print", t("menu.print"), true),
+          needsDoc("file.print"),
           SEPARATOR,
-          command("file.closeTab", t("menu.closeTab"), true),
+          needsDoc("file.closeTab"),
+          item("file.moveToNewWindow", { disabled: tabCount < 2 }),
           SEPARATOR,
-          command("file.preferences", t("menu.preferences")),
+          item("file.preferences"),
           SEPARATOR,
-          {
-            label: t("menu.exit"),
-            shortcut: "Alt+F4",
-            action: () => void getCurrentWindow().close().catch(notifyError),
-          },
+          item("file.closeWindow"),
+          item("file.exit"),
         ],
       },
       {
@@ -103,14 +104,60 @@ function useMenus(): Menu[] {
         label: t("menu.edit"),
         accessKey: "e",
         items: [
-          command("edit.undo", t("menu.undo"), true),
-          command("edit.redo", t("menu.redo"), true),
+          item("edit.undo"),
+          item("edit.redo"),
           SEPARATOR,
-          command("edit.cut", t("menu.cut"), true),
-          command("edit.copy", t("menu.copy"), true),
-          command("edit.paste", t("menu.paste"), true),
+          item("edit.cut"),
+          item("edit.copy"),
+          item("edit.paste"),
+          item("edit.selectAll"),
           SEPARATOR,
-          command("edit.selectAll", t("menu.selectAll"), true),
+          needsDoc("edit.find"),
+          needsDoc("edit.replace"),
+          needsDoc("edit.goToLine"),
+          SEPARATOR,
+          item("edit.moveLineUp"),
+          item("edit.moveLineDown"),
+        ],
+      },
+      {
+        id: "insert",
+        label: t("menu.insert"),
+        accessKey: "i",
+        items: [
+          item("insert.link"),
+          item("insert.image"),
+          item("insert.table"),
+          item("insert.equation"),
+          item("insert.pageBreak"),
+        ],
+      },
+      {
+        id: "format",
+        label: t("menu.format"),
+        accessKey: "o",
+        items: [
+          item("format.bold"),
+          item("format.italic"),
+          item("format.underline"),
+          item("format.strikethrough"),
+          item("format.code"),
+          item("format.removeLink"),
+          SEPARATOR,
+          {
+            label: t("menu.heading"),
+            disabled: !hasDoc,
+            submenu: [1, 2, 3, 4, 5, 6].map((n) => item(`paragraph.heading${n}` as CommandId)),
+          },
+          item("paragraph.normal"),
+          SEPARATOR,
+          item("paragraph.bulletList"),
+          item("paragraph.numberedList"),
+          item("paragraph.taskList"),
+          item("paragraph.quote"),
+          item("paragraph.codeBlock"),
+          SEPARATOR,
+          { label: t("menu.table"), disabled: !hasDoc, submenu: tableItems(item) },
         ],
       },
       {
@@ -118,14 +165,16 @@ function useMenus(): Menu[] {
         label: t("menu.view"),
         accessKey: "v",
         items: [
-          mode("split", t("menu.splitView")),
-          mode("source", t("menu.sourceOnly")),
-          mode("preview", t("menu.previewOnly")),
+          item("view.split", { checked: viewMode === "split" }),
+          item("view.source", { checked: viewMode === "source" }),
+          item("view.preview", { checked: viewMode === "preview" }),
           SEPARATOR,
-          { label: t("menu.zoomIn"), shortcut: t("menu.zoomInKeys"), action: () => zoomBy(0.1) },
-          { label: t("menu.zoomOut"), shortcut: t("menu.zoomOutKeys"), action: () => zoomBy(-0.1) },
-          { label: t("menu.actualSize"), action: () => setZoom(1) },
-          { label: t("menu.fitWidth"), checked: fitWidth, action: fitPageWidth },
+          item("view.zoomIn"),
+          item("view.zoomOut"),
+          item("view.actualSize"),
+          item("view.fitWidth", { checked: fitWidth }),
+          SEPARATOR,
+          item("view.statusBar", { checked: statusBar }),
         ],
       },
       {
@@ -133,6 +182,8 @@ function useMenus(): Menu[] {
         label: t("menu.help"),
         accessKey: "h",
         items: [
+          item("view.shortcuts"),
+          SEPARATOR,
           {
             label: t("menu.makeDefault"),
             action: () => api.openDefaultAppsSettings().catch(notifyError),
@@ -142,7 +193,27 @@ function useMenus(): Menu[] {
         ],
       },
     ];
-  }, [t, hasDoc, recent, viewMode, fitWidth]);
+  }, [t, item, hasDoc, tabCount, recent, viewMode, fitWidth, statusBar]);
+}
+
+/** The table commands, for the Format menu and the editor's right-click menu. */
+export function tableItems(item: (id: CommandId) => MenuItem): MenuItem[] {
+  return [
+    item("table.insertRowAbove"),
+    item("table.insertRowBelow"),
+    item("table.insertColumnLeft"),
+    item("table.insertColumnRight"),
+    SEPARATOR,
+    item("table.deleteRow"),
+    item("table.deleteColumn"),
+    item("table.delete"),
+    SEPARATOR,
+    item("table.alignLeft"),
+    item("table.alignCenter"),
+    item("table.alignRight"),
+    SEPARATOR,
+    item("table.format"),
+  ];
 }
 
 async function showAbout() {
@@ -160,48 +231,21 @@ async function showAbout() {
   });
 }
 
-const selectable = (item: MenuItem) => !item.separator && !item.disabled;
-
 export function MenuBar() {
   const menus = useMenus();
-  const [open, setOpen] = useState<number | null>(null);
-  const [highlight, setHighlight] = useState(-1);
-  const [submenuOpen, setSubmenuOpen] = useState(false);
+  const [open, setOpen] = useState<{ index: number; byKey: boolean } | null>(null);
   const barRef = useRef<HTMLDivElement>(null);
+  const close = useCallback(() => setOpen(null), []);
 
-  const close = useCallback(() => {
-    setOpen(null);
-    setHighlight(-1);
-    setSubmenuOpen(false);
-  }, []);
-
-  const openMenu = useCallback((index: number, highlightFirst = false) => {
-    setOpen(index);
-    setSubmenuOpen(false);
-    setHighlight(highlightFirst ? 0 : -1);
-  }, []);
-
-  const activate = useCallback(
-    (item: MenuItem) => {
-      if (!selectable(item)) return;
-      if (item.submenu) {
-        setSubmenuOpen(true);
-        return;
-      }
-      close();
-      item.action?.();
-    },
-    [close],
-  );
-
-  // Alt+F / Alt+E / Alt+H open a menu; clicking elsewhere closes it.
+  // Alt+F, Alt+E, … open a menu; clicking elsewhere closes it.
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
+      if (event.defaultPrevented || isModalOpen()) return;
       if (event.altKey && !event.ctrlKey && !event.shiftKey) {
         const index = menus.findIndex((m) => `Key${m.accessKey.toUpperCase()}` === event.code);
         if (index >= 0) {
           event.preventDefault();
-          openMenu(index, true);
+          setOpen({ index, byKey: true });
         }
       }
     };
@@ -216,161 +260,44 @@ export function MenuBar() {
       window.removeEventListener("pointerdown", onPointerDown);
       window.removeEventListener("blur", close);
     };
-  }, [menus, openMenu, close]);
+  }, [menus, close]);
 
-  const onMenuKeyDown = (event: React.KeyboardEvent) => {
-    if (open === null) return;
-    const items = menus[open].items;
-    const move = (step: number) => {
-      let next = highlight;
-      for (let i = 0; i < items.length; i++) {
-        next = (next + step + items.length) % items.length;
-        if (selectable(items[next])) break;
-      }
-      setHighlight(next);
-      setSubmenuOpen(false);
-    };
-    switch (event.key) {
-      case "ArrowDown":
-        move(1);
-        break;
-      case "ArrowUp":
-        move(-1);
-        break;
-      case "ArrowRight":
-        if (!submenuOpen && items[highlight]?.submenu) setSubmenuOpen(true);
-        else openMenu((open + 1) % menus.length, true);
-        break;
-      case "ArrowLeft":
-        if (submenuOpen) setSubmenuOpen(false);
-        else openMenu((open - 1 + menus.length) % menus.length, true);
-        break;
-      case "Enter":
-      case " ":
-        if (highlight >= 0) activate(items[highlight]);
-        break;
-      case "Escape":
-        close();
-        break;
-      default:
-        return;
-    }
-    event.preventDefault();
+  const onExit = (direction: MenuExit) => {
+    if (!open) return;
+    if (direction === "escape") return close();
+    const step = direction === "right" ? 1 : -1;
+    setOpen({ index: (open.index + step + menus.length) % menus.length, byKey: true });
   };
 
   return (
-    <div className="menubar" role="menubar" ref={barRef} onKeyDown={onMenuKeyDown}>
+    <div className="menubar" role="menubar" ref={barRef}>
       {menus.map((menu, index) => (
         <div key={menu.id} className="menubar-entry">
           <button
             type="button"
-            className={`menubar-button${open === index ? " open" : ""}`}
+            className={`menubar-button${open?.index === index ? " open" : ""}`}
             role="menuitem"
             aria-haspopup="menu"
-            aria-expanded={open === index}
+            aria-expanded={open?.index === index}
             onMouseDown={(e) => {
               e.preventDefault();
-              if (open === index) close();
-              else openMenu(index);
+              setOpen(open?.index === index ? null : { index, byKey: false });
             }}
-            onMouseEnter={() => open !== null && open !== index && openMenu(index)}
+            onMouseEnter={() => open && open.index !== index && setOpen({ index, byKey: false })}
           >
             {menu.label}
           </button>
-          {open === index ? (
+          {open?.index === index ? (
             <MenuList
+              key={`${index}-${open.byKey}`}
               items={menu.items}
-              highlight={highlight}
-              submenuOpen={submenuOpen}
-              onHighlight={(i) => {
-                setHighlight(i);
-                setSubmenuOpen(Boolean(menu.items[i]?.submenu));
-              }}
-              onActivate={activate}
+              highlightFirst={open.byKey}
               onClose={close}
+              onExit={onExit}
             />
           ) : null}
         </div>
       ))}
-    </div>
-  );
-}
-
-interface MenuListProps {
-  items: MenuItem[];
-  highlight: number;
-  submenuOpen: boolean;
-  onHighlight(index: number): void;
-  onActivate(item: MenuItem): void;
-  onClose(): void;
-}
-
-function MenuList({
-  items,
-  highlight,
-  submenuOpen,
-  onHighlight,
-  onActivate,
-  onClose,
-}: MenuListProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  useEffect(() => ref.current?.focus(), []);
-
-  return (
-    <div className="menu" role="menu" ref={ref} tabIndex={-1}>
-      {items.map((item, i) =>
-        item.separator ? (
-          <div key={i} className="menu-separator" role="separator" />
-        ) : (
-          <div
-            key={i}
-            role={item.checked === undefined ? "menuitem" : "menuitemcheckbox"}
-            aria-checked={item.checked}
-            aria-disabled={item.disabled || undefined}
-            aria-haspopup={item.submenu ? "menu" : undefined}
-            className={`menu-item${i === highlight ? " highlighted" : ""}${item.disabled ? " disabled" : ""}`}
-            onMouseEnter={() => onHighlight(i)}
-            onMouseDown={(e) => e.preventDefault()}
-            onClick={() => onActivate(item)}
-          >
-            <span className="menu-check" aria-hidden>
-              {item.checked ? "✓" : ""}
-            </span>
-            <span className="menu-label">{item.label}</span>
-            {item.submenu ? (
-              <span className="menu-arrow">›</span>
-            ) : (
-              <span className="menu-shortcut">{item.shortcut}</span>
-            )}
-            {item.submenu && i === highlight && submenuOpen ? (
-              <div className="menu submenu" role="menu">
-                {item.submenu.map((sub, j) =>
-                  sub.separator ? (
-                    <div key={j} className="menu-separator" role="separator" />
-                  ) : (
-                    <div
-                      key={j}
-                      role="menuitem"
-                      title={sub.shortcut}
-                      aria-disabled={sub.disabled || undefined}
-                      className={`menu-item${sub.disabled ? " disabled" : ""}`}
-                      onMouseDown={(e) => e.preventDefault()}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        if (sub.disabled) return;
-                        onClose();
-                        sub.action?.();
-                      }}
-                    >
-                      <span className="menu-label">{sub.label}</span>
-                    </div>
-                  ),
-                )}
-              </div>
-            ) : null}
-          </div>
-        ),
-      )}
     </div>
   );
 }

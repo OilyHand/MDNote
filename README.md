@@ -5,7 +5,7 @@ A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and
 - What MDNote does: [Objectives.md](Objectives.md)
 - How and in what order it is built: [ImplementationPlan.md](ImplementationPlan.md)
 
-> **Status:** Phase 1 (foundation). MDNote opens, edits and saves `.md` files in tabs, in English and Korean. Markdown rendering arrives in Phase 2.
+> **Status:** Phase 3 (editing). MDNote edits Markdown with Word-style shortcuts, renders it beside the source, pastes images, keeps recovery copies, and moves tabs between windows, in English and Korean. Navigation (outline, folder sidebar) arrives in Phase 4.
 
 ## Development
 
@@ -26,7 +26,22 @@ A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and
 | `pnpm check` | Type check, lint, formatting check, and frontend tests |
 | `cargo test` (in `src-tauri`) | Rust tests, including byte-exact encoding round-trips |
 
-Debug builds started with `MDNOTE_CONFIG_DIR` set are isolated test runs. They keep settings and the session in that folder instead of `%APPDATA%\io.github.oilyhand.mdnote`, and they never hand files to an installed MDNote that is running.
+Debug builds started with `MDNOTE_CONFIG_DIR` set are isolated test runs. They keep settings, the session and WebView2's data in that folder instead of `%APPDATA%\io.github.oilyhand.mdnote`, and they never hand files to an installed MDNote that is running.
+
+### Driving the app
+
+`scripts/devtools.mjs` scripts a debug build through WebView2's DevTools port: key presses, IME composition, clicks, screenshots and the editor's state. Build first with `pnpm tauri build --debug --no-bundle`, then:
+
+```
+node scripts/devtools.mjs launch notes\test.md    isolated run, settings in %TEMP%\mdnote-devtools
+node scripts/devtools.mjs wait                    until the editor is ready
+node scripts/devtools.mjs key Ctrl+B
+node scripts/devtools.mjs compose 가              a Korean syllable, still being composed
+node scripts/devtools.mjs eval "V.state.doc.toString()"
+node scripts/devtools.mjs shot screen.png
+```
+
+The comment at the top of the script lists every command.
 
 ### Layout
 
@@ -34,6 +49,7 @@ Debug builds started with `MDNOTE_CONFIG_DIR` set are isolated test runs. They k
 src/              React + TypeScript: window UI, editor, translations (src/i18n/locales)
 src-tauri/src/    Rust: file reading and safe saving, settings, session, file watching
 tests/fixtures/   Byte-exact sample files (Git never converts them)
+scripts/          Developer tools (driving the app for tests)
 docs/testing/     Hands-on test checklists
 ```
 

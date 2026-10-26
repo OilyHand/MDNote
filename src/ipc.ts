@@ -30,6 +30,19 @@ export interface LoadedFile {
 
 export type ThemePref = "system" | "light" | "dark";
 
+export interface StatusBarItems {
+  words: boolean;
+  characters: boolean;
+  charactersNoSpaces: boolean;
+  cursor: boolean;
+  encoding: boolean;
+  lineEnding: boolean;
+  zoom: boolean;
+}
+
+/** Where pasted and dropped images are saved (O15). */
+export type ImageFolder = "assets" | "noteName" | "noteFolder";
+
 export interface Preferences {
   language: LanguagePref;
   restoreSession: boolean;
@@ -41,6 +54,17 @@ export interface Preferences {
   editorFontSize: number;
   editorWordWrap: boolean;
   editorLineNumbers: boolean;
+  /** Editor conveniences (O17). */
+  editorListContinuation: boolean;
+  editorCloseBrackets: boolean;
+  editorWrapSelection: boolean;
+  editorRenumberLists: boolean;
+  /** Line source tables up when the cursor leaves them (O16). */
+  editorFormatTables: boolean;
+  imageFolder: ImageFolder;
+  /** View > Status Bar, and the items it shows (O18). */
+  statusBar: boolean;
+  statusBarItems: StatusBarItems;
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }
@@ -48,6 +72,17 @@ export interface Preferences {
 export interface PreferencesView {
   preferences: Preferences;
   systemLanguage: Language;
+}
+
+/** A copy of a document with unsaved changes, kept for crash recovery (O1). */
+export interface RecoveryCopy {
+  docId: string;
+  path: string | null;
+  untitled: number | null;
+  encoding: TextEncoding;
+  lineEnding: LineEnding;
+  text: string;
+  savedMs: number;
 }
 
 export interface TabSession {
@@ -60,6 +95,8 @@ export interface Startup {
   tabs: TabSession[];
   active: number;
   paths: string[];
+  /** Tabs moved to this window from another one (see app/tabWindows.ts). */
+  transfers: unknown[];
 }
 
 export type ErrorCode = "notFound" | "accessDenied" | "readOnly" | "unmappable" | "io" | "internal";
@@ -85,6 +122,7 @@ export const api = {
   writeDocument: (path: string, text: string, encoding: TextEncoding, lineEnding: LineEnding) =>
     invoke<FileStamp>("write_document", { path, text, encoding, lineEnding }),
   defaultLineEnding: () => invoke<LineEnding>("default_line_ending"),
+  systemCodePage: () => invoke<number>("system_code_page"),
 
   getPreferences: () => invoke<PreferencesView>("get_preferences"),
   setPreferences: (preferences: Preferences) => invoke<void>("set_preferences", { preferences }),
@@ -100,6 +138,9 @@ export const api = {
   takeStartup: () => invoke<Startup>("take_startup"),
   reportTabs: (tabs: TabSession[], active: number) => invoke<void>("report_tabs", { tabs, active }),
   openPaths: (paths: string[]) => invoke<void>("open_paths", { paths }),
+  /** File > Exit: closes every window; the next start restores them all. */
+  quitApp: () => invoke<void>("quit_app"),
+  cancelQuit: () => invoke<void>("cancel_quit"),
 
   openPreferences: () => invoke<void>("open_preferences"),
   openDefaultAppsSettings: () => invoke<void>("open_default_apps_settings"),
@@ -110,6 +151,26 @@ export const api = {
   resolveLink: (document: string | null, target: string) =>
     invoke<string | null>("resolve_link", { document, target }),
   listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
+
+  /** Saves a pasted image for the note; returns its path relative to the note. */
+  saveImage: (document: string | null, docId: string, name: string, bytes: Uint8Array) =>
+    invoke<string>("save_image", bytes, {
+      headers: {
+        "x-document": encodeURIComponent(document ?? ""),
+        "x-doc-id": encodeURIComponent(docId),
+        "x-name": encodeURIComponent(name),
+      },
+    }),
+  importImages: (document: string | null, docId: string, paths: string[]) =>
+    invoke<string[]>("import_images", { document, docId, paths }),
+  adoptUnsavedImages: (docId: string, document: string) =>
+    invoke<[string, string][]>("adopt_unsaved_images", { docId, document }),
+  discardUnsavedImages: (docId: string) => invoke<void>("discard_unsaved_images", { docId }),
+  unsavedDocumentPath: (docId: string) => invoke<string>("unsaved_document_path", { docId }),
+
+  writeRecovery: (copy: RecoveryCopy) => invoke<void>("write_recovery", { copy }),
+  removeRecovery: (docId: string) => invoke<void>("remove_recovery", { docId }),
+  takeRecovery: () => invoke<RecoveryCopy[]>("take_recovery"),
 };
 
 export interface FontFamily {

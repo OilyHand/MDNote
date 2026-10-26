@@ -40,7 +40,14 @@ async function run(docId: string, state: DocumentState) {
         return { key: block.key, line: block.line, node };
       });
       state.sent = sent;
-      post({ type: "rendered", docId, requestId, blocks, images: result.images });
+      post({
+        type: "rendered",
+        docId,
+        requestId,
+        blocks,
+        images: result.images,
+        counts: result.counts,
+      });
     } catch (error) {
       post({ type: "failed", docId, requestId, message: String(error) });
     }
@@ -52,10 +59,32 @@ function post(reply: WorkerReply) {
   self.postMessage(reply);
 }
 
+async function count(state: DocumentState, request: Extract<WorkerRequest, { type: "count" }>) {
+  const { docId, requestId } = request;
+  try {
+    const [total, selection] = await Promise.all([
+      state.renderer.count(request.text),
+      request.selection === null ? null : state.renderer.count(request.selection),
+    ]);
+    post({ type: "counted", docId, requestId, total, selection });
+  } catch (error) {
+    post({ type: "failed", docId, requestId, message: String(error) });
+  }
+}
+
 self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   const request = event.data;
   if (request.type === "forget") {
     documents.delete(request.docId);
+    return;
+  }
+  if (request.type === "count") {
+    let state = documents.get(request.docId);
+    if (!state) {
+      state = { renderer: new Renderer(), sent: new Set(), running: false };
+      documents.set(request.docId, state);
+    }
+    void count(state, request);
     return;
   }
   let state = documents.get(request.docId);

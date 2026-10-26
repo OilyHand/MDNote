@@ -278,6 +278,69 @@ input:focus-visible,
   background: var(--border);
 }
 
+.context-menu {
+  position: fixed;
+  z-index: 30;
+}
+
+.context-menu > .menu {
+  position: static;
+}
+
+/* ---- Tab drag label (O1) --------------------------------------------------- */
+
+.tab-ghost {
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 13px;
+}
+
+/* ---- Status bar (O18) ------------------------------------------------------ */
+
+.statusbar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 26px;
+  padding: 0 8px;
+  background: var(--chrome);
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--muted);
+  user-select: none;
+}
+
+.status-item {
+  padding: 2px 8px;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.status-spacer {
+  flex: 1;
+}
+
+.status-button {
+  border: none;
+  border-radius: 3px;
+  background: none;
+  color: inherit;
+  font: inherit;
+}
+
+.status-button:hover {
+  background: var(--hover);
+  color: var(--text);
+}
+
 /* ---- Tab bar --------------------------------------------------------------- */
 
 .tabbar {
@@ -517,6 +580,60 @@ input:focus-visible,
   background: var(--active-line);
 }
 
+/* Find, Replace and Go to line panels. The extra .cm-editor beats CodeMirror's own theme. */
+.editor-pane .cm-editor .cm-panels {
+  background: var(--chrome);
+  color: var(--text);
+  border-color: var(--border);
+  font-family: var(--font-ui);
+  font-size: 13px;
+}
+
+.editor-pane .cm-editor .cm-panel {
+  padding: 6px 32px 6px 8px;
+}
+
+.editor-pane .cm-editor .cm-panel input.cm-textfield,
+.editor-pane .cm-editor .cm-panel input:not([type="checkbox"]) {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+}
+
+.editor-pane .cm-editor .cm-panel .cm-button {
+  padding: 3px 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-raised);
+  background-image: none;
+  color: var(--text);
+  font: inherit;
+}
+
+.editor-pane .cm-editor .cm-panel .cm-button:hover {
+  background: var(--hover);
+}
+
+.editor-pane .cm-editor .cm-panel label {
+  font-size: 13px;
+}
+
+.editor-pane .cm-editor .cm-panel button[name="close"] {
+  color: var(--muted);
+  font-size: 18px;
+}
+
+.editor-pane .cm-editor .cm-searchMatch {
+  background: rgba(255, 196, 0, 0.3);
+}
+
+.editor-pane .cm-editor .cm-searchMatch-selected {
+  background: rgba(255, 140, 0, 0.55);
+}
+
 /* ---- Banner, empty state, notices, dialogs --------------------------------- */
 
 .banner {
@@ -672,6 +789,133 @@ input:focus-visible,
   gap: 8px;
 }
 
+/* A button set apart from the others, such as Remove Link. */
+.dialog-button-left {
+  margin-right: auto;
+}
+
+.dialog-wide {
+  width: min(760px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.dialog-field input {
+  padding: 5px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+/* F1: the shortcut list */
+.shortcut-groups {
+  overflow: auto;
+  columns: 2 320px;
+  column-gap: 32px;
+  margin-bottom: 16px;
+}
+
+.shortcut-groups section {
+  break-inside: avoid;
+  margin-bottom: 14px;
+}
+
+.shortcut-groups h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.shortcut-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.shortcut-table td {
+  padding: 2px 0;
+}
+
+.shortcut-table td:last-child {
+  text-align: right;
+  white-space: nowrap;
+  padding-left: 12px;
+}
+
+.key-tester {
+  margin-bottom: 16px;
+}
+
+.key-tester h3 {
+  margin: 0 0 4px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.key-tester-box {
+  min-height: 72px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-family: var(--font-editor);
+  font-size: 12px;
+  white-space: pre;
+  overflow-x: auto;
+  outline: none;
+}
+
+.key-tester-box:focus {
+  border-color: var(--accent);
+}
+
+kbd {
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* Insert > Table */
+.table-grid {
+  display: grid;
+  gap: 3px;
+  width: max-content;
+  padding: 4px;
+  outline: none;
+  border-radius: 4px;
+}
+
+.table-grid:focus-visible {
+  box-shadow: 0 0 0 2px var(--accent);
+}
+
+.table-grid-cell {
+  width: 18px;
+  height: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.table-grid-cell.on {
+  border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 25%, var(--surface));
+}
+
+.dialog .table-grid-size {
+  margin: 8px 0 0;
+  font-variant-numeric: tabular-nums;
+}
+
 /* ---- Preferences window ---------------------------------------------------- */
 
 .preferences {
@@ -694,6 +938,13 @@ input:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.preferences h3 {
+  margin: 6px 0 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .field {

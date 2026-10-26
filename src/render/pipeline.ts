@@ -37,6 +37,26 @@ export interface RenderResult {
   blocks: RenderedBlock[];
   /** Image sources as written in the document (resolved by the main thread). */
   images: string[];
+  counts: TextCounts;
+}
+
+/** Counts of the rendered text, for the status bar (O18). */
+export interface TextCounts {
+  /** Runs of text between spaces, which is how Korean word processors count 어절. */
+  words: number;
+  /** Characters including spaces, not counting line breaks. */
+  characters: number;
+  charactersNoSpaces: number;
+}
+
+export const NO_COUNTS: TextCounts = { words: 0, characters: 0, charactersNoSpaces: 0 };
+
+export function addCounts(a: TextCounts, b: TextCounts): TextCounts {
+  return {
+    words: a.words + b.words,
+    characters: a.characters + b.characters,
+    charactersNoSpaces: a.charactersNoSpaces + b.charactersNoSpaces,
+  };
 }
 
 /** One rendered top-level element, with its line relative to the chunk (1-based). */
@@ -49,6 +69,7 @@ interface ChunkBlock {
 interface ChunkOutput {
   blocks: ChunkBlock[];
   images: string[];
+  counts: TextCounts;
 }
 
 /** `<!-- pagebreak -->` on its own line (O9). */
@@ -245,6 +266,83 @@ function collectImages(node: Element, into: Set<string>) {
   });
 }
 
+// ---------------------------------------------------------------------------
+// Counting the rendered text (O18)
+// ---------------------------------------------------------------------------
+
+/** Elements that start a new line of text: their text never runs into their neighbours'. */
+const TEXT_BLOCKS = new Set([
+  ...LINE_MARKED,
+  "ul",
+  "ol",
+  "td",
+  "th",
+  "section",
+  "dt",
+  "dd",
+  "details",
+  "summary",
+  "figure",
+  "figcaption",
+]);
+
+/** Generated, not written: MathML copies of equations, footnote labels and back links. */
+function isGenerated(node: Element): boolean {
+  const classes = classesOf(node);
+  return (
+    classes.includes("katex-mathml") ||
+    classes.includes("sr-only") ||
+    node.properties.dataFootnoteBackref !== undefined
+  );
+}
+
+/** The text a reader sees, one line per block. Soft line breaks read as spaces. */
+function visibleText(nodes: ElementContent[], into: string[], inPre = false) {
+  for (const node of nodes) {
+    if (node.type === "text") {
+      // KaTeX lays out superscripts with zero-width spaces; they are not text.
+      const value = node.value.replace(/[\u200b\ufeff]/g, "");
+      into.push(inPre ? value : value.replace(/\s+/g, " "));
+    } else if (node.type === "element" && !isGenerated(node)) {
+      if (node.tagName === "br") {
+        into.push("\n");
+        continue;
+      }
+      const block = TEXT_BLOCKS.has(node.tagName);
+      if (block) into.push("\n");
+      visibleText(node.children, into, inPre || node.tagName === "pre");
+      if (block) into.push("\n");
+    }
+  }
+}
+
+const graphemes = new Intl.Segmenter(undefined, { granularity: "grapheme" });
+
+export function countText(text: string): TextCounts {
+  let characters = 0;
+  let charactersNoSpaces = 0;
+  let words = 0;
+  for (const line of text.split("\n")) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+    words += trimmed.split(/\s+/).length;
+    for (const { segment } of graphemes.segment(trimmed)) {
+      characters++;
+      if (!/^\s+$/.test(segment)) charactersNoSpaces++;
+    }
+  }
+  return { words, characters, charactersNoSpaces };
+}
+
+function countBlocks(blocks: ChunkBlock[]): TextCounts {
+  const parts: string[] = [];
+  visibleText(
+    blocks.map((b) => b.node),
+    parts,
+  );
+  return countText(parts.join(""));
+}
+
 /** FNV-1a, enough to tell blocks apart. */
 export function hashText(text: string): string {
   let hash = 0x811c9dc5;
@@ -278,7 +376,7 @@ async function renderChunk(
     collectImages(child, images);
     blocks.push({ key: `${chunkKey}.${index}`, line, node: child });
   });
-  return { blocks, images: [...images] };
+  return { blocks, images: [...images], counts: countBlocks(blocks) };
 }
 
 /**
@@ -288,6 +386,9 @@ async function renderChunk(
 export class Renderer {
   private cache = new Map<string, Promise<ChunkOutput>>();
   private definitionCache = new Map<string, string[]>();
+  private definitionsKey = "";
+  /** Counts of chunks that only occurred in selections. */
+  private countCache = new Map<string, Promise<TextCounts>>();
 
   /**
    * Link reference definitions in a chunk, found by parsing it (only chunks
@@ -315,6 +416,7 @@ export class Renderer {
     const definitions =
       chunks.length > 1 ? chunks.flatMap((c) => this.definitionsOf(c.text)).join("\n") : "";
     const definitionsKey = definitions ? hashText(definitions) : "";
+    this.definitionsKey = definitionsKey;
     if (this.definitionCache.size > 4 * chunks.length + 100) this.definitionCache.clear();
 
     const previous = this.cache;
@@ -336,7 +438,9 @@ export class Renderer {
     const blocks: RenderedBlock[] = [];
     const images = new Set<string>();
     const seen = new Map<string, number>();
+    let counts = NO_COUNTS;
     outputs.forEach((output, i) => {
+      counts = addCounts(counts, output.counts);
       output.images.forEach((src) => images.add(src));
       for (const block of output.blocks) {
         let key = block.key;
@@ -355,7 +459,33 @@ export class Renderer {
         });
       }
     });
-    return { blocks, images: [...images] };
+    return { blocks, images: [...images], counts };
+  }
+
+  /**
+   * Counts the rendered text of `source` (a selection, or the whole document
+   * when the preview is hidden). Chunks the document already rendered are not
+   * rendered again.
+   */
+  async count(source: string): Promise<TextCounts> {
+    const chunks: Chunk[] = hasFootnotes(source)
+      ? [{ text: source, startLine: 0, open: true }]
+      : splitChunks(source);
+    if (this.countCache.size > 500) this.countCache.clear();
+    const counts = await Promise.all(
+      chunks.map((chunk) => {
+        const hash = hashText(chunk.text);
+        const rendered = this.cache.get(hash) ?? this.cache.get(`${hash}~${this.definitionsKey}`);
+        if (rendered) return rendered.then((output) => output.counts);
+        let counted = this.countCache.get(hash);
+        if (!counted) {
+          counted = renderChunk(chunk.text, "", hash).then((output) => output.counts);
+          this.countCache.set(hash, counted);
+        }
+        return counted;
+      }),
+    );
+    return counts.reduce(addCounts, NO_COUNTS);
   }
 }
 
@@ -372,5 +502,5 @@ export async function renderWhole(source: string): Promise<RenderResult> {
     if (/^h[1-6]$/.test(block.node.tagName))
       block.node.properties.id = slugger.slug(toString(block.node));
   }
-  return { blocks: output.blocks, images: output.images };
+  return { blocks: output.blocks, images: output.images, counts: output.counts };
 }

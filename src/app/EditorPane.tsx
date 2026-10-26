@@ -1,15 +1,21 @@
 // One CodeMirror view per window. Switching tabs swaps the document's state in
 // and out, which keeps each tab's text, selection and Undo history.
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { EditorView } from "@codemirror/view";
 import {
   applyEditorOptions,
   createEditorState,
   setChangeListener,
+  setCursorListener,
+  setEditorCommandRunner,
   setEditorOptions,
+  setImagePasteHandler,
 } from "../editor/setup";
-import { setActiveView } from "../editor/view";
+import { setActiveView, setShownDocId } from "../editor/view";
+import { tableAt } from "../editor/table";
+import { nodeAround } from "../editor/edits";
 import {
   editorStates,
   notifyDocEdited,
@@ -18,10 +24,46 @@ import {
   useDocs,
 } from "../state/documents";
 import { usePrefs } from "../state/prefs";
+import { updateCursor } from "../state/status";
 import { scheduleSessionReport } from "./session";
+import { runEditorCommand } from "./editorCommands";
+import { pasteImages } from "./images";
+import { ContextMenu, SEPARATOR, type MenuItem } from "./Menu";
+import { tableItems, useCommandItem } from "./MenuBar";
 
 /** Used when Preferences leave the editor font empty. */
 const DEFAULT_EDITOR_FONT = '"Cascadia Mono", Consolas';
+
+setEditorCommandRunner(runEditorCommand);
+setImagePasteHandler((files) => void pasteImages(files));
+
+function useEditorOptions(view: React.RefObject<EditorView | null>) {
+  const { i18n } = useTranslation();
+  const p = usePrefs((s) => s.preferences);
+  useEffect(() => {
+    setEditorOptions({
+      wordWrap: p.editorWordWrap,
+      lineNumbers: p.editorLineNumbers,
+      listContinuation: p.editorListContinuation,
+      closeBrackets: p.editorCloseBrackets,
+      wrapSelection: p.editorWrapSelection,
+      renumberLists: p.editorRenumberLists,
+      formatTables: p.editorFormatTables,
+      language: i18n.language,
+    });
+    if (view.current) applyEditorOptions(view.current);
+  }, [
+    view,
+    p.editorWordWrap,
+    p.editorLineNumbers,
+    p.editorListContinuation,
+    p.editorCloseBrackets,
+    p.editorWrapSelection,
+    p.editorRenumberLists,
+    p.editorFormatTables,
+    i18n.language,
+  ]);
+}
 
 export function EditorPane() {
   const hostRef = useRef<HTMLDivElement>(null);
@@ -30,8 +72,9 @@ export function EditorPane() {
   const activeId = useDocs((s) => s.activeId);
   const fontFamily = usePrefs((s) => s.preferences.editorFontFamily);
   const fontSize = usePrefs((s) => s.preferences.editorFontSize);
-  const wordWrap = usePrefs((s) => s.preferences.editorWordWrap);
-  const lineNumbers = usePrefs((s) => s.preferences.editorLineNumbers);
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const item = useCommandItem();
+  const { t } = useTranslation();
 
   // Create the view once.
   useEffect(() => {
@@ -45,6 +88,9 @@ export function EditorPane() {
       refreshDirty(id, state.doc);
       notifyDocEdited(id);
     });
+    setCursorListener((state) => {
+      if (shownId.current) updateCursor(shownId.current, state);
+    });
     const onScroll = () => {
       if (shownId.current) {
         scrollTops.set(shownId.current, view.scrollDOM.scrollTop);
@@ -57,7 +103,9 @@ export function EditorPane() {
       const id = shownId.current;
       if (id && editorStates.has(id)) editorStates.set(id, view.state);
       setChangeListener(() => {});
+      setCursorListener(() => {});
       setActiveView(null);
+      setShownDocId(null);
       view.destroy();
       viewRef.current = null;
       shownId.current = null;
@@ -66,10 +114,7 @@ export function EditorPane() {
 
   // Editor options from Preferences apply to the visible document right away,
   // and to other tabs when they are shown.
-  useEffect(() => {
-    setEditorOptions({ wordWrap, lineNumbers });
-    if (viewRef.current) applyEditorOptions(viewRef.current);
-  }, [wordWrap, lineNumbers]);
+  useEditorOptions(viewRef);
 
   // Show the active document.
   useEffect(() => {
@@ -81,7 +126,9 @@ export function EditorPane() {
     if (!state) return;
     shownId.current = activeId;
     view.setState(state);
+    setShownDocId(activeId);
     applyEditorOptions(view);
+    updateCursor(activeId, view.state);
     const top = scrollTops.get(activeId) ?? 0;
     requestAnimationFrame(() => {
       view.scrollDOM.scrollTop = top;
@@ -89,10 +136,59 @@ export function EditorPane() {
     view.focus();
   }, [activeId]);
 
+  /** Right-click: the clipboard commands, plus the table commands inside a table (O16). */
+  const onContextMenu = (event: React.MouseEvent) => {
+    const view = viewRef.current;
+    if (!view || !view.contentDOM.contains(event.target as Node)) return;
+    event.preventDefault();
+    // As in Word, a right-click outside the selection moves the cursor there.
+    const pos = view.posAtCoords({ x: event.clientX, y: event.clientY });
+    const selection = view.state.selection.main;
+    if (pos !== null && (pos < selection.from || pos > selection.to)) {
+      view.dispatch({ selection: { anchor: pos } });
+    }
+    const head = view.state.selection.main.head;
+    const inTable = tableAt(view.state, head) !== null;
+    const inLink = Boolean(
+      nodeAround(view.state, head, "Link") ?? nodeAround(view.state, head, "Autolink"),
+    );
+    const items: MenuItem[] = [
+      item("edit.cut"),
+      item("edit.copy"),
+      item("edit.paste"),
+      SEPARATOR,
+      item("edit.selectAll"),
+      ...(inLink
+        ? [
+            SEPARATOR,
+            item("insert.link", { label: t("linkDialog.edit") }),
+            item("format.removeLink"),
+          ]
+        : []),
+      ...(inTable ? [SEPARATOR, ...tableItems(item)] : []),
+    ];
+    setMenu({ x: event.clientX, y: event.clientY, items });
+  };
+
   const style = {
     "--editor-font-family": `${fontFamily ? `"${fontFamily}", ` : ""}${DEFAULT_EDITOR_FONT}, "Malgun Gothic", monospace`,
     "--editor-font-size": `${fontSize}px`,
   } as React.CSSProperties;
 
-  return <div className="editor-pane" ref={hostRef} style={style} />;
+  return (
+    <>
+      <div className="editor-pane" ref={hostRef} style={style} onContextMenu={onContextMenu} />
+      {menu ? (
+        <ContextMenu
+          x={menu.x}
+          y={menu.y}
+          items={menu.items}
+          onClose={() => {
+            setMenu(null);
+            viewRef.current?.focus();
+          }}
+        />
+      ) : null}
+    </>
+  );
 }

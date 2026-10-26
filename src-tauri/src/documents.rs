@@ -48,6 +48,12 @@ pub async fn write_document(
     Ok(stamp)
 }
 
+/// The code page Windows uses for "ANSI" text (the status bar's encoding menu offers it).
+#[tauri::command]
+pub fn system_code_page() -> u16 {
+    files::system_ansi_codepage()
+}
+
 /// The line ending new documents start with.
 #[tauri::command]
 pub fn default_line_ending() -> LineEnding {
