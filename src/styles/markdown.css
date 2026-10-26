@@ -147,8 +147,12 @@
   color: var(--paper-muted);
 }
 
+/* The "Footnotes" label belongs to the footnotes, not to the Heading 2 style. */
 .page .footnotes h2 {
-  font-size: 1em;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  margin: 0 0 4pt;
 }
 
 .page sup a {

@@ -25,6 +25,9 @@ import { resolveImages, useImageUrl } from "./images";
 import { setReadingLine, useShownZoom } from "../state/status";
 import { followLink } from "./links";
 import { useDocumentLook } from "../styles/look";
+import { styleKeyOfElement } from "../styles/sections";
+import { modifyStyle } from "../styles/actions";
+import { ContextMenu, SEPARATOR, type MenuItem } from "../app/Menu";
 import { pageSize, PX_PER_MM } from "../page/page";
 import type { CodeTheme, PageSetup } from "../mdmeta/schema";
 import {
@@ -203,9 +206,41 @@ export function PreviewPane() {
     void followLink(link.getAttribute("href") ?? "", docPath, scrollerRef.current);
   };
 
+  // Right-click: Copy, and Modify <style> Style… for what was clicked (O4).
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const onContextMenu = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!docId || !target.closest(".page")) return;
+    event.preventDefault();
+    const key = styleKeyOfElement(target);
+    const selected = Boolean(window.getSelection()?.toString());
+    setMenu({
+      x: event.clientX,
+      y: event.clientY,
+      items: [
+        {
+          label: t("commands.edit.copy"),
+          shortcut: "Ctrl+C",
+          disabled: !selected,
+          action: () => document.execCommand("copy"),
+        },
+        SEPARATOR,
+        {
+          label: t("styles.modifyMenu", { name: t(`styles.names.${key}`) }),
+          action: () => modifyStyle(docId, key),
+        },
+      ],
+    });
+  };
+
   return (
     <>
-      <div className="preview-scroll" ref={scrollerRef} onClick={onClick}>
+      <div
+        className="preview-scroll"
+        ref={scrollerRef}
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+      >
         <style>{look.css}</style>
         <DocumentPath.Provider value={docPath}>
           <article className="page" ref={pageRef} style={pageStyle(look.page, effectiveZoom)}>
@@ -221,6 +256,9 @@ export function PreviewPane() {
         </div>
       ) : null}
       <ZoomBadge zoom={effectiveZoom} />
+      {menu ? (
+        <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />
+      ) : null}
     </>
   );
 }

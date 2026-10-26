@@ -5,7 +5,7 @@ import { create } from "zustand";
 
 export type ViewMode = "split" | "source" | "preview";
 
-export type SidebarTab = "files" | "outline";
+export type SidebarTab = "files" | "outline" | "styles";
 export type FolderSort = "name" | "modified";
 
 export interface ViewState {

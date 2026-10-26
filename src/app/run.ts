@@ -25,6 +25,12 @@ import { isTableCommand, runEditorCommand } from "./editorCommands";
 import { moveToNewWindow } from "./tabWindows";
 import { open } from "@tauri-apps/plugin-dialog";
 import { closeFolder, openFolder } from "../state/folder";
+import {
+  growFont,
+  modifyCurrentStyle,
+  resetToDefaults,
+  setStylesAsDefault,
+} from "../styles/actions";
 
 /** File > Open Folder…: the folder shows in the sidebar's Files tab (O14). */
 async function openFolderWithDialog() {
@@ -114,6 +120,19 @@ export function runCommand(id: CommandId) {
     }
     case "view.shortcuts":
       return showShortcuts();
+
+    case "styles.pane":
+      return useView.setState({ sidebar: true, sidebarTab: "styles" });
+    case "styles.modify":
+      return modifyCurrentStyle();
+    case "styles.grow":
+      return growFont(1);
+    case "styles.shrink":
+      return growFont(-1);
+    case "styles.setDefault":
+      return void setStylesAsDefault();
+    case "styles.reset":
+      return resetToDefaults();
   }
 
   if ((COMMANDS[id] as { editor?: boolean }).editor) {

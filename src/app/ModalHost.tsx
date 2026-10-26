@@ -11,6 +11,10 @@ import {
   type CommandId,
 } from "../shortcuts/registry";
 import { closeModal, useModal, type LinkFields, type LinkResult, type Modal } from "../state/modal";
+import { ModifyStyleDialog } from "../styles/ModifyStyleDialog";
+
+/** Dialogs that change the page as you go: the page stays visible beside them. */
+const LIVE: Modal["kind"][] = ["style"];
 
 export function ModalHost() {
   const modal = useModal((s) => s.modal);
@@ -19,6 +23,8 @@ export function ModalHost() {
     if (!modal) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      // A drop-down inside the dialog (the font list) closes first.
+      if ((event.target as Element | null)?.closest?.("[data-own-escape]")) return;
       event.preventDefault();
       event.stopPropagation();
       cancel(modal);
@@ -30,7 +36,7 @@ export function ModalHost() {
   if (!modal) return null;
   return (
     <div
-      className="dialog-backdrop"
+      className={`dialog-backdrop${LIVE.includes(modal.kind) ? " live" : ""}`}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) cancel(modal);
       }}
@@ -40,12 +46,16 @@ export function ModalHost() {
         <LinkDialog initial={modal.initial} existing={modal.existing} onDone={modal.resolve} />
       ) : null}
       {modal.kind === "table" ? <TablePicker onDone={modal.resolve} /> : null}
+      {modal.kind === "style" ? (
+        <ModifyStyleDialog docId={modal.docId} styleKey={modal.key} onDone={modal.resolve} />
+      ) : null}
     </div>
   );
 }
 
 function cancel(modal: Modal) {
   if (modal.kind === "shortcuts") closeModal();
+  else if (modal.kind === "style") modal.resolve();
   else modal.resolve(null);
 }
 
@@ -53,7 +63,16 @@ function cancel(modal: Modal) {
 // F1: every shortcut, generated from the shortcut table
 // ---------------------------------------------------------------------------
 
-const GROUPS: CommandGroup[] = ["file", "edit", "format", "paragraph", "insert", "table", "view"];
+const GROUPS: CommandGroup[] = [
+  "file",
+  "edit",
+  "format",
+  "paragraph",
+  "insert",
+  "table",
+  "styles",
+  "view",
+];
 
 function ShortcutList() {
   const { t } = useTranslation();

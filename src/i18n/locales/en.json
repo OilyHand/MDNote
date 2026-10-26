@@ -17,7 +17,8 @@
     "heading": "Heading",
     "table": "Table",
     "makeDefault": "Make MDNote the Default for .md Files…",
-    "about": "About MDNote"
+    "about": "About MDNote",
+    "design": "Design"
   },
   "commands": {
     "file": {
@@ -108,6 +109,14 @@
       "statusBar": "Status Bar",
       "shortcuts": "Keyboard Shortcuts",
       "sidebar": "Sidebar"
+    },
+    "styles": {
+      "pane": "Styles Pane",
+      "modify": "Modify Style…",
+      "grow": "Bigger Font",
+      "shrink": "Smaller Font",
+      "setDefault": "Set as Default",
+      "reset": "Reset to Defaults"
     }
   },
   "keys": {
@@ -124,7 +133,8 @@
       "paragraph": "Paragraphs and blocks",
       "insert": "Insert",
       "table": "Tables",
-      "view": "View and help"
+      "view": "View and help",
+      "styles": "Styles and page"
     },
     "testTitle": "Try a shortcut",
     "testHint": "Click here and press keys. This shows exactly what MDNote receives, which helps when an input method (IME) or another program takes a shortcut.",
@@ -193,7 +203,8 @@
     "outline": "Outline",
     "noFolder": "No folder is open.",
     "noDocument": "No document is open.",
-    "noHeadings": "This note has no headings."
+    "noHeadings": "This note has no headings.",
+    "styles": "Styles"
   },
   "folder": {
     "open": "Open",
@@ -254,6 +265,12 @@
       "message_other": "MDNote closed unexpectedly. {{count}} documents had unsaved changes: {{files}}",
       "restore": "Restore",
       "discard": "Discard"
+    },
+    "setDefault": {
+      "title": "Set as Default",
+      "message": "Use this document's styles for new documents, and for documents that don't have styles of their own?",
+      "set": "Set as Default",
+      "cancel": "Cancel"
     }
   },
   "fileTypes": {
@@ -336,5 +353,92 @@
     "imageFolderNoteName": "A folder named after the note (name.assets)",
     "imageFolderNoteFolder": "The note's own folder",
     "showAllFiles": "Show other files (such as images) in the folder sidebar"
+  },
+  "styles": {
+    "names": {
+      "body": "Body text",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "heading4": "Heading 4",
+      "heading5": "Heading 5",
+      "heading6": "Heading 6",
+      "blockquote": "Quote",
+      "list": "List",
+      "inlineCode": "Inline code",
+      "codeBlock": "Code block",
+      "equation": "Equation",
+      "tableHeader": "Table header",
+      "tableCell": "Table cell",
+      "link": "Link",
+      "footnote": "Footnote"
+    },
+    "modifyTitle": "Modify Style: {{name}}",
+    "modifyMenu": "Modify {{name}} Style…",
+    "modifyItem": "Modify…",
+    "sample": "AaBbCc 가나다라 123",
+    "font": "Font",
+    "fallbackFont": "Font for Korean",
+    "fallbackHint": "Used for characters the font doesn't have, such as Korean.",
+    "size": "Size",
+    "emphasis": "Emphasis",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "color": "Color",
+    "automatic": "Automatic",
+    "lineSpacing": "Line spacing",
+    "spacing": {
+      "115": "1.15",
+      "150": "1.5 lines",
+      "single": "Single",
+      "double": "Double",
+      "multiple": "Multiple",
+      "exactly": "Exactly"
+    },
+    "spacingValue": "Line spacing value",
+    "lines": "lines",
+    "spacingAround": "Spacing",
+    "before": "Before",
+    "after": "After",
+    "spaceBefore": "Spacing before",
+    "spaceAfter": "Spacing after",
+    "alignment": "Alignment",
+    "align": {
+      "left": "Left",
+      "center": "Center",
+      "right": "Right",
+      "justify": "Justify"
+    },
+    "codeTheme": "Colors",
+    "themes": {
+      "github": "GitHub",
+      "vscode": "Visual Studio Code",
+      "one": "One",
+      "solarized": "Solarized",
+      "catppuccin": "Catppuccin",
+      "gruvbox": "Gruvbox"
+    },
+    "resetStyle": "Reset Style",
+    "resetStyleHint": "Back to the style this document would have without its own change",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "fromSet": "Style set: {{name}}",
+    "fromDefaultSet": "Default styles ({{name}})",
+    "fromDefaults": "Default styles",
+    "withChanges": " · changed"
+  },
+  "fontPicker": {
+    "none": "(None)",
+    "notInstalled": "not installed",
+    "search": "Search fonts",
+    "monospaced": "Monospaced only",
+    "refresh": "Refresh",
+    "refreshHint": "Look for fonts installed since MDNote started",
+    "recent": "Recently used",
+    "all": "All fonts",
+    "loading": "Reading the installed fonts…",
+    "noMatch": "No font matches.",
+    "mono": "mono"
   }
 }

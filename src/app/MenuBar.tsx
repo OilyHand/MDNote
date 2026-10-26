@@ -166,6 +166,21 @@ function useMenus(): Menu[] {
         ],
       },
       {
+        id: "design",
+        label: t("menu.design"),
+        accessKey: "d",
+        items: [
+          item("styles.modify"),
+          item("styles.grow"),
+          item("styles.shrink"),
+          SEPARATOR,
+          item("styles.pane"),
+          SEPARATOR,
+          item("styles.setDefault"),
+          item("styles.reset"),
+        ],
+      },
+      {
         id: "view",
         label: t("menu.view"),
         accessKey: "v",

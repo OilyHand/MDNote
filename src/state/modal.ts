@@ -1,7 +1,9 @@
 // Dialogs with their own content (the shortcut list, Insert Link, the table
-// picker). Questions with buttons only use `ask()` in dialog.ts instead.
+// picker, Modify Style, Page Setup, style sets). Questions with buttons only
+// use `ask()` in dialog.ts instead.
 
 import { create } from "zustand";
+import type { StyleKey } from "../mdmeta/schema";
 
 export interface LinkFields {
   text: string;
@@ -20,7 +22,9 @@ export type Modal =
       existing: boolean;
       resolve(result: LinkResult): void;
     }
-  | { kind: "table"; resolve(size: { rows: number; columns: number } | null): void };
+  | { kind: "table"; resolve(size: { rows: number; columns: number } | null): void }
+  /** Modify Style (O4); the page shows the changes while it is open. */
+  | { kind: "style"; docId: string; key: StyleKey; resolve(): void };
 
 export const useModal = create<{ modal: Modal | null }>(() => ({ modal: null }));
 
@@ -44,6 +48,23 @@ export function askLink(initial: LinkFields, existing: boolean): Promise<LinkRes
         resolve: (result) => {
           closeModal();
           resolve(result);
+        },
+      },
+    });
+  });
+}
+
+/** Opens Modify Style for one section type of a document. */
+export function modifyStyleDialog(docId: string, key: StyleKey): Promise<void> {
+  return new Promise((resolve) => {
+    useModal.setState({
+      modal: {
+        kind: "style",
+        docId,
+        key,
+        resolve: () => {
+          closeModal();
+          resolve();
         },
       },
     });

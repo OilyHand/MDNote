@@ -106,6 +106,8 @@ const KEYS = {
   "`": { key: "`", code: "Backquote", vk: 192 },
   "=": { key: "=", code: "Equal", vk: 187 },
   ",": { key: ",", code: "Comma", vk: 188 },
+  "[": { key: "[", code: "BracketLeft", vk: 219 },
+  "]": { key: "]", code: "BracketRight", vk: 221 },
 };
 
 function keyInfo(name) {

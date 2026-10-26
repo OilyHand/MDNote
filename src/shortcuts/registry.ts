@@ -3,7 +3,8 @@
 //
 // Each command's label is the translation `commands.<id>`.
 
-export type CommandGroup = "file" | "edit" | "format" | "paragraph" | "insert" | "table" | "view";
+export type CommandGroup =
+  "file" | "edit" | "format" | "paragraph" | "insert" | "table" | "styles" | "view";
 
 export interface CommandSpec {
   /** Key combinations; the first one is shown in menus. */
@@ -31,6 +32,8 @@ const paragraph = (keys: string[] = []): CommandSpec => ({
 const insert = (keys: string[] = []): CommandSpec => ({ keys, group: "insert", editor: true });
 const table = (keys: string[] = []): CommandSpec => ({ keys, group: "table", editor: true });
 const view = (keys: string[] = []): CommandSpec => ({ keys, group: "view" });
+/** Styles and page setup (O4, O9, O19): they work wherever the focus is. */
+const styles = (keys: string[] = []): CommandSpec => ({ keys, group: "styles" });
 
 export const COMMANDS = {
   "file.new": file(["Ctrl+N"]),
@@ -105,6 +108,14 @@ export const COMMANDS = {
   "table.alignCenter": table(),
   "table.alignRight": table(),
   "table.format": table(),
+
+  "styles.pane": styles(),
+  "styles.modify": styles(),
+  // Word's Ctrl+] and Ctrl+[, for the section type at the cursor (O8).
+  "styles.grow": styles(["Ctrl+]"]),
+  "styles.shrink": styles(["Ctrl+["]),
+  "styles.setDefault": styles(),
+  "styles.reset": styles(),
 
   "view.split": view(),
   "view.source": view(),

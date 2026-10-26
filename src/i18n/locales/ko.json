@@ -17,7 +17,8 @@
     "heading": "제목",
     "table": "표",
     "makeDefault": "MDNote를 .md 파일의 기본 앱으로 설정…",
-    "about": "MDNote 정보"
+    "about": "MDNote 정보",
+    "design": "디자인"
   },
   "commands": {
     "file": {
@@ -108,6 +109,14 @@
       "statusBar": "상태 표시줄",
       "shortcuts": "바로 가기 키",
       "sidebar": "사이드바"
+    },
+    "styles": {
+      "pane": "스타일 창",
+      "modify": "스타일 수정…",
+      "grow": "글꼴 크게",
+      "shrink": "글꼴 작게",
+      "setDefault": "기본값으로 설정",
+      "reset": "기본값으로 되돌리기"
     }
   },
   "keys": {
@@ -124,7 +133,8 @@
       "paragraph": "단락과 블록",
       "insert": "삽입",
       "table": "표",
-      "view": "보기와 도움말"
+      "view": "보기와 도움말",
+      "styles": "스타일과 페이지"
     },
     "testTitle": "바로 가기 키 시험",
     "testHint": "여기를 클릭하고 키를 누르면 MDNote가 받은 키가 그대로 표시됩니다. 입력기(IME)나 다른 프로그램이 바로 가기 키를 가로챌 때 원인을 찾는 데 도움이 됩니다.",
@@ -187,7 +197,8 @@
     "outline": "개요",
     "noFolder": "열린 폴더가 없습니다.",
     "noDocument": "열린 문서가 없습니다.",
-    "noHeadings": "이 노트에는 제목이 없습니다."
+    "noHeadings": "이 노트에는 제목이 없습니다.",
+    "styles": "스타일"
   },
   "folder": {
     "open": "열기",
@@ -246,6 +257,12 @@
       "message_other": "MDNote가 예기치 않게 종료되었습니다. 저장하지 않은 변경 내용이 있는 문서 {{count}}개: {{files}}",
       "restore": "복원",
       "discard": "버리기"
+    },
+    "setDefault": {
+      "title": "기본값으로 설정",
+      "message": "이 문서의 스타일을 새 문서와, 자체 스타일이 없는 문서에 사용할까요?",
+      "set": "기본값으로 설정",
+      "cancel": "취소"
     }
   },
   "fileTypes": {
@@ -327,5 +344,92 @@
     "imageFolderNoteName": "노트 이름으로 된 폴더 (이름.assets)",
     "imageFolderNoteFolder": "노트와 같은 폴더",
     "showAllFiles": "폴더 사이드바에 다른 파일(그림 등)도 표시"
+  },
+  "styles": {
+    "names": {
+      "body": "본문",
+      "heading1": "제목 1",
+      "heading2": "제목 2",
+      "heading3": "제목 3",
+      "heading4": "제목 4",
+      "heading5": "제목 5",
+      "heading6": "제목 6",
+      "blockquote": "인용",
+      "list": "목록",
+      "inlineCode": "인라인 코드",
+      "codeBlock": "코드 블록",
+      "equation": "수식",
+      "tableHeader": "표 머리글",
+      "tableCell": "표 셀",
+      "link": "링크",
+      "footnote": "각주"
+    },
+    "modifyTitle": "스타일 수정: {{name}}",
+    "modifyMenu": "{{name}} 스타일 수정…",
+    "modifyItem": "수정…",
+    "sample": "AaBbCc 가나다라 123",
+    "font": "글꼴",
+    "fallbackFont": "한글 글꼴",
+    "fallbackHint": "글꼴에 없는 문자(예: 한글)에 사용합니다.",
+    "size": "크기",
+    "emphasis": "강조",
+    "bold": "굵게",
+    "italic": "기울임꼴",
+    "underline": "밑줄",
+    "color": "색",
+    "automatic": "자동",
+    "lineSpacing": "줄 간격",
+    "spacing": {
+      "115": "1.15",
+      "150": "1.5줄",
+      "single": "1줄",
+      "double": "2줄",
+      "multiple": "배수",
+      "exactly": "고정"
+    },
+    "spacingValue": "줄 간격 값",
+    "lines": "줄",
+    "spacingAround": "단락 간격",
+    "before": "앞",
+    "after": "뒤",
+    "spaceBefore": "단락 앞 간격",
+    "spaceAfter": "단락 뒤 간격",
+    "alignment": "맞춤",
+    "align": {
+      "left": "왼쪽",
+      "center": "가운데",
+      "right": "오른쪽",
+      "justify": "양쪽"
+    },
+    "codeTheme": "색 테마",
+    "themes": {
+      "github": "GitHub",
+      "vscode": "Visual Studio Code",
+      "one": "One",
+      "solarized": "Solarized",
+      "catppuccin": "Catppuccin",
+      "gruvbox": "Gruvbox"
+    },
+    "resetStyle": "스타일 되돌리기",
+    "resetStyleHint": "이 문서에서 바꾸기 전의 스타일로 되돌립니다",
+    "ok": "확인",
+    "cancel": "취소",
+    "fromSet": "스타일 세트: {{name}}",
+    "fromDefaultSet": "기본 스타일 ({{name}})",
+    "fromDefaults": "기본 스타일",
+    "withChanges": " · 변경됨"
+  },
+  "fontPicker": {
+    "none": "(없음)",
+    "notInstalled": "설치되지 않음",
+    "search": "글꼴 검색",
+    "monospaced": "고정폭 글꼴만",
+    "refresh": "새로 고침",
+    "refreshHint": "MDNote를 시작한 뒤 설치한 글꼴을 찾습니다",
+    "recent": "최근에 사용한 글꼴",
+    "all": "모든 글꼴",
+    "loading": "설치된 글꼴을 읽는 중…",
+    "noMatch": "일치하는 글꼴이 없습니다.",
+    "mono": "고정폭"
   }
 }

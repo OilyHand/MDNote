@@ -1,4 +1,4 @@
-// The sidebar (O13, O14): Files and Outline tabs, on the left of the window.
+// The sidebar (O13, O14, O4): Files, Outline and Styles tabs, on the left of the window.
 // View > Sidebar shows or hides it; drag its edge to change the width
 // (double-click for the default). Both are remembered.
 
@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import { SIDEBAR_MAX, SIDEBAR_MIN, useView, type SidebarTab } from "../state/view";
 import { FolderTree } from "./FolderTree";
 import { Outline } from "./Outline";
+import { StylesPane } from "../styles/StylesPane";
 
 const DEFAULT_WIDTH = 240;
 
@@ -63,9 +64,10 @@ export function Sidebar() {
         <div className="sidebar-tabs" role="tablist">
           {tabButton("files", t("sidebar.files"))}
           {tabButton("outline", t("sidebar.outline"))}
+          {tabButton("styles", t("sidebar.styles"))}
         </div>
         <div className="sidebar-body" role="tabpanel">
-          {tab === "files" ? <FolderTree /> : <Outline />}
+          {tab === "files" ? <FolderTree /> : tab === "styles" ? <StylesPane /> : <Outline />}
         </div>
       </aside>
       <SidebarEdge />
