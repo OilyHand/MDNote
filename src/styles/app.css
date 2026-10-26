@@ -1747,3 +1747,118 @@ kbd {
 .preferences .field-hint {
   margin: -4px 0 0 212px;
 }
+
+/* The colour menu (Modify Style > Color) */
+.color-picker {
+  position: relative;
+}
+
+.color-picker-button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 160px;
+  padding: 4px 8px;
+  text-align: left;
+  background: var(--surface);
+}
+
+.color-picker-button > span:nth-child(2) {
+  flex: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.color-chip {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+}
+
+/* Automatic: the page's text colour, shown as half dark, half light. */
+.color-chip.auto {
+  background: linear-gradient(135deg, var(--paper-text) 50%, var(--paper) 50%);
+}
+
+.color-menu {
+  position: absolute;
+  z-index: 45;
+  top: calc(100% + 2px);
+  left: 0;
+  width: 248px;
+  padding: 8px;
+  background: var(--surface-raised);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow);
+}
+
+.color-auto {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 6px;
+  border: none;
+  background: none;
+  text-align: left;
+}
+
+.color-auto:hover {
+  background: var(--hover);
+}
+
+.color-heading {
+  margin: 8px 0 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.color-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  gap: 4px;
+}
+
+.color-grid.shades {
+  gap: 0 4px;
+  margin-top: 4px;
+}
+
+.color-swatch {
+  width: 100%;
+  aspect-ratio: 1;
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.45);
+  border-radius: 2px;
+}
+
+.color-swatch:hover,
+.color-swatch:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  position: relative;
+  z-index: 1;
+}
+
+.color-custom {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.color-custom input {
+  flex: 1;
+  min-width: 0;
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  font-variant-numeric: tabular-nums;
+}
+
+.color-custom button {
+  padding: 3px 10px;
+}

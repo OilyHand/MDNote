@@ -15,6 +15,7 @@ import {
 } from "../mdmeta/schema";
 import { fontStack } from "./css";
 import { FontPicker } from "./FontPicker";
+import { ColorPicker } from "./ColorPicker";
 import {
   changeMeta,
   clearPreviewMeta,
@@ -184,7 +185,10 @@ export function ModifyStyleDialog({
   };
 
   return (
+    // noValidate: values are checked here; the browser would refuse 11.3 pt for not
+    // being a multiple of the arrows' step.
     <form
+      noValidate
       className="dialog dialog-style"
       role="dialog"
       aria-modal="true"
@@ -265,23 +269,11 @@ export function ModifyStyleDialog({
         {has("color") ? (
           <div className="style-field">
             <span>{t("styles.color")}</span>
-            <span className="style-inline">
-              <label className="check">
-                <input
-                  type="checkbox"
-                  checked={values.color === undefined}
-                  onChange={(e) => set("color", e.target.checked ? undefined : "#000000")}
-                />
-                <span>{t("styles.automatic")}</span>
-              </label>
-              <input
-                type="color"
-                aria-label={t("styles.color")}
-                value={values.color ?? "#000000"}
-                disabled={values.color === undefined}
-                onChange={(e) => set("color", e.target.value)}
-              />
-            </span>
+            <ColorPicker
+              label={t("styles.color")}
+              value={values.color}
+              onChange={(color) => set("color", color)}
+            />
           </div>
         ) : null}
         {has("lineSpacing") ? (

@@ -391,7 +391,7 @@
     "sample": "AaBbCc 가나다라 123",
     "font": "글꼴",
     "fallbackFont": "한글 글꼴",
-    "fallbackHint": "글꼴에 없는 문자(예: 한글)에 사용합니다.",
+    "fallbackHint": "한글(과 다른 동아시아 문자)은 Word의 한글 글꼴처럼 항상 이 글꼴로 표시합니다.",
     "size": "크기",
     "emphasis": "강조",
     "bold": "굵게",
@@ -438,7 +438,11 @@
     "fromSet": "스타일 세트: {{name}}",
     "fromDefaultSet": "기본 스타일 ({{name}})",
     "fromDefaults": "기본 스타일",
-    "withChanges": " · 변경됨"
+    "withChanges": " · 변경됨",
+    "themeColors": "테마 색",
+    "standardColors": "표준 색",
+    "customColor": "다른 색",
+    "applyColor": "적용"
   },
   "fontPicker": {
     "none": "(없음)",

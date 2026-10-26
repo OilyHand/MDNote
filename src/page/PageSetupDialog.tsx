@@ -142,7 +142,10 @@ export function PageSetupDialog({ docId, onDone }: { docId: string; onDone(): vo
   };
 
   return (
+    // noValidate: lengths are checked here; the browser would refuse 2.54 for not
+    // being a multiple of the arrows' step.
     <form
+      noValidate
       className="dialog dialog-page"
       role="dialog"
       aria-modal="true"

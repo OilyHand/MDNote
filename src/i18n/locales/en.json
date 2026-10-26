@@ -400,7 +400,7 @@
     "sample": "AaBbCc 가나다라 123",
     "font": "Font",
     "fallbackFont": "Font for Korean",
-    "fallbackHint": "Used for characters the font doesn't have, such as Korean.",
+    "fallbackHint": "Korean (and other East Asian) characters always use this font, as with Word's font for Asian text.",
     "size": "Size",
     "emphasis": "Emphasis",
     "bold": "Bold",
@@ -447,7 +447,11 @@
     "fromSet": "Style set: {{name}}",
     "fromDefaultSet": "Default styles ({{name}})",
     "fromDefaults": "Default styles",
-    "withChanges": " · changed"
+    "withChanges": " · changed",
+    "themeColors": "Theme colors",
+    "standardColors": "Standard colors",
+    "customColor": "Other color",
+    "applyColor": "Use"
   },
   "fontPicker": {
     "none": "(None)",

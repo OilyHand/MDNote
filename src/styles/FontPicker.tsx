@@ -3,7 +3,10 @@
 // only" filter and Refresh. Only the rows in view are drawn, so hundreds of
 // fonts stay quick. A font that is not installed stays selectable, marked.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { floatingPosition, useCloseOnMove } from "./popover";
+
+const LIST_SIZE = { width: 340, height: 336 };
 import { useTranslation } from "react-i18next";
 import type { FontFamily } from "../ipc";
 import { ensureFonts, refreshFonts, useFonts } from "../state/fonts";
@@ -46,6 +49,10 @@ export function FontPicker({ value, onChange, allowNone, monospaced, label }: Fo
   const fonts = useFonts((s) => s.fonts);
   const index = useFonts((s) => s.index);
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => setOpen(false), []);
+  const [floating, setFloating] = useState<React.CSSProperties>();
+  useCloseOnMove(open, close);
   const font = value ? index?.get(value.toLowerCase()) : undefined;
   const missing = Boolean(value && index && !font);
 
@@ -56,12 +63,16 @@ export function FontPicker({ value, onChange, allowNone, monospaced, label }: Fo
   return (
     <div className="font-picker">
       <button
+        ref={buttonRef}
         type="button"
         className="font-picker-button"
         aria-haspopup="listbox"
         aria-expanded={open}
         aria-label={label}
-        onClick={() => setOpen(!open)}
+        onClick={() => {
+          if (buttonRef.current) setFloating(floatingPosition(buttonRef.current, LIST_SIZE));
+          setOpen(!open);
+        }}
       >
         <span style={value && !missing ? { fontFamily: `"${value}"` } : undefined}>
           {value ? fontLabel(font, value, i18n.language) : t("fontPicker.none")}
@@ -82,7 +93,8 @@ export function FontPicker({ value, onChange, allowNone, monospaced, label }: Fo
             if (name) rememberFont(name);
             onChange(name);
           }}
-          onClose={() => setOpen(false)}
+          onClose={close}
+          style={floating}
         />
       ) : null}
     </div>
@@ -96,6 +108,7 @@ function FontList({
   monospaced,
   onPick,
   onClose,
+  style,
 }: {
   value: string | undefined;
   fonts: FontFamily[] | null;
@@ -103,6 +116,7 @@ function FontList({
   monospaced?: boolean;
   onPick(name: string | undefined): void;
   onClose(): void;
+  style?: React.CSSProperties;
 }) {
   const { t, i18n } = useTranslation();
   const recent = usePrefs((s) => s.preferences.recentFonts);
@@ -183,7 +197,7 @@ function FontList({
   const last = Math.min(rows.length, Math.ceil((scrollTop + LIST_HEIGHT) / ROW) + 4);
 
   return (
-    <div className="font-list" ref={rootRef} onKeyDown={onKeyDown} data-own-escape>
+    <div className="font-list" ref={rootRef} style={style} onKeyDown={onKeyDown} data-own-escape>
       <div className="font-list-tools">
         <input
           ref={searchRef}
