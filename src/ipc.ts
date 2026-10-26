@@ -183,6 +183,13 @@ export const api = {
     invoke<string | null>("resolve_link", { document, target }),
   listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
 
+  // User style sets (O19): JSON text, checked by the window.
+  listStyleSets: () => invoke<{ id: string; text: string }[]>("list_style_sets"),
+  saveStyleSet: (id: string, text: string) => invoke<void>("save_style_set", { id, text }),
+  deleteStyleSet: (id: string) => invoke<void>("delete_style_set", { id }),
+  importStyleSet: (path: string) => invoke<string>("import_style_set", { path }),
+  exportStyleSet: (path: string, text: string) => invoke<void>("export_style_set", { path, text }),
+
   // The folder sidebar (O14)
   listFolder: (path: string, showAll: boolean) =>
     invoke<FolderEntry[]>("list_folder", { path, showAll }),

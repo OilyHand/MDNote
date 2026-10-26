@@ -116,7 +116,9 @@
       "grow": "글꼴 크게",
       "shrink": "글꼴 작게",
       "setDefault": "기본값으로 설정",
-      "reset": "기본값으로 되돌리기"
+      "reset": "기본값으로 되돌리기",
+      "sets": "스타일 세트…",
+      "saveSet": "새 스타일 세트로 저장…"
     }
   },
   "keys": {
@@ -431,5 +433,41 @@
     "loading": "설치된 글꼴을 읽는 중…",
     "noMatch": "일치하는 글꼴이 없습니다.",
     "mono": "고정폭"
+  },
+  "styleSets": {
+    "title": "스타일 세트",
+    "hint": "세트를 가리키면 페이지에 미리 보이고, 클릭하면 적용됩니다. 세트를 적용하면 그 스타일이 문서에 복사되며, 실행 취소로 되돌릴 수 있습니다.",
+    "builtIn": {
+      "default": "기본",
+      "report": "보고서",
+      "compact": "간결"
+    },
+    "sampleTitle": "Title 제목",
+    "sampleHeading": "Heading 소제목",
+    "sampleText": "Body text in this style set. 본문은 이렇게 보입니다.",
+    "more": "{{name}} 더 보기",
+    "apply": "적용",
+    "export": "내보내기…",
+    "renameItem": "이름 바꾸기…",
+    "deleteItem": "삭제…",
+    "import": "가져오기…",
+    "close": "닫기",
+    "name": "이름",
+    "saveTitle": "새 스타일 세트로 저장",
+    "save": "저장",
+    "saved": "스타일 세트 “{{name}}”을(를) 저장했습니다.",
+    "replaceTitle": "스타일 세트 바꾸기",
+    "replaceMessage": "“{{name}}” 스타일 세트가 이미 있습니다. 이 문서의 스타일로 바꿀까요?",
+    "replace": "바꾸기",
+    "cancel": "취소",
+    "renameTitle": "스타일 세트 이름 바꾸기",
+    "rename": "이름 바꾸기",
+    "nameTaken": "“{{name}}” 스타일 세트가 이미 있습니다.",
+    "deleteTitle": "스타일 세트 삭제",
+    "deleteMessage": "“{{name}}” 스타일 세트를 삭제할까요? 이 세트를 사용한 문서의 스타일은 그대로 남습니다.",
+    "delete": "삭제",
+    "fileType": "MDNote 스타일 세트",
+    "notASet": "“{{path}}”은(는) MDNote 스타일 세트가 아닙니다.",
+    "imported": "스타일 세트 “{{name}}”을(를) 가져왔습니다."
   }
 }

@@ -12,9 +12,11 @@ import {
 } from "../shortcuts/registry";
 import { closeModal, useModal, type LinkFields, type LinkResult, type Modal } from "../state/modal";
 import { ModifyStyleDialog } from "../styles/ModifyStyleDialog";
+import { StyleSetGallery } from "../styles/StyleSetGallery";
+import type { TextPrompt } from "../state/modal";
 
 /** Dialogs that change the page as you go: the page stays visible beside them. */
-const LIVE: Modal["kind"][] = ["style"];
+const LIVE: Modal["kind"][] = ["style", "styleSets"];
 
 export function ModalHost() {
   const modal = useModal((s) => s.modal);
@@ -49,13 +51,17 @@ export function ModalHost() {
       {modal.kind === "style" ? (
         <ModifyStyleDialog docId={modal.docId} styleKey={modal.key} onDone={modal.resolve} />
       ) : null}
+      {modal.kind === "styleSets" ? (
+        <StyleSetGallery docId={modal.docId} onDone={modal.resolve} />
+      ) : null}
+      {modal.kind === "text" ? <TextDialog prompt={modal.prompt} onDone={modal.resolve} /> : null}
     </div>
   );
 }
 
 function cancel(modal: Modal) {
   if (modal.kind === "shortcuts") closeModal();
-  else if (modal.kind === "style") modal.resolve();
+  else if (modal.kind === "style" || modal.kind === "styleSets") modal.resolve();
   else modal.resolve(null);
 }
 
@@ -223,6 +229,51 @@ function LinkDialog({
         </button>
         <button type="button" onClick={() => onDone(null)}>
           {t("linkDialog.cancel")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// A name to type
+// ---------------------------------------------------------------------------
+
+function TextDialog({ prompt, onDone }: { prompt: TextPrompt; onDone(text: string | null): void }) {
+  const { t } = useTranslation();
+  const [text, setText] = useState(prompt.initial);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+  return (
+    <form
+      className="dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="text-title"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (text.trim()) onDone(text);
+      }}
+    >
+      <h2 id="text-title">{prompt.title}</h2>
+      <label className="dialog-field">
+        <span>{prompt.label}</span>
+        <input
+          ref={inputRef}
+          value={text}
+          maxLength={100}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </label>
+      <div className="dialog-buttons">
+        <button type="submit" className="primary" disabled={!text.trim()}>
+          {prompt.ok}
+        </button>
+        <button type="button" onClick={() => onDone(null)}>
+          {t("styleSets.cancel")}
         </button>
       </div>
     </form>

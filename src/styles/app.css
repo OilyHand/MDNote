@@ -1526,3 +1526,74 @@ kbd {
   padding: 3px 10px;
   font-size: 12px;
 }
+
+/* Design > Style Sets (O19) */
+.dialog-sets {
+  width: min(640px, calc(100vw - 64px));
+}
+
+.set-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+  margin: 8px 0 18px;
+  max-height: 60vh;
+  overflow: auto;
+  padding: 2px;
+}
+
+.set-card {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.set-card.current {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px var(--accent);
+}
+
+.set-sample {
+  height: 118px;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  background: var(--preview-bg);
+  overflow: hidden;
+}
+
+.set-sample:hover,
+.set-sample:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.set-sample-page {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  height: 100%;
+  padding: 12px 14px;
+  background: var(--paper);
+  color: var(--paper-text);
+  text-align: left;
+  /* The sample in its real sizes, halved. */
+  zoom: 0.62;
+}
+
+.set-caption {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 4px 4px 10px;
+  border-top: 1px solid var(--border);
+}
+
+.set-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}

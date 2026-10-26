@@ -52,6 +52,12 @@ export function lineHeight(key: StyleKey, props: StyleProps, fonts: FontIndex): 
   return String(Math.round(spacing.value * single * 1000) / 1000);
 }
 
+/** Whether the page is shown dark (the dark theme, chosen or from Windows). */
+export function pageIsDark(): boolean {
+  const theme = document.documentElement.dataset.theme;
+  return theme ? theme === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches;
+}
+
 /** Dark colours turned light for the dark page, keeping their hue. */
 export function darkModeColor(hex: string): string {
   const n = parseInt(hex.slice(1), 16);

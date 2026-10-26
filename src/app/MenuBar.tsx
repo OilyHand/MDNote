@@ -170,6 +170,9 @@ function useMenus(): Menu[] {
         label: t("menu.design"),
         accessKey: "d",
         items: [
+          item("styles.sets"),
+          item("styles.saveSet"),
+          SEPARATOR,
           item("styles.modify"),
           item("styles.grow"),
           item("styles.shrink"),

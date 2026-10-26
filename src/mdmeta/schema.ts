@@ -299,7 +299,8 @@ function orderedStyle(style: StyleProps): Json {
   return out;
 }
 
-function orderedStyles(styles: StyleMap): Json {
+/** A "styles" object with its styles and properties in the written order. */
+export function orderedStyles(styles: StyleMap): Json {
   const out: Json = {};
   for (const key of STYLE_KEYS) {
     const style = styles[key];

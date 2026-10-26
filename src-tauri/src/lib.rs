@@ -15,6 +15,7 @@ mod recent;
 mod recovery;
 mod shell;
 mod storage;
+mod stylesets;
 mod tabs;
 mod watch;
 mod windows;
@@ -146,6 +147,11 @@ pub fn run() {
             preview::resolve_images,
             preview::resolve_link,
             fonts::list_fonts,
+            stylesets::list_style_sets,
+            stylesets::save_style_set,
+            stylesets::delete_style_set,
+            stylesets::import_style_set,
+            stylesets::export_style_set,
             folders::list_folder,
             folders::watch_folder,
             folders::unwatch_folder,

@@ -116,7 +116,9 @@
       "grow": "Bigger Font",
       "shrink": "Smaller Font",
       "setDefault": "Set as Default",
-      "reset": "Reset to Defaults"
+      "reset": "Reset to Defaults",
+      "sets": "Style Sets…",
+      "saveSet": "Save as New Style Set…"
     }
   },
   "keys": {
@@ -440,5 +442,41 @@
     "loading": "Reading the installed fonts…",
     "noMatch": "No font matches.",
     "mono": "mono"
+  },
+  "styleSets": {
+    "title": "Style Sets",
+    "hint": "Point at a set to see it on the page; click to apply it. Applying a set copies its styles into the document, and Undo takes it back.",
+    "builtIn": {
+      "default": "Default",
+      "report": "Report",
+      "compact": "Compact"
+    },
+    "sampleTitle": "Title 제목",
+    "sampleHeading": "Heading 소제목",
+    "sampleText": "Body text in this style set. 본문은 이렇게 보입니다.",
+    "more": "More for {{name}}",
+    "apply": "Apply",
+    "export": "Export…",
+    "renameItem": "Rename…",
+    "deleteItem": "Delete…",
+    "import": "Import…",
+    "close": "Close",
+    "name": "Name",
+    "saveTitle": "Save as New Style Set",
+    "save": "Save",
+    "saved": "Saved the style set “{{name}}”.",
+    "replaceTitle": "Replace Style Set",
+    "replaceMessage": "A style set named “{{name}}” already exists. Replace it with this document's styles?",
+    "replace": "Replace",
+    "cancel": "Cancel",
+    "renameTitle": "Rename Style Set",
+    "rename": "Rename",
+    "nameTaken": "A style set named “{{name}}” already exists.",
+    "deleteTitle": "Delete Style Set",
+    "deleteMessage": "Delete the style set “{{name}}”? Documents that used it keep their styles.",
+    "delete": "Delete",
+    "fileType": "MDNote style set",
+    "notASet": "“{{path}}” is not an MDNote style set.",
+    "imported": "Imported the style set “{{name}}”."
   }
 }

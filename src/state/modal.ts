@@ -24,7 +24,19 @@ export type Modal =
     }
   | { kind: "table"; resolve(size: { rows: number; columns: number } | null): void }
   /** Modify Style (O4); the page shows the changes while it is open. */
-  | { kind: "style"; docId: string; key: StyleKey; resolve(): void };
+  | { kind: "style"; docId: string; key: StyleKey; resolve(): void }
+  /** Design > Style Sets (O19): hovering a set shows it on the page. */
+  | { kind: "styleSets"; docId: string; resolve(): void }
+  /** A name to type (a new style set, renaming one). */
+  | { kind: "text"; prompt: TextPrompt; resolve(text: string | null): void };
+
+export interface TextPrompt {
+  title: string;
+  label: string;
+  initial: string;
+  /** The label of the button that confirms. */
+  ok: string;
+}
 
 export const useModal = create<{ modal: Modal | null }>(() => ({ modal: null }));
 
@@ -62,6 +74,39 @@ export function modifyStyleDialog(docId: string, key: StyleKey): Promise<void> {
         kind: "style",
         docId,
         key,
+        resolve: () => {
+          closeModal();
+          resolve();
+        },
+      },
+    });
+  });
+}
+
+/** Asks for a line of text; null if cancelled. Opens over another dialog, which comes back after. */
+export function askText(prompt: TextPrompt): Promise<string | null> {
+  const previous = useModal.getState().modal;
+  return new Promise((resolve) => {
+    useModal.setState({
+      modal: {
+        kind: "text",
+        prompt,
+        resolve: (text) => {
+          useModal.setState({ modal: previous });
+          resolve(text?.trim() || null);
+        },
+      },
+    });
+  });
+}
+
+/** Design > Style Sets: the gallery. */
+export function showStyleSets(docId: string): Promise<void> {
+  return new Promise((resolve) => {
+    useModal.setState({
+      modal: {
+        kind: "styleSets",
+        docId,
         resolve: () => {
           closeModal();
           resolve();

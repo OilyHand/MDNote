@@ -109,6 +109,8 @@ export const COMMANDS = {
   "table.alignRight": table(),
   "table.format": table(),
 
+  "styles.sets": styles(),
+  "styles.saveSet": styles(),
   "styles.pane": styles(),
   "styles.modify": styles(),
   // Word's Ctrl+] and Ctrl+[, for the section type at the cursor (O8).

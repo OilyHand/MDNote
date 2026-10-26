@@ -25,6 +25,8 @@ import { isTableCommand, runEditorCommand } from "./editorCommands";
 import { moveToNewWindow } from "./tabWindows";
 import { open } from "@tauri-apps/plugin-dialog";
 import { closeFolder, openFolder } from "../state/folder";
+import { saveCurrentAsSet } from "../styles/sets";
+import { showStyleSets } from "../state/modal";
 import {
   growFont,
   modifyCurrentStyle,
@@ -121,6 +123,10 @@ export function runCommand(id: CommandId) {
     case "view.shortcuts":
       return showShortcuts();
 
+    case "styles.sets":
+      return void (active && showStyleSets(active.id));
+    case "styles.saveSet":
+      return void (active && saveCurrentAsSet(active.id));
     case "styles.pane":
       return useView.setState({ sidebar: true, sidebarTab: "styles" });
     case "styles.modify":

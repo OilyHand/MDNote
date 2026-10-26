@@ -97,6 +97,9 @@ export function StylesPane() {
         })}
       </ul>
       <div className="styles-actions">
+        <button type="button" onClick={item("styles.sets").action}>
+          {t("commands.styles.sets")}
+        </button>
         <button type="button" onClick={item("styles.setDefault").action}>
           {t("commands.styles.setDefault")}
         </button>
