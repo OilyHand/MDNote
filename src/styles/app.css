@@ -1740,3 +1740,8 @@ kbd {
   font-size: 11px;
   pointer-events: none;
 }
+
+/* A hint under a Preferences field, lined up with the field's control. */
+.preferences .field-hint {
+  margin: -4px 0 0 212px;
+}

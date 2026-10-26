@@ -350,7 +350,21 @@
     "imageFolderAssets": "노트 옆의 assets 폴더",
     "imageFolderNoteName": "노트 이름으로 된 폴더 (이름.assets)",
     "imageFolderNoteFolder": "노트와 같은 폴더",
-    "showAllFiles": "폴더 사이드바에 다른 파일(그림 등)도 표시"
+    "showAllFiles": "폴더 사이드바에 다른 파일(그림 등)도 표시",
+    "documents": "문서",
+    "defaultStyles": "기본 스타일",
+    "builtInStyles": "기본 제공 (기본)",
+    "customStyles": "문서에서 가져옴 (기본값으로 설정)",
+    "defaultStylesHint": "새 문서와 자체 스타일이 없는 문서에 사용합니다. 문서 자체의 스타일과 적용한 스타일 세트가 항상 우선합니다.",
+    "defaultPaper": "기본 용지 크기",
+    "paperSystem": "Windows와 같게 ({{paper}})",
+    "defaultPageHint": "자체 페이지 설정이 없는 문서에 사용합니다. 사용자 지정 여백은 레이아웃 > 페이지 설정 > 기본값으로 설정에서 정합니다.",
+    "units": "측정 단위",
+    "unitsSystem": "Windows와 같게 ({{units}})",
+    "unitNames": {
+      "cm": "센티미터",
+      "in": "인치"
+    }
   },
   "styles": {
     "names": {

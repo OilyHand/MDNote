@@ -359,7 +359,21 @@
     "imageFolderAssets": "An “assets” folder next to the note",
     "imageFolderNoteName": "A folder named after the note (name.assets)",
     "imageFolderNoteFolder": "The note's own folder",
-    "showAllFiles": "Show other files (such as images) in the folder sidebar"
+    "showAllFiles": "Show other files (such as images) in the folder sidebar",
+    "documents": "Documents",
+    "defaultStyles": "Default styles",
+    "builtInStyles": "Built-in (Default)",
+    "customStyles": "From a document (Set as Default)",
+    "defaultStylesHint": "For new documents and documents without styles of their own. A document's own styles, and an applied style set, always win.",
+    "defaultPaper": "Default paper size",
+    "paperSystem": "Same as Windows ({{paper}})",
+    "defaultPageHint": "For documents without their own page setup. Layout > Page Setup > Set as Default sets custom margins.",
+    "units": "Measurement units",
+    "unitsSystem": "Same as Windows ({{units}})",
+    "unitNames": {
+      "cm": "Centimeters",
+      "in": "Inches"
+    }
   },
   "styles": {
     "names": {
