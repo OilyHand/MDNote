@@ -1,5 +1,7 @@
 /* Colours are tokens, redefined for dark mode. "Same as Windows" follows
-   prefers-color-scheme; an explicit choice sets data-theme on <html>. */
+   prefers-color-scheme; an explicit choice sets data-theme on <html>. Printing
+   always uses the light colours (markdown.css), so the dark ones are for the
+   screen only. */
 
 :root {
   --font-ui: "Segoe UI Variable Text", "Segoe UI", "Malgun Gothic", sans-serif;
@@ -42,7 +44,7 @@
   font-size: 14px;
 }
 
-@media (prefers-color-scheme: dark) {
+@media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     --chrome: #202020;
     --surface: #1b1b1b;

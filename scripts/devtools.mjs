@@ -6,6 +6,7 @@
 //   node scripts/devtools.mjs wait             wait until a window shows its editor
 //   node scripts/devtools.mjs eval "<js>"      evaluate in the page (promises are awaited)
 //   node scripts/devtools.mjs shot <file.png>  screenshot of the page
+//   node scripts/devtools.mjs printshot <file.png>  the page as it prints (print styles)
 //   node scripts/devtools.mjs key <combo> [n]  e.g. Ctrl+B, Alt+Shift+ArrowUp, Enter, F1
 //   node scripts/devtools.mjs keyup <combo>    only the key-up (as when an IME keeps the key-down)
 //   node scripts/devtools.mjs type "<text>"    insert text as if typed
@@ -178,7 +179,10 @@ try {
       } else console.log(JSON.stringify(result.result.value, null, 1));
       break;
     }
-    case "shot": {
+    case "shot":
+    case "printshot": {
+      // Print styles last only as long as this connection.
+      if (command === "printshot") await send("Emulation.setEmulatedMedia", { media: "print" });
       const { data } = await send("Page.captureScreenshot", { format: "png" });
       writeFileSync(args[0], Buffer.from(data, "base64"));
       console.log(`saved ${args[0]}`);
