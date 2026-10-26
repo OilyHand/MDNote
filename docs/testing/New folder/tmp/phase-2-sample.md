@@ -2,6 +2,8 @@
 
 This document exercises everything the rendered view supports (O2). Open it in MDNote and compare the preview with each section's description.
 
+
+
 ## 1. Text
 
 Plain text, **bold**, *italic*, ***both***, ~~strikethrough~~, `inline code`, <u>underline (HTML)</u>, and a hard line break after this backslash:\
@@ -74,10 +76,10 @@ Unknown languages stay plain.
 - Web link: [Tauri](https://tauri.app) (opens in the browser)
 - Autolink: https://github.com/OilyHand/MDNote
 - Heading link: [jump to Math](#7-math)
-- Note link: [the Phase 1 checklist](phase-1.md) (opens in MDNote)
+- Note link: [the Phase 1 checklist](../phase-1.md) (opens in MDNote)
 - Reference link: [MDNote on GitHub][repo]
 
-![A sample image, loaded from the assets folder](assets/sample%20image.png)
+![A sample image, loaded from the assets folder](../assets/sample%20image.png)
 
 [repo]: https://github.com/OilyHand/MDNote
 
