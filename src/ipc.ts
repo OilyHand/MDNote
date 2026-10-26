@@ -167,12 +167,12 @@ export const api = {
     invoke<FolderEntry[]>("list_folder", { path, showAll }),
   watchFolder: (path: string) => invoke<void>("watch_folder", { path }),
   unwatchFolder: () => invoke<void>("unwatch_folder"),
-  /** Returns the new path; a note's .mdn and .assets go with it. */
+  /** Returns the new path; a note's .mdmeta and .assets go with it. */
   renameEntry: (path: string, name: string) => invoke<string>("rename_entry", { path, name }),
   moveEntry: (path: string, folder: string) => invoke<string>("move_entry", { path, folder }),
   createNote: (folder: string, name: string) => invoke<string>("create_note", { folder, name }),
   createFolder: (folder: string, name: string) => invoke<string>("create_folder", { folder, name }),
-  /** To the Recycle Bin, a note with its .mdn and .assets. */
+  /** To the Recycle Bin, a note with its .mdmeta and .assets. */
   deleteEntry: (path: string) => invoke<void>("delete_entry", { path }),
   existingFiles: (paths: string[]) => invoke<boolean[]>("existing_files", { paths }),
 

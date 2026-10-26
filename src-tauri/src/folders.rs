@@ -1,7 +1,7 @@
 //! The folder sidebar (O14): listing a folder one level at a time, watching it
 //! for changes made outside MDNote, and the file operations of its menu.
 //!
-//! A note's companions travel with it: its `<name>.mdn` formatting file (O7)
+//! A note's companions travel with it: its `<name>.mdmeta` formatting file (O7)
 //! and its `<name>.assets` image folder (O15). Renames and moves are reported
 //! to every window ("paths-moved"), so open tabs follow them.
 
@@ -22,7 +22,7 @@ use crate::error::{AppError, AppResult};
 const SETTLE_TIME: Duration = Duration::from_millis(300);
 const NOTE_EXTENSIONS: &[&str] = &["md", "markdown"];
 /// Files that belong to a note, named after it.
-const COMPANION_SUFFIXES: &[&str] = &[".mdn", ".assets"];
+const COMPANION_SUFFIXES: &[&str] = &[".mdmeta", ".assets"];
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -59,7 +59,7 @@ fn modified_ms(meta: &fs::Metadata) -> u64 {
         .map_or(0, |d| d.as_millis() as u64)
 }
 
-/// The folders and notes directly inside `path`. `.mdn` files are never listed
+/// The folders and notes directly inside `path`. `.mdmeta` files are never listed
 /// (they belong to their note); other files only with `show_all`.
 #[tauri::command]
 pub async fn list_folder(path: String, show_all: bool) -> AppResult<Vec<FolderEntry>> {
@@ -73,7 +73,7 @@ pub async fn list_folder(path: String, show_all: bool) -> AppResult<Vec<FolderEn
         let is_dir = meta.is_dir();
         let note = !is_dir && is_note(&path);
         let skip = is_hidden(&meta, &name)
-            || (!is_dir && has_extension(&path, &["mdn"]))
+            || (!is_dir && has_extension(&path, &["mdmeta"]))
             || (!is_dir && !note && !show_all);
         if skip {
             continue;
@@ -189,7 +189,7 @@ fn checked_name(name: &str) -> AppResult<String> {
     Ok(name.to_string())
 }
 
-/// `<name>.mdn` and `<name>.assets` next to a note, if they exist.
+/// `<name>.mdmeta` and `<name>.assets` next to a note, if they exist.
 fn companions(note: &Path) -> Vec<(PathBuf, &'static str)> {
     let (Some(dir), Some(stem)) = (note.parent(), note.file_stem()) else {
         return Vec::new();
@@ -383,16 +383,34 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let note = dir.path().join("회의.md");
         fs::write(&note, "x").unwrap();
-        fs::write(dir.path().join("회의.mdn"), "{}").unwrap();
+        fs::write(dir.path().join("회의.mdmeta"), "{}").unwrap();
         fs::create_dir(dir.path().join("회의.assets")).unwrap();
-        fs::write(dir.path().join("other.mdn"), "{}").unwrap();
+        fs::write(dir.path().join("other.mdmeta"), "{}").unwrap();
         let mut found: Vec<&str> = companions(&note).into_iter().map(|(_, s)| s).collect();
         found.sort();
-        assert_eq!(found, vec![".assets", ".mdn"]);
+        assert_eq!(found, vec![".assets", ".mdmeta"]);
         assert_eq!(
-            companion_for(&dir.path().join("b.md"), ".mdn"),
-            dir.path().join("b.mdn")
+            companion_for(&dir.path().join("b.md"), ".mdmeta"),
+            dir.path().join("b.mdmeta")
         );
+    }
+
+    #[test]
+    fn the_tree_never_lists_metadata_files() {
+        let dir = tempfile::tempdir().unwrap();
+        for name in ["a.md", "a.mdmeta", "b.png"] {
+            fs::write(dir.path().join(name), "{}").unwrap();
+        }
+        let path = dir.path().display().to_string();
+        let names = |show_all| {
+            let listed =
+                tauri::async_runtime::block_on(list_folder(path.clone(), show_all)).unwrap();
+            let mut names: Vec<String> = listed.into_iter().map(|e| e.name).collect();
+            names.sort();
+            names
+        };
+        assert_eq!(names(false), vec!["a.md"]);
+        assert_eq!(names(true), vec!["a.md", "b.png"]);
     }
 
     #[test]

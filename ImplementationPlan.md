@@ -15,7 +15,7 @@
 | 2. Rendering | Split view with complete Markdown rendering | O2 | M | v0.2 |
 | 3. Editing | Word-style shortcuts, editor conveniences, table tools, image paste, status bar, crash recovery, tab windows | O1, O8, O15–O18 | L | v0.3 |
 | 4. Navigation | Sidebar with folder tree and outline | O13, O14 | M | v0.4 |
-| 5. Styles and page | Fonts, styles, style sets, page setup, `.mdn` files | O3, O4, O7, O9, O19 | L | v0.5 |
+| 5. Styles and page | Fonts, styles, style sets, page setup, `.mdmeta` files | O3, O4, O7, O9, O19 | L | v0.5 |
 | 6. Layout | Table and image resizing with the mouse | O5, O6, O7, O16 | M | v0.6 |
 | 7. Output | PDF and Word export, copy as rich text | O10, O20 | L | v0.7 |
 | 8. Release | Icons, signing, auto-update, translation review, installer tests | O1, O11 | M | v1.0 |
@@ -38,7 +38,7 @@ MDNote/
 │  ├─ render/                Markdown pipeline, runs in a Web Worker (O2)
 │  ├─ preview/               page view, scroll sync, table/image resizing (O5, O6)
 │  ├─ styles/                style model, CSS variables, style sets (O4, O19)
-│  ├─ mdn/                   .mdn schema, load / merge / save, element matching (O7)
+│  ├─ mdmeta/                .mdmeta schema, load / merge / save, element matching (O7)
 │  ├─ page/                  page setup, ruler, unit conversion (O9)
 │  ├─ export/                DOCX builder, PDF request, rich-text copy (O10, O20)
 │  ├─ sidebar/               folder tree and outline (O13, O14)
@@ -66,7 +66,7 @@ MDNote/
 
 ### 2.2 Key design choices
 
-- **One document = text + metadata + file info.** The text lives in a CodeMirror state. The `.mdn` metadata lives in a field of that same state, and file info is kept alongside: path, encoding, line endings, and last-modified time. Because text edits and layout changes (style changes, table and image resizes) are transactions in the same state, **one Undo history covers both**, so Ctrl+Z undoes a table resize just like a typed word.
+- **One document = text + metadata + file info.** The text lives in a CodeMirror state. The `.mdmeta` metadata lives in a field of that same state, and file info is kept alongside: path, encoding, line endings, and last-modified time. Because text edits and layout changes (style changes, table and image resizes) are transactions in the same state, **one Undo history covers both**, so Ctrl+Z undoes a table resize just like a typed word.
 - **Rendering runs in a Web Worker.** Markdown is parsed (remark → rehype → sanitize → KaTeX → Shiki) off the main thread, so typing stays smooth on large notes. The worker returns a syntax tree with source line numbers (for scroll sync) and element keys (table index and fingerprint, image path and occurrence, for O7). Export (O10) reuses the same pipeline.
 - **One unit-conversion module.** The screen, PDF, and DOCX all convert through the same `page/units.ts`:
   - pt for fonts
@@ -76,7 +76,7 @@ MDNote/
 
   This keeps the three outputs identical.
 - **Styles are CSS variables.** Each section type's style becomes a set of variables on the page element. Changing a style is instant and never re-renders the document.
-- **The `.mdn` module is pure TypeScript.** It covers the schema (with validation), version migrations, merging (built-in → user → document), saving only the differences from defaults, and preserving unknown fields. It is easy to unit-test in isolation.
+- **The `.mdmeta` module is pure TypeScript.** It covers the schema (with validation), version migrations, merging (built-in → user → document), saving only the differences from defaults, and preserving unknown fields. It is easy to unit-test in isolation.
 - **Rust keeps a registry of windows and tabs.** Rust knows which window holds which file. That powers "already open → switch to its tab", sending a file opened from Explorer to the right window, session restore, and moving tabs between windows. A moved tab carries its serialized editor state, including Undo history.
 - **The menu bar is drawn in React, not by Windows.** Native Windows menu bars cannot follow dark mode and are awkward to translate on the fly. The window keeps the normal Windows title bar, so Snap Layouts keep working.
 - **One shortcut table.** Each entry has an id, keys, a command, a menu location, and a translated label. Keymaps, menu labels, tooltips, and the F1 list are all generated from it, so they can never disagree.
@@ -364,7 +364,7 @@ Fixes after the first run:
 
 ---
 
-### Phase 4: Navigation (O13, O14) → v0.4 — 🔄 built, hands-on test pending
+### Phase 4: Navigation (O13, O14) → v0.4 — ✅ complete (2026-10-26)
 
 **Goal:** Browse a folder of notes and move around inside a note.
 
@@ -374,18 +374,19 @@ Verified:
 - **Automated:** 86 frontend tests (+6, link rewriting) and 27 Rust tests (+3: names, companions, numbering).
 - **Running the app** (scripted through the DevTools port):
   - the Outline: nesting, rendered text, a `#` line in a code block left out, clicking a heading, the highlight following scrolling, Preview Only view
-  - the Files tab: listing, hidden `.mdn` and non-Markdown files, a file created outside MDNote appearing, renaming in place (F2), New Note, dragging a note into a folder with its link updated, Delete into the Recycle Bin together with the `.mdn`
+  - the Files tab: listing, hidden `.mdmeta` and non-Markdown files, a file created outside MDNote appearing, renaming in place (F2), New Note, dragging a note into a folder with its link updated, Delete into the Recycle Bin together with the `.mdmeta`
   - restoring the window's folder
 
-Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-4.md), in particular Open Folder's dialog, real mouse drags, and two windows with different folders.
+Hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-4.md) (2026-10-26): all 18 items pass. Items 7, 12 and 15 could not be checked at first, because nothing writes a metadata file before Phase 5; the rechecks R1–R3 with a hand-made one pass. That "a renamed note keeps its formatting" is left for the Phase 5 checklist.
 
 **What changed from the plan**
 - **Headings come from the render worker's summary**, the same request that counts words for the status bar. They are the rendered text and also update in Source Only view.
-- **A note's `<name>.assets` folder travels with it**, as its `.mdn` does (images pasted under the "<note name>.assets" choice of O15 would otherwise be left behind).
+- **A note's `<name>.assets` folder travels with it**, as its `.mdmeta` does (images pasted under the "<note name>.assets" choice of O15 would otherwise be left behind).
 - **Link fixing covers links to other files too**, not only images, and runs for single notes. Moving a folder keeps the links inside it working, so it is not checked.
 - **A click in the folder tree keeps the keyboard there.** In the first scripted run, a click opened the note and moved the focus to the editor, so Delete deleted text instead of the file. Now F2 and Delete act on the tree, and double-click or Enter moves on to the editor.
 - **Deleting an open note** closes its tab, unless it has unsaved changes; that text stays, with the "deleted" notice.
 - **Open Folder** has the shortcut Ctrl+Shift+O.
+- **The metadata file is `.mdmeta`**, no longer `.mdn`, which Microsoft Access registers for its blank database templates (found during the hands-on test). Nothing wrote the files yet, so only the sidebar's rules, the tests and the docs changed.
 
 **Tasks**
 - **4.1 Sidebar:** **Files** and **Outline** tabs, resizable width, **View > Sidebar**.
@@ -395,12 +396,12 @@ Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-
   - clicking a heading scrolls both panes to it
 - **4.3 Folder tree:**
   - folders are listed only when expanded (lazy loading)
-  - `.mdn` files are hidden, and other file types are hidden by default
+  - `.mdmeta` files are hidden, and other file types are hidden by default
   - sorting by name or by date modified
   - live updates from folder watching
 - **4.4 File operations:**
-  - new note, new folder, rename and move (each carries the `.mdn` with it)
-  - Delete moves the note and its `.mdn` to the Recycle Bin
+  - new note, new folder, rename and move (each carries the `.mdmeta` with it)
+  - Delete moves the note and its `.mdmeta` to the Recycle Bin
   - Show in File Explorer, Copy path
   - open tabs follow renames and moves
   - if a move would break relative image links, MDNote warns and offers to update them
@@ -412,10 +413,10 @@ Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-
 
 ### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5
 
-**Goal:** Full control over typography and the page, saved in `.mdn` files.
+**Goal:** Full control over typography and the page, saved in `.mdmeta` files.
 
 **Tasks**
-- **5.1 `.mdn` module (O7):**
+- **5.1 `.mdmeta` module (O7):**
   - schema version 1 with validation
   - merging and saving only the differences from defaults
   - preserving unknown fields
@@ -425,7 +426,7 @@ Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-
   - extensive unit tests
 - **5.2 Font list (O3):**
   - DirectWrite, including per-user fonts
-  - the picker shows names in the UI language, but `.mdn` stores the English family name, so the file works on any PC
+  - the picker shows names in the UI language, but `.mdmeta` stores the English family name, so the file works on any PC
   - fonts are flagged as monospaced or not
 - **5.3 Font picker:**
   - a virtualized list that stays fast with hundreds of fonts
@@ -447,7 +448,7 @@ Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-
 - **5.6 Style sets (O19):**
   - three built-in sets in `resources/stylesets/`
   - a gallery with live preview on hover
-  - applying a set copies its styles into the `.mdn`
+  - applying a set copies its styles into the `.mdmeta`
   - save, rename, delete, import, and export user sets
   - a default set in Preferences
 - **5.7 Page setup (O9):**
@@ -562,10 +563,10 @@ Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-
 
 | Level | Tool | Covers |
 |---|---|---|
-| Unit (TypeScript) | Vitest | `.mdn` merge/save/matching, shortcut toggling, table alignment, unit conversion, word counts, style mapping |
+| Unit (TypeScript) | Vitest | `.mdmeta` merge/save/matching, shortcut toggling, table alignment, unit conversion, word counts, style mapping |
 | Unit (Rust) | `cargo test` | encoding detection and round-trips, safe save, path comparison, recovery files, locale lookups |
 | Rendering | Vitest snapshots | CommonMark and GFM example suites, MDNote's own syntax test document |
-| End-to-end | WebdriverIO + `tauri-driver` | open → edit → save, `.mdn` creation, session restore, tabs |
+| End-to-end | WebdriverIO + `tauri-driver` | open → edit → save, `.mdmeta` creation, session restore, tabs |
 | Manual checklists (`docs/`) | People | Korean IME, file association, installer, Word and Outlook paste, opening DOCX files in Word, PDF comparison |
 
 - Test files in `tests/fixtures/` are committed without line-ending conversion (see 0.2), so encoding tests use exact bytes.
@@ -593,7 +594,7 @@ Still open: the hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-
 | Scroll sync drifts with tall images and equations | Annoying, not blocking | Positions anchored to source lines, with interpolation. |
 | Large notes slow down typing | Poor feel | Rendering in a worker, partial re-rendering, and a 1 MB performance test in CI. |
 | Korean IME edge cases | Broken Korean input | Spike 5 passed all 7 checks. Keep its checklist as a manual test for every phase that touches the editor. |
-| Matching `.mdn` sizes after outside edits | Sizes lost or misplaced | Cautious matching (drop rather than misapply) and tests on edited notes. |
+| Matching `.mdmeta` sizes after outside edits | Sizes lost or misplaced | Cautious matching (drop rather than misapply) and tests on edited notes. |
 | No Hyper-V or Sandbox on Windows 11 Home | Hard to test clean installs | VirtualBox, VMware Workstation, or a spare PC. |
 | Code signing needs identity verification and a fee | Unsigned builds trigger SmartScreen warnings | Decide before Phase 8. Unsigned pre-releases until then. |
 

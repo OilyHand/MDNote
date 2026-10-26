@@ -17,7 +17,7 @@ use crate::error::{AppError, AppResult};
 #[derive(Clone, Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FontFamily {
-    /// The en-us family name (stored in settings and `.mdn` files).
+    /// The en-us family name (stored in settings and `.mdmeta` files).
     pub name: String,
     /// The Korean name, when the family has one (shown in the Korean UI).
     pub name_ko: Option<String>,

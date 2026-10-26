@@ -1,5 +1,5 @@
 // The folder sidebar's file operations (O14). Rust renames, moves and deletes,
-// taking a note's .mdn and .assets along, and tells every window
+// taking a note's .mdmeta and .assets along, and tells every window
 // ("paths-moved"); this side asks the questions, keeps open tabs on the right
 // files, and offers to fix links that a move would break.
 
@@ -176,7 +176,7 @@ export async function moveEntry(path: string, folder: string) {
 }
 
 /**
- * Delete, after asking: to the Recycle Bin, a note with its .mdn and .assets.
+ * Delete, after asking: to the Recycle Bin, a note with its .mdmeta and .assets.
  * Tabs of deleted notes close, unless they have unsaved changes, which stay
  * (with the "deleted" notice) so nothing is lost.
  */

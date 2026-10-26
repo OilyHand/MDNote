@@ -1,6 +1,6 @@
 # MDNote
 
-A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and React. Features split-view editing, pixel-level layout control via non-intrusive `.mdn` metadata, and native DOCX/PDF export.
+A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and React. Features split-view editing, pixel-level layout control via non-intrusive `.mdmeta` metadata, and native DOCX/PDF export.
 
 - What MDNote does: [Objectives.md](Objectives.md)
 - How and in what order it is built: [ImplementationPlan.md](ImplementationPlan.md)

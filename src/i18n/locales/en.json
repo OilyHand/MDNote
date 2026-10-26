@@ -211,7 +211,7 @@
     "more": "More actions",
     "cancel": "Cancel",
     "deleteTitle": "Delete “{{name}}”?",
-    "deleteNoteMessage": "The note moves to the Recycle Bin, together with its formatting (.mdn) and image (.assets) files. You can restore it from there.",
+    "deleteNoteMessage": "The note moves to the Recycle Bin, together with its formatting (.mdmeta) and image (.assets) files. You can restore it from there.",
     "deleteFolderMessage": "The folder and everything in it move to the Recycle Bin. You can restore them from there.",
     "relinkTitle": "Update links?",
     "relinkMessage_one": "After this, one link in “{{name}}” to an image or file would no longer be found. Update it?",
