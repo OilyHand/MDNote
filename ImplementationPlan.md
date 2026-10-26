@@ -429,7 +429,12 @@ Verified:
   - crash recovery and Move to New Window keep the formatting
   - the print style sheet, in the light and the dark theme, and the Korean UI
 
-Still open: the hands-on checklist [docs/testing/phase-5.md](docs/testing/phase-5.md), in particular printing, the native file dialogs (Save As, style set import and export), fonts installed for the current user, and real mouse drags on the ruler.
+Hands-on checklist [docs/testing/phase-5.md](docs/testing/phase-5.md), first run (2026-10-27): 27 items pass, 4 fail. Fixes:
+- **Colour (item 5):** the colour box relied on WebView2's own colour popup and stayed disabled until Automatic was cleared. Modify Style now has a colour menu like Word's. It and the font list float above the dialog, which had cut them off.
+- **Font for Korean (item 6) and the comparison with Word (item 7):** measured in Word 365, a line holding Korean text is far taller than an English one (Segoe UI 12 pt at 1.5 lines: 24 pt for English, 31 pt with Korean in Malgun Gothic). Word measures fonts the GDI way, and East Asian fonts as 1.3 times their Windows ascent and descent (Malgun Gothic: 1.729, against 1.33 from DirectWrite); and it always sets Korean in the "Asian text" font. MDNote now does both: the font list reports Word's line heights (checked for ten fonts), and the render worker wraps Korean runs so they take the style's Korean font and line height.
+- **Margins in cm (item 29):** values such as 2.54 cm were refused by the browser's check for multiples of the arrows' step; Page Setup and Modify Style no longer use it.
+
+Still open: the rechecks R1–R4 in the checklist, and the suggestion from item 29 to show the printed pages in the preview (a decision for Objectives O9).
 
 **What changed from the plan**
 - **Word's line spacing is exact:** DirectWrite reports each font's single line height, and the page uses it. The built-in Body text uses 1.15 lines (about the earlier 1.5 times the font size).

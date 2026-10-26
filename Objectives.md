@@ -155,7 +155,7 @@ Features planned for after the essential implementation are listed under [After 
   - each font name shown in its own typeface
   - recently used fonts at the top
   - a "monospaced only" filter (useful for code)
-- Each style can have an optional fallback font for characters the main font doesn't contain (for example Korean text). This works like Word's separate "Asian text" font.
+- Each style can have a font for Korean text (Malgun Gothic by default). As with Word's separate "Asian text" font, Korean and other East Asian characters always use it, even when the main font has Korean letters.
 - **Missing fonts:** a `.mdmeta` file may name a font that isn't installed on this PC. In that case:
   - that style uses the default font
   - the picker shows the name marked as *not installed*
@@ -185,11 +185,11 @@ Features planned for after the essential implementation are listed under [After 
 - **Footnotes**
 
 **Properties of each style**
-- Font family, plus an optional fallback font (O3)
+- Font family, plus a font for Korean text (O3)
 - Font size, in points (pt), as in Word
 - Bold and italic
 - Text color
-- Line spacing, with Word's options: Single, 1.15, 1.5, Double, Multiple (custom value), Exactly (pt). As in Word, "Single" is the font's own line height (its ascent, descent and line gap), so 1.5 lines of Segoe UI is about twice the font size.
+- Line spacing, with Word's options: Single, 1.15, 1.5, Double, Multiple (custom value), Exactly (pt). As in Word, "Single" is the font's own line height, measured as Word measures it: about 1.33 times the size for Segoe UI, and 1.3 times its height for East Asian fonts (1.73 for Malgun Gothic). A line that holds Korean text is as tall as the Korean font's line, so Korean text is spaced wider than English text, as in Word.
 - Spacing before and after, in pt. As in Word, the space after one paragraph and the space before the next add up.
 - Alignment (left, center, right, justify) for paragraphs and headings
 
@@ -197,7 +197,7 @@ Features planned for after the essential implementation are listed under [After 
 - Paper size and margins are set for each document in Page Setup (O9). The width of the text column is the page width minus the left and right margins.
 
 **Where settings come from** (later items override earlier ones)
-1. **Built-in defaults:** Segoe UI 12 pt with Malgun Gothic as the fallback for Korean text, 1.15 line spacing (about 1.5 times the font size), and code in Consolas 10.5 pt.
+1. **Built-in defaults:** Segoe UI 12 pt with Malgun Gothic for Korean text, 1.15 line spacing (about 1.5 times the font size), and code in Consolas 10.5 pt.
 2. **User defaults:** the user's own defaults, set in Preferences (O12) and stored in `%APPDATA%\io.github.oilyhand.mdnote\`. For a document with a style set applied (O19), the set's copy takes this place instead, so the document looks the same on every PC.
 3. **Document settings:** read from the note's `.mdmeta` file (O7).
 
@@ -514,7 +514,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - The language can be changed in Preferences (O12) and takes effect immediately.
 - All UI text lives in translation files from the start. No text is hard-coded, and the build reports any text that is missing a translation.
 - Dates and numbers are formatted for the selected language.
-- Korean text displays correctly with any font: when a font has no Korean characters, the fallback font is used (Malgun Gothic by default; see O3 and O4).
+- Korean text displays correctly with any font: it uses the style's font for Korean text (Malgun Gothic by default; see O3 and O4).
 
 **Done when**
 - Switching the language changes every visible piece of UI text without a restart.
@@ -827,6 +827,8 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-26 | Code block colours | Six themes, each with a light and a dark version: GitHub (default), Visual Studio Code, One, Solarized, Catppuccin, Gruvbox. The light version is printed. |
 | 2026-10-26 | Undo outside the editor | Ctrl+Z and Ctrl+Y also work with the focus on the page or in the sidebar, so a style or margin change made there can be taken back. |
 | 2026-10-26 | Measurement defaults | Units and paper size follow Windows' regional format (Settings > Time & language > Region), as Word does; Preferences can override both. |
+| 2026-10-27 | Korean text | As in Word, Korean (East Asian) characters always use the style's font for Korean text, and a line holding them is as tall as that font's line. Word measures East Asian fonts as 1.3 times their height (Malgun Gothic 12 pt: 20.7 pt per line, against 16 pt for Segoe UI), which MDNote now follows (found in the Phase 5 hands-on test). |
+| 2026-10-27 | Colours | Modify Style picks colours from a menu like Word's (Automatic, theme colours with shades, standard colours, any #RRGGBB), not WebView2's colour popup. |
 
 ## Open decisions
 
