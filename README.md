@@ -5,7 +5,7 @@ A Word-inspired, lightweight Markdown editor for Windows, built with Tauri 2 and
 - What MDNote does: [Objectives.md](Objectives.md)
 - How and in what order it is built: [ImplementationPlan.md](ImplementationPlan.md)
 
-> **Status:** Phase 4 (navigation). MDNote edits Markdown with Word-style shortcuts, renders it beside the source, pastes images, keeps recovery copies, moves tabs between windows, and browses a folder of notes with an outline of the current one, in English and Korean. Styles and page setup arrive in Phase 5.
+> **Status:** Phase 5 (styles and page). MDNote edits Markdown with Word-style shortcuts, renders it beside the source with per-section styles, style sets and page setup kept in a `.mdmeta` file, pastes images, keeps recovery copies, moves tabs between windows, and browses a folder of notes with an outline of the current one, in English and Korean. Table and image resizing arrive in Phase 6.
 
 ## Development
 

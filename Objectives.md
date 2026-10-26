@@ -176,10 +176,10 @@ Features planned for after the essential implementation are listed under [After 
 - **Body text** (paragraphs): the base style. Other styles inherit any value they don't set.
 - **Headings 1–6:** each level has its own style.
 - **Blockquote**
-- **Lists:** bulleted, numbered, and task lists.
+- **Lists:** bulleted, numbered, and task lists (one style for all three).
 - **Inline code**
 - **Code block:** also has a syntax-highlighting color theme.
-- **Equations** (inline and block): only size, color, and spacing can be changed. KaTeX uses its own math fonts, so the math font family cannot be changed freely.
+- **Equations** (inline and block): only size, color, and spacing can be changed. KaTeX uses its own math fonts, so the math font family cannot be changed freely. By default an equation is a little larger than the text around it (KaTeX's 1.21 times); a size in pt fixes it.
 - **Table header cells** and **table body cells**
 - **Links:** color and underline.
 - **Footnotes**
@@ -189,17 +189,19 @@ Features planned for after the essential implementation are listed under [After 
 - Font size, in points (pt), as in Word
 - Bold and italic
 - Text color
-- Line spacing, with Word's options: Single, 1.15, 1.5, Double, Multiple (custom value), Exactly (pt)
-- Spacing before and after, in pt
+- Line spacing, with Word's options: Single, 1.15, 1.5, Double, Multiple (custom value), Exactly (pt). As in Word, "Single" is the font's own line height (its ascent, descent and line gap), so 1.5 lines of Segoe UI is about twice the font size.
+- Spacing before and after, in pt. As in Word, the space after one paragraph and the space before the next add up.
 - Alignment (left, center, right, justify) for paragraphs and headings
 
 **Page layout**
 - Paper size and margins are set for each document in Page Setup (O9). The width of the text column is the page width minus the left and right margins.
 
 **Where settings come from** (later items override earlier ones)
-1. **Built-in defaults:** for example Segoe UI 12 pt with Malgun Gothic as the fallback for Korean text, 1.5 line spacing, and code in Consolas 10.5 pt.
-2. **User defaults:** the user's own defaults, set in Preferences (O12) and stored in `%APPDATA%\io.github.oilyhand.mdnote\`.
+1. **Built-in defaults:** Segoe UI 12 pt with Malgun Gothic as the fallback for Korean text, 1.15 line spacing (about 1.5 times the font size), and code in Consolas 10.5 pt.
+2. **User defaults:** the user's own defaults, set in Preferences (O12) and stored in `%APPDATA%\io.github.oilyhand.mdnote\`. For a document with a style set applied (O19), the set's copy takes this place instead, so the document looks the same on every PC.
 3. **Document settings:** read from the note's `.mdmeta` file (O7).
+
+A style that doesn't set a value takes it from Body text, except inline code, links and equations, which follow the text around them.
 
 **UI**
 - A **Styles** panel lists all section types. Editing a style updates the rendered view live.
@@ -279,7 +281,7 @@ Features planned for after the essential implementation are listed under [After 
 - The `.mdmeta` is saved together with the `.md` when the user saves (Ctrl+S). Layout-only changes, such as resizing a table, mark the document unsaved just like text edits do.
 - Only files that actually changed are written.
 - An `.mdmeta` file is created only when the note has settings that differ from the defaults. Opening and saving a plain note leaves no extra file behind.
-- Only values that differ from the defaults are stored, which keeps the file small.
+- Only the document's own settings are stored, which keeps the file small: the style values changed in the document (a value set back to its default is removed), the page setup if it differs from the default, and, when a style set is applied, a full copy of that set's styles (O19).
 - If every setting is back at its default, the existing `.mdmeta` is removed on save.
 - Save As also writes the `.mdmeta` file under the new name.
 
@@ -427,7 +429,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 **Goal:** Set the paper size and margins as with Word's **Layout > Size** and **Layout > Margins**, so the screen, PDF exports, and Word exports all use the same page.
 
 **Page Setup dialog** (Layout menu)
-- Paper size: A4, Letter, Legal, A5, B5, or a custom width and height.
+- Paper size: A4, Letter, Legal, A5, B5 (JIS, 182 × 257 mm, as Word lists it in Korea and Japan), or a custom width and height.
 - Orientation: portrait or landscape.
 - Margins: Word's presets or custom values.
   - **Normal:** 2.54 cm on all sides
@@ -435,6 +437,8 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
   - **Moderate:** 2.54 cm top and bottom, 1.91 cm left and right
   - **Wide:** 2.54 cm top and bottom, 5.08 cm left and right
 - A thumbnail previews the page and its margins.
+- **Set as Default** makes the setup the default for documents without their own, as in Word.
+- The **Layout** menu also offers Word's quick choices: **Size**, **Orientation** and **Margins**.
 
 **Ruler**
 - A horizontal ruler above the rendered page shows the margins. Dragging its margin markers changes the left and right margins, as in Word.
@@ -694,11 +698,11 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 **Goal:** Change the whole look of a note in one step, like Word's **Design > Style Sets**.
 
 - A style set is a named collection of every section style (O4): fonts, sizes, spacing, and colors. It does not include page setup.
-- MDNote ships at least three built-in sets (for example Default, Report, and Compact). Each set is checked with both English and Korean text.
+- MDNote ships three built-in sets: Default, Report, and Compact. They use only fonts that come with Windows (Segoe UI, Cambria, Consolas, Malgun Gothic). Each set is checked with both English and Korean text.
 - **Design > Style Sets** shows a gallery. Hovering over a set previews it in the rendered view, and clicking applies it.
 - Applying a set copies its styles into the document's `.mdmeta` file. The document therefore looks the same on a PC that doesn't have the set, and later changes to the set don't alter documents that already used it. The name of the set is remembered for display.
 - **Save as new style set** stores the current document's styles as a user set. User sets can be renamed and deleted. Built-in sets cannot be changed.
-- Sets can be exported to a file and imported, for sharing or for moving to another PC.
+- Sets can be exported to a file and imported, for sharing or for moving to another PC. The file is JSON (`<name>.json`), so no new file type is registered.
 - User sets are stored in `%APPDATA%\io.github.oilyhand.mdnote\stylesets\`.
 - A set can be chosen as the default for documents without an `.mdmeta` file (O12).
 
@@ -815,6 +819,14 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-24 | Clicking in the folder tree | A click opens a note but keeps the keyboard in the tree, so F2 and Delete act on the tree, not on the text. Double-click or Enter moves on to the editor. Other files are only shown in File Explorer, never started. |
 | 2026-10-24 | Links after a move | MDNote checks a single note's relative links when it is renamed or moved and offers to fix those that would break. Moving a whole folder keeps the links inside it working and is not checked. |
 | 2026-10-26 | Metadata file extension | `.mdmeta` instead of `.mdn`, which Microsoft Access registers for its blank database templates: on a PC with Office, a `.mdn` showed the Access icon and opened in Access. `.mdmeta` is not used by other programs and reads as "the metadata of the `.md`". |
+| 2026-10-26 | Line spacing | Word's measure: "Single" is the font's own line height, read from DirectWrite, so a document's spacing matches Word's. The built-in Body text uses 1.15 lines, which looks like the 1.5 times the font size used until Phase 4. |
+| 2026-10-26 | Paragraph spacing | The space after a paragraph and the space before the next add up, as in Word (CSS would use only the larger). |
+| 2026-10-26 | Style layers | Built-in styles, then the user's defaults or (for a document with a style set) the set's copy, then the document's own changes. A document stores only its own changes and the copy of an applied set. |
+| 2026-10-26 | Colours in dark mode | Chosen text colours show lighter on the dark page, keeping their hue, as Word does in dark mode. Printing and exports use the real colours. |
+| 2026-10-26 | Missing fonts | A style whose font is not installed uses Segoe UI (Consolas for code), keeping its Korean font. |
+| 2026-10-26 | Code block colours | Six themes, each with a light and a dark version: GitHub (default), Visual Studio Code, One, Solarized, Catppuccin, Gruvbox. The light version is printed. |
+| 2026-10-26 | Undo outside the editor | Ctrl+Z and Ctrl+Y also work with the focus on the page or in the sidebar, so a style or margin change made there can be taken back. |
+| 2026-10-26 | Measurement defaults | Units and paper size follow Windows' regional format (Settings > Time & language > Region), as Word does; Preferences can override both. |
 
 ## Open decisions
 

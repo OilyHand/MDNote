@@ -411,9 +411,36 @@ Hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-4.md) (2026-10-2
 
 ---
 
-### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5
+### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5 — 🔄 built, hands-on test pending
 
 **Goal:** Full control over typography and the page, saved in `.mdmeta` files.
+
+**Status (2026-10-26):** all tasks below are implemented on `phase5/styles`.
+
+Verified:
+- **Automated:** 106 frontend tests (+20: the `.mdmeta` format, the style layers, the style sheet, style set files) and 31 Rust tests (+4: reading, writing, removing and backing up `.mdmeta` files; Windows' region settings).
+- **Running the app** (scripted through the DevTools port):
+  - Modify Style: the page changes while the dialog is open; OK, Undo and Redo; saving writes only the `.mdmeta`; Reset to Defaults removes it on save; reopening restores the styles
+  - a broken `.mdmeta`: a notice, the defaults, and a `.bak` copy when the formatting is changed and saved
+  - Ctrl+] and Ctrl+[ on a heading and on body text
+  - style sets: the gallery, a set shown on hover and applied on click, Save as New Style Set
+  - Page Setup (A4 landscape), Layout > Margins > Narrow, dragging a margin on the ruler, Undo from the page
+  - Preferences > Documents: default styles and units followed by an open window
+  - crash recovery and Move to New Window keep the formatting
+  - the print style sheet, in the light and the dark theme, and the Korean UI
+
+Still open: the hands-on checklist [docs/testing/phase-5.md](docs/testing/phase-5.md), in particular printing, the native file dialogs (Save As, style set import and export), fonts installed for the current user, and real mouse drags on the ruler.
+
+**What changed from the plan**
+- **Word's line spacing is exact:** DirectWrite reports each font's single line height, and the page uses it. The built-in Body text uses 1.15 lines (about the earlier 1.5 times the font size).
+- **Paragraph spacing adds up as in Word**, so the page and a Word export space paragraphs alike.
+- **A style set replaces the user's defaults for that document**, and the document keeps a full copy of it, so it looks the same on any PC.
+- **The Styles panel is a sidebar tab.** The **Design** menu holds the style commands and the **Layout** menu the page setup, as in Word's ribbon.
+- **Page Setup has Set as Default**, and the Layout menu Word's quick Size, Orientation and Margins choices.
+- **The built-in sets are defined in code** (`src/styles/sets.ts`), not in `resources/stylesets/`.
+- **Ctrl+Z and Ctrl+Y work outside the editor**, for changes made on the page.
+- **Fixed on the way:** printing with the theme "Same as Windows" while Windows was in dark mode printed a dark page (since Phase 2).
+- **Known limitation:** after a tab moves to another window, Undo still reverts its text, but no longer its formatting changes from before the move (CodeMirror keeps only text changes when its history is moved).
 
 **Tasks**
 - **5.1 `.mdmeta` module (O7):**
