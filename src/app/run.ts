@@ -23,6 +23,15 @@ import {
 } from "./commands";
 import { isTableCommand, runEditorCommand } from "./editorCommands";
 import { moveToNewWindow } from "./tabWindows";
+import { open } from "@tauri-apps/plugin-dialog";
+import { closeFolder, openFolder } from "../state/folder";
+
+/** File > Open Folder…: the folder shows in the sidebar's Files tab (O14). */
+async function openFolderWithDialog() {
+  const picked = await open({ directory: true });
+  if (typeof picked !== "string") return;
+  if (await openFolder(picked)) useView.setState({ sidebar: true, sidebarTab: "files" });
+}
 
 /** The editor, shown and focused, for commands that work on the text. */
 function editorView() {
@@ -40,6 +49,10 @@ export function runCommand(id: CommandId) {
       return newDocument();
     case "file.open":
       return void openWithDialog();
+    case "file.openFolder":
+      return void openFolderWithDialog();
+    case "file.closeFolder":
+      return closeFolder();
     case "file.save":
       return void (active && saveDocument(active.id));
     case "file.saveAs":
@@ -93,6 +106,8 @@ export function runCommand(id: CommandId) {
       return setZoom(1);
     case "view.fitWidth":
       return fitPageWidth();
+    case "view.sidebar":
+      return useView.setState(({ sidebar }) => ({ sidebar: !sidebar }));
     case "view.statusBar": {
       const { preferences, update } = usePrefs.getState();
       return void update({ statusBar: !preferences.statusBar });

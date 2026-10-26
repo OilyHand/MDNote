@@ -66,10 +66,20 @@ interface ChunkBlock {
   node: Element;
 }
 
+/** A heading for the Outline (O13), with its first source line. */
+export interface OutlineHeading {
+  level: number;
+  /** The text as rendered: no `#`, `**` or link addresses. */
+  text: string;
+  line: number;
+}
+
 interface ChunkOutput {
   blocks: ChunkBlock[];
   images: string[];
   counts: TextCounts;
+  /** Lines relative to the chunk. */
+  headings: OutlineHeading[];
 }
 
 /** `<!-- pagebreak -->` on its own line (O9). */
@@ -334,6 +344,20 @@ export function countText(text: string): TextCounts {
   return { words, characters, charactersNoSpaces };
 }
 
+/** The document's own headings; headings with no text are left out (O13). */
+function headingsOf(blocks: ChunkBlock[]): OutlineHeading[] {
+  const headings: OutlineHeading[] = [];
+  for (const block of blocks) {
+    const level = /^h([1-6])$/.exec(block.node.tagName);
+    if (!level) continue;
+    const parts: string[] = [];
+    visibleText(block.node.children, parts);
+    const text = parts.join("").replace(/\s+/g, " ").trim();
+    if (text) headings.push({ level: Number(level[1]), text, line: block.line });
+  }
+  return headings;
+}
+
 function countBlocks(blocks: ChunkBlock[]): TextCounts {
   const parts: string[] = [];
   visibleText(
@@ -376,7 +400,12 @@ async function renderChunk(
     collectImages(child, images);
     blocks.push({ key: `${chunkKey}.${index}`, line, node: child });
   });
-  return { blocks, images: [...images], counts: countBlocks(blocks) };
+  return {
+    blocks,
+    images: [...images],
+    counts: countBlocks(blocks),
+    headings: headingsOf(blocks),
+  };
 }
 
 /**
@@ -388,7 +417,7 @@ export class Renderer {
   private definitionCache = new Map<string, string[]>();
   private definitionsKey = "";
   /** Counts of chunks that only occurred in selections. */
-  private countCache = new Map<string, Promise<TextCounts>>();
+  private extraCache = new Map<string, Promise<ChunkOutput>>();
 
   /**
    * Link reference definitions in a chunk, found by parsing it (only chunks
@@ -463,29 +492,38 @@ export class Renderer {
   }
 
   /**
-   * Counts the rendered text of `source` (a selection, or the whole document
-   * when the preview is hidden). Chunks the document already rendered are not
-   * rendered again.
+   * Counts and headings of `source` (the document, or a selection), for the
+   * status bar and the Outline, also while the preview is hidden. Chunks the
+   * document already rendered are not rendered again.
    */
-  async count(source: string): Promise<TextCounts> {
+  async summarize(source: string): Promise<{ counts: TextCounts; headings: OutlineHeading[] }> {
     const chunks: Chunk[] = hasFootnotes(source)
       ? [{ text: source, startLine: 0, open: true }]
       : splitChunks(source);
-    if (this.countCache.size > 500) this.countCache.clear();
-    const counts = await Promise.all(
+    if (this.extraCache.size > 500) this.extraCache.clear();
+    const outputs = await Promise.all(
       chunks.map((chunk) => {
         const hash = hashText(chunk.text);
         const rendered = this.cache.get(hash) ?? this.cache.get(`${hash}~${this.definitionsKey}`);
-        if (rendered) return rendered.then((output) => output.counts);
-        let counted = this.countCache.get(hash);
-        if (!counted) {
-          counted = renderChunk(chunk.text, "", hash).then((output) => output.counts);
-          this.countCache.set(hash, counted);
+        if (rendered) return rendered;
+        let output = this.extraCache.get(hash);
+        if (!output) {
+          output = renderChunk(chunk.text, "", hash);
+          this.extraCache.set(hash, output);
         }
-        return counted;
+        return output;
       }),
     );
-    return counts.reduce(addCounts, NO_COUNTS);
+    return {
+      counts: outputs.reduce((sum, output) => addCounts(sum, output.counts), NO_COUNTS),
+      headings: outputs.flatMap((output, i) =>
+        output.headings.map((h) => ({ ...h, line: chunks[i].startLine + h.line })),
+      ),
+    };
+  }
+
+  async count(source: string): Promise<TextCounts> {
+    return (await this.summarize(source)).counts;
   }
 }
 

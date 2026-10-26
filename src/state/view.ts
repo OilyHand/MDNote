@@ -5,8 +5,17 @@ import { create } from "zustand";
 
 export type ViewMode = "split" | "source" | "preview";
 
+export type SidebarTab = "files" | "outline";
+export type FolderSort = "name" | "modified";
+
 export interface ViewState {
   mode: ViewMode;
+  /** View > Sidebar (O13, O14), its width in CSS px, and the tab it shows. */
+  sidebar: boolean;
+  sidebarWidth: number;
+  sidebarTab: SidebarTab;
+  /** How the folder tree sorts notes; folders always come first. */
+  folderSort: FolderSort;
   /** Share of the width given to the source editor in split view. */
   split: number;
   /** Preview zoom, 0.5–2. Ignored while `fitWidth` is on. */
@@ -19,7 +28,19 @@ export const ZOOM_MAX = 2;
 const STORAGE_KEY = "mdnote.view";
 
 /** An A4 page is wider than half a typical window, so the page starts fitted to the pane. */
-const DEFAULTS: ViewState = { mode: "split", split: 0.5, zoom: 1, fitWidth: true };
+const DEFAULTS: ViewState = {
+  mode: "split",
+  sidebar: true,
+  sidebarWidth: 240,
+  sidebarTab: "outline",
+  folderSort: "name",
+  split: 0.5,
+  zoom: 1,
+  fitWidth: true,
+};
+
+export const SIDEBAR_MIN = 160;
+export const SIDEBAR_MAX = 480;
 
 function load(): ViewState {
   try {

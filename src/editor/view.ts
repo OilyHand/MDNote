@@ -18,6 +18,23 @@ export function setShownDocId(id: string | null) {
   shownDocId = id;
 }
 
+let focusRequested = false;
+
+/** The next document the editor shows also gets the keyboard focus (Enter in the folder tree). */
+export function requestEditorFocus() {
+  focusRequested = true;
+}
+
+/**
+ * Whether the editor should take the focus when it shows another document: yes,
+ * unless the focus is in the sidebar, where F2 and Delete act on the tree.
+ */
+export function takeFocusOnShow(): boolean {
+  const asked = focusRequested;
+  focusRequested = false;
+  return asked || !document.activeElement?.closest(".sidebar");
+}
+
 /** The view, if it currently holds document `id`; otherwise the change goes to the stored state. */
 export function viewShowing(id: string): EditorView | null {
   return current && shownDocId === id ? current : null;

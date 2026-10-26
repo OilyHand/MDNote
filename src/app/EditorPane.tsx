@@ -13,7 +13,7 @@ import {
   setEditorOptions,
   setImagePasteHandler,
 } from "../editor/setup";
-import { setActiveView, setShownDocId } from "../editor/view";
+import { setActiveView, setShownDocId, takeFocusOnShow } from "../editor/view";
 import { tableAt } from "../editor/table";
 import { nodeAround } from "../editor/edits";
 import {
@@ -24,12 +24,23 @@ import {
   useDocs,
 } from "../state/documents";
 import { usePrefs } from "../state/prefs";
-import { updateCursor } from "../state/status";
+import { setReadingLine, updateCursor } from "../state/status";
+import { editorTopLine } from "../preview/scrollSync";
 import { scheduleSessionReport } from "./session";
 import { runEditorCommand } from "./editorCommands";
 import { pasteImages } from "./images";
 import { ContextMenu, SEPARATOR, type MenuItem } from "./Menu";
 import { tableItems, useCommandItem } from "./MenuBar";
+
+/** The cursor's line while it is on screen, otherwise the top visible line (O13). */
+function readingLine(view: EditorView): number {
+  const top = Math.floor(editorTopLine(view));
+  const bottom = view.state.doc.lineAt(
+    view.lineBlockAtHeight(view.scrollDOM.scrollTop + view.scrollDOM.clientHeight).from,
+  ).number;
+  const cursor = view.state.doc.lineAt(view.state.selection.main.head).number;
+  return cursor >= top && cursor <= bottom ? cursor : top;
+}
 
 /** Used when Preferences leave the editor font empty. */
 const DEFAULT_EDITOR_FONT = '"Cascadia Mono", Consolas';
@@ -95,6 +106,7 @@ export function EditorPane() {
       if (shownId.current) {
         scrollTops.set(shownId.current, view.scrollDOM.scrollTop);
         scheduleSessionReport();
+        setReadingLine(shownId.current, readingLine(view));
       }
     };
     view.scrollDOM.addEventListener("scroll", onScroll, { passive: true });
@@ -133,7 +145,7 @@ export function EditorPane() {
     requestAnimationFrame(() => {
       view.scrollDOM.scrollTop = top;
     });
-    view.focus();
+    if (takeFocusOnShow()) view.focus();
   }, [activeId]);
 
   /** Right-click: the clipboard commands, plus the table commands inside a table (O16). */

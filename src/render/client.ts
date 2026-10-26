@@ -4,7 +4,7 @@
 
 import type { Element } from "hast";
 import type { WorkerReply, WorkerRequest } from "./protocol";
-import type { TextCounts } from "./pipeline";
+import type { OutlineHeading, TextCounts } from "./pipeline";
 
 export interface PreviewBlock {
   key: string;
@@ -37,18 +37,24 @@ function stateOf(docId: string): DocState {
   return state;
 }
 
-export interface Counts {
+/** Counts for the status bar and headings for the Outline. */
+export interface Summary {
   total: TextCounts;
   selection: TextCounts | null;
+  headings: OutlineHeading[];
 }
 
-const countRequests = new Map<number, (counts: Counts | null) => void>();
+const countRequests = new Map<number, (summary: Summary | null) => void>();
 
 function onReply(reply: WorkerReply) {
   const counted = countRequests.get(reply.requestId);
   if (counted) {
     countRequests.delete(reply.requestId);
-    counted(reply.type === "counted" ? { total: reply.total, selection: reply.selection } : null);
+    counted(
+      reply.type === "counted"
+        ? { total: reply.total, selection: reply.selection, headings: reply.headings }
+        : null,
+    );
     return;
   }
   if (reply.type === "counted") return;
@@ -111,12 +117,12 @@ export function requestRender(docId: string, text: string) {
   send({ type: "render", docId, requestId: nextRequestId++, text, reset });
 }
 
-/** Word and character counts of the rendered text (O18); null if counting failed. */
-export function requestCounts(
+/** Counts (O18) and headings (O13) of the rendered text; null if that failed. */
+export function requestSummary(
   docId: string,
   text: string,
   selection: string | null,
-): Promise<Counts | null> {
+): Promise<Summary | null> {
   const requestId = nextRequestId++;
   return new Promise((resolve) => {
     countRequests.set(requestId, resolve);

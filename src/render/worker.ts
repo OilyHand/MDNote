@@ -62,11 +62,18 @@ function post(reply: WorkerReply) {
 async function count(state: DocumentState, request: Extract<WorkerRequest, { type: "count" }>) {
   const { docId, requestId } = request;
   try {
-    const [total, selection] = await Promise.all([
-      state.renderer.count(request.text),
+    const [whole, selection] = await Promise.all([
+      state.renderer.summarize(request.text),
       request.selection === null ? null : state.renderer.count(request.selection),
     ]);
-    post({ type: "counted", docId, requestId, total, selection });
+    post({
+      type: "counted",
+      docId,
+      requestId,
+      total: whole.counts,
+      selection,
+      headings: whole.headings,
+    });
   } catch (error) {
     post({ type: "failed", docId, requestId, message: String(error) });
   }

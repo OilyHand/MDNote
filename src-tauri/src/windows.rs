@@ -52,6 +52,8 @@ pub struct WindowSession {
     pub bounds: Option<Bounds>,
     pub tabs: Vec<TabSession>,
     pub active: usize,
+    /// The folder the window's sidebar shows (O14).
+    pub folder: Option<String>,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -75,6 +77,7 @@ impl Default for Session {
 pub struct PendingWindow {
     pub tabs: Vec<TabSession>,
     pub active: usize,
+    pub folder: Option<String>,
     /// Tabs moved from another window, with text, metadata and Undo history (opaque to Rust).
     pub transfers: Vec<Value>,
 }
@@ -192,7 +195,7 @@ pub fn restore_windows(app: &AppHandle, state: &AppState, session: &Session) {
     let mut others: Vec<WindowSession> = session
         .windows
         .iter()
-        .filter(|w| w.label != MAIN && !w.tabs.is_empty())
+        .filter(|w| w.label != MAIN && (!w.tabs.is_empty() || w.folder.is_some()))
         .cloned()
         .collect();
     let main_saved = session.windows.iter().find(|w| w.label == MAIN).cloned();
@@ -218,6 +221,7 @@ pub fn restore_windows(app: &AppHandle, state: &AppState, session: &Session) {
         if !restore_tabs {
             restored.tabs.clear();
             restored.active = 0;
+            restored.folder = None;
         }
         restored.label = MAIN.to_string();
         registry.windows.insert(MAIN.to_string(), restored.clone());
@@ -238,6 +242,7 @@ pub fn restore_windows(app: &AppHandle, state: &AppState, session: &Session) {
             PendingWindow {
                 tabs: saved.tabs,
                 active: saved.active,
+                folder: saved.folder,
                 transfers: Vec::new(),
             },
         );
@@ -276,6 +281,8 @@ pub struct Startup {
     pub paths: Vec<String>,
     /// Tabs moved here from another window.
     pub transfers: Vec<Value>,
+    /// The folder the sidebar showed last time.
+    pub folder: Option<String>,
 }
 
 /// Called once by a window when it is ready.
@@ -289,6 +296,7 @@ pub fn take_startup(window: WebviewWindow, state: State<AppState>) -> Startup {
             active: pending.active,
             paths: Vec::new(),
             transfers: pending.transfers,
+            folder: pending.folder,
         };
     }
     let restored = registry.restored.take().unwrap_or_default();
@@ -297,6 +305,7 @@ pub fn take_startup(window: WebviewWindow, state: State<AppState>) -> Startup {
         active: restored.active,
         paths: std::mem::take(&mut registry.startup_paths),
         transfers: Vec::new(),
+        folder: restored.folder,
     }
 }
 
@@ -311,6 +320,7 @@ pub fn report_tabs(
     state: State<AppState>,
     tabs: Vec<TabSession>,
     active: usize,
+    folder: Option<String>,
 ) {
     {
         let mut registry = state.registry.lock().unwrap();
@@ -323,6 +333,7 @@ pub fn report_tabs(
             });
         entry.tabs = tabs;
         entry.active = active;
+        entry.folder = folder;
     }
     save_session(&state);
 }
@@ -438,6 +449,7 @@ pub fn on_window_event(window: &tauri::Window, event: &tauri::WindowEvent) {
             if !is_document_window(window.label()) {
                 return;
             }
+            state.folders.forget(window.label());
             let others_open = app
                 .webview_windows()
                 .keys()

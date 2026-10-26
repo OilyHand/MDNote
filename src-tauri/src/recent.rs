@@ -21,6 +21,35 @@ pub fn add(app: &AppHandle, state: &AppState, path: &Path) -> AppResult<()> {
     save(app, state, &recent)
 }
 
+/// Renamed or moved files (or folders holding them) keep their place in the list.
+pub fn moved(app: &AppHandle, state: &AppState, moves: &[(String, String)]) {
+    let mut recent = state.recent.lock().unwrap();
+    let mut changed = false;
+    for entry in recent.iter_mut() {
+        let lower = entry.to_lowercase();
+        for (old, new) in moves {
+            let old_lower = old.to_lowercase();
+            let rest = if lower == old_lower {
+                Some("")
+            } else if lower.starts_with(&format!("{old_lower}\\")) {
+                Some(&entry[old.len()..])
+            } else {
+                None
+            };
+            if let Some(rest) = rest {
+                *entry = format!("{new}{rest}");
+                changed = true;
+                break;
+            }
+        }
+    }
+    if changed {
+        if let Err(error) = save(app, state, &recent) {
+            log::warn!("could not update recent files: {error}");
+        }
+    }
+}
+
 pub fn trim(app: &AppHandle, state: &AppState, limit: u32) -> AppResult<()> {
     let mut recent = state.recent.lock().unwrap();
     if recent.len() > limit as usize {

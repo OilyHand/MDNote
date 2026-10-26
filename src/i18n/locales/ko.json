@@ -30,7 +30,9 @@
       "moveToNewWindow": "새 창으로 이동",
       "preferences": "환경 설정…",
       "closeWindow": "창 닫기",
-      "exit": "끝내기"
+      "exit": "끝내기",
+      "openFolder": "폴더 열기…",
+      "closeFolder": "폴더 닫기"
     },
     "tab": {
       "next": "다음 탭",
@@ -104,7 +106,8 @@
       "actualSize": "실제 크기 (100%)",
       "fitWidth": "페이지 너비에 맞추기",
       "statusBar": "상태 표시줄",
-      "shortcuts": "바로 가기 키"
+      "shortcuts": "바로 가기 키",
+      "sidebar": "사이드바"
     }
   },
   "keys": {
@@ -179,6 +182,36 @@
     "copyPath": "경로 복사",
     "reveal": "파일 탐색기에서 보기"
   },
+  "sidebar": {
+    "files": "파일",
+    "outline": "개요",
+    "noFolder": "열린 폴더가 없습니다.",
+    "noDocument": "열린 문서가 없습니다.",
+    "noHeadings": "이 노트에는 제목이 없습니다."
+  },
+  "folder": {
+    "open": "열기",
+    "newNote": "새 노트",
+    "newFolder": "새 폴더",
+    "newNoteName": "새 노트",
+    "newFolderName": "새 폴더",
+    "rename": "이름 바꾸기",
+    "delete": "삭제",
+    "reveal": "파일 탐색기에서 보기",
+    "copyPath": "경로 복사",
+    "refresh": "새로 고침",
+    "sortByName": "이름순 정렬",
+    "sortByModified": "수정한 날짜순 정렬",
+    "more": "기타 작업",
+    "cancel": "취소",
+    "deleteTitle": "“{{name}}”을(를) 삭제할까요?",
+    "deleteNoteMessage": "노트를 휴지통으로 옮깁니다. 서식(.mdmeta)과 그림(.assets) 파일도 함께 옮기며, 휴지통에서 복원할 수 있습니다.",
+    "deleteFolderMessage": "폴더와 그 안의 모든 항목을 휴지통으로 옮깁니다. 휴지통에서 복원할 수 있습니다.",
+    "relinkTitle": "링크를 고칠까요?",
+    "relinkMessage_other": "이렇게 하면 “{{name}}”에 있는 그림이나 파일 링크 {{count}}개를 더 이상 찾을 수 없습니다. 링크를 고칠까요?",
+    "relinkUpdate": "링크 고치기",
+    "relinkKeep": "고치지 않기"
+  },
   "empty": {
     "title": "열린 문서가 없습니다",
     "subtitle": "새 문서를 만들거나 기존 Markdown 파일을 여세요.",
@@ -243,7 +276,10 @@
     "readOnly": "{{detail}}은(는) 읽기 전용입니다. 다른 이름으로 저장해 사본을 만드세요.",
     "unmappable": "텍스트에 {{detail}}(으)로 저장할 수 없는 문자가 있습니다.",
     "io": "파일에 접근할 수 없습니다: {{detail}}",
-    "internal": "문제가 발생했습니다: {{detail}}"
+    "internal": "문제가 발생했습니다: {{detail}}",
+    "invalidName": "“{{detail}}”은(는) 이름으로 쓸 수 없습니다.",
+    "exists": "“{{detail}}”이(가) 이미 있습니다.",
+    "intoItself": "폴더를 그 안으로 옮길 수 없습니다."
   },
   "lineEnding": {
     "crlf": "CRLF (Windows)",
@@ -287,6 +323,7 @@
     "imageFolder": "붙여넣거나 끌어 놓은 그림 저장 위치",
     "imageFolderAssets": "노트 옆의 assets 폴더",
     "imageFolderNoteName": "노트 이름으로 된 폴더 (이름.assets)",
-    "imageFolderNoteFolder": "노트와 같은 폴더"
+    "imageFolderNoteFolder": "노트와 같은 폴더",
+    "showAllFiles": "폴더 사이드바에 다른 파일(그림 등)도 표시"
   }
 }
