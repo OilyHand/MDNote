@@ -18,6 +18,8 @@ export interface ViewState {
   folderSort: FolderSort;
   /** Share of the width given to the source editor in split view. */
   split: number;
+  /** View > Ruler (O9), above the rendered page. */
+  ruler: boolean;
   /** Preview zoom, 0.5–2. Ignored while `fitWidth` is on. */
   zoom: number;
   fitWidth: boolean;
@@ -35,6 +37,7 @@ const DEFAULTS: ViewState = {
   sidebarTab: "outline",
   folderSort: "name",
   split: 0.5,
+  ruler: true,
   zoom: 1,
   fitWidth: true,
 };

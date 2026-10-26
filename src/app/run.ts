@@ -26,6 +26,7 @@ import { moveToNewWindow } from "./tabWindows";
 import { open } from "@tauri-apps/plugin-dialog";
 import { closeFolder, openFolder } from "../state/folder";
 import { saveCurrentAsSet } from "../styles/sets";
+import { openPageSetup } from "../page/actions";
 import { showStyleSets } from "../state/modal";
 import {
   growFont,
@@ -127,6 +128,10 @@ export function runCommand(id: CommandId) {
       return void (active && showStyleSets(active.id));
     case "styles.saveSet":
       return void (active && saveCurrentAsSet(active.id));
+    case "layout.pageSetup":
+      return openPageSetup();
+    case "view.ruler":
+      return useView.setState(({ ruler }) => ({ ruler: !ruler }));
     case "styles.pane":
       return useView.setState({ sidebar: true, sidebarTab: "styles" });
     case "styles.modify":

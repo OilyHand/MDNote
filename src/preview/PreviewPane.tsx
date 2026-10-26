@@ -24,7 +24,9 @@ import { useView, zoomBy, clampZoom } from "../state/view";
 import { resolveImages, useImageUrl } from "./images";
 import { setReadingLine, useShownZoom } from "../state/status";
 import { followLink } from "./links";
-import { useDocumentLook } from "../styles/look";
+import { useDocumentDefaults, useDocumentLook } from "../styles/look";
+import { Ruler } from "../page/Ruler";
+import { openPageSetup } from "../page/actions";
 import { styleKeyOfElement } from "../styles/sections";
 import { modifyStyle } from "../styles/actions";
 import { ContextMenu, SEPARATOR, type MenuItem } from "../app/Menu";
@@ -153,6 +155,8 @@ export function PreviewPane() {
   const [fitZoom, setFitZoom] = useState(1);
   const effectiveZoom = fitWidth ? fitZoom : zoom;
   const look = useDocumentLook(docId);
+  const units = useDocumentDefaults().units;
+  const ruler = useView((s) => s.ruler);
   const pageWidthPx = pageSize(look.page).width * PX_PER_MM;
 
   useRenderRequests(docId, look.codeTheme);
@@ -235,6 +239,16 @@ export function PreviewPane() {
 
   return (
     <>
+      {ruler && docId ? (
+        <Ruler
+          docId={docId}
+          page={look.page}
+          units={units}
+          scrollerRef={scrollerRef}
+          pageRef={pageRef}
+          onOpenSetup={openPageSetup}
+        />
+      ) : null}
       <div
         className="preview-scroll"
         ref={scrollerRef}

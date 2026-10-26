@@ -25,6 +25,8 @@ export type Modal =
   | { kind: "table"; resolve(size: { rows: number; columns: number } | null): void }
   /** Modify Style (O4); the page shows the changes while it is open. */
   | { kind: "style"; docId: string; key: StyleKey; resolve(): void }
+  /** Layout > Page Setup (O9); the page shows the changes while it is open. */
+  | { kind: "pageSetup"; docId: string; resolve(): void }
   /** Design > Style Sets (O19): hovering a set shows it on the page. */
   | { kind: "styleSets"; docId: string; resolve(): void }
   /** A name to type (a new style set, renaming one). */
@@ -94,6 +96,22 @@ export function askText(prompt: TextPrompt): Promise<string | null> {
         resolve: (text) => {
           useModal.setState({ modal: previous });
           resolve(text?.trim() || null);
+        },
+      },
+    });
+  });
+}
+
+/** Layout > Page Setup. */
+export function showPageSetup(docId: string): Promise<void> {
+  return new Promise((resolve) => {
+    useModal.setState({
+      modal: {
+        kind: "pageSetup",
+        docId,
+        resolve: () => {
+          closeModal();
+          resolve();
         },
       },
     });

@@ -118,6 +118,7 @@ export const COMMANDS = {
   "styles.shrink": styles(["Ctrl+["]),
   "styles.setDefault": styles(),
   "styles.reset": styles(),
+  "layout.pageSetup": styles(),
 
   "view.split": view(),
   "view.source": view(),
@@ -127,6 +128,7 @@ export const COMMANDS = {
   "view.actualSize": view(),
   "view.fitWidth": view(),
   "view.sidebar": view(),
+  "view.ruler": view(),
   "view.statusBar": view(),
   "view.shortcuts": view(["F1"]),
 } satisfies Record<string, CommandSpec>;

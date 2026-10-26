@@ -1597,3 +1597,146 @@ kbd {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* ---- Page setup (O9) ---------------------------------------------------------- */
+
+.dialog-page {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.page-setup {
+  display: flex;
+  gap: 18px;
+  margin: 8px 0 18px;
+}
+
+.page-fields {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.page-fields select,
+.page-fields input {
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.length-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.length-field input {
+  width: 72px;
+}
+
+.margin-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 16px;
+  padding-left: 130px;
+}
+
+.margin-field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.page-error {
+  margin: 0;
+  color: var(--error);
+}
+
+.page-thumbnail {
+  flex: none;
+  align-self: center;
+}
+
+.thumb-page {
+  fill: var(--paper);
+  stroke: var(--border);
+}
+
+.thumb-text {
+  fill: color-mix(in srgb, var(--accent) 14%, transparent);
+  stroke: var(--accent);
+  stroke-dasharray: 2 2;
+}
+
+/* The ruler above the rendered page */
+.ruler {
+  flex: none;
+  position: relative;
+  height: 22px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+  user-select: none;
+}
+
+.ruler svg {
+  display: block;
+}
+
+.ruler-paper {
+  fill: var(--surface);
+}
+
+.ruler-margin {
+  fill: var(--hover);
+}
+
+.ruler-tick {
+  stroke: var(--muted);
+  stroke-width: 1;
+}
+
+.ruler-number {
+  fill: var(--muted);
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.ruler-marker {
+  position: absolute;
+  top: 12px;
+  width: 12px;
+  height: 10px;
+  margin-left: -6px;
+  cursor: ew-resize;
+  touch-action: none;
+}
+
+.ruler-marker::before {
+  content: "";
+  position: absolute;
+  left: 1px;
+  bottom: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-bottom: 8px solid var(--muted);
+}
+
+.ruler-marker:hover::before,
+.ruler-marker.dragging::before {
+  border-bottom-color: var(--accent);
+}
+
+.ruler-value {
+  position: absolute;
+  top: 1px;
+  transform: translateX(8px);
+  padding: 0 4px;
+  border-radius: 3px;
+  background: var(--accent);
+  color: var(--accent-text);
+  font-size: 11px;
+  pointer-events: none;
+}

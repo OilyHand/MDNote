@@ -18,7 +18,8 @@
     "table": "표",
     "makeDefault": "MDNote를 .md 파일의 기본 앱으로 설정…",
     "about": "MDNote 정보",
-    "design": "디자인"
+    "design": "디자인",
+    "layout": "레이아웃"
   },
   "commands": {
     "file": {
@@ -108,7 +109,8 @@
       "fitWidth": "페이지 너비에 맞추기",
       "statusBar": "상태 표시줄",
       "shortcuts": "바로 가기 키",
-      "sidebar": "사이드바"
+      "sidebar": "사이드바",
+      "ruler": "눈금자"
     },
     "styles": {
       "pane": "스타일 창",
@@ -119,6 +121,9 @@
       "reset": "기본값으로 되돌리기",
       "sets": "스타일 세트…",
       "saveSet": "새 스타일 세트로 저장…"
+    },
+    "layout": {
+      "pageSetup": "페이지 설정…"
     }
   },
   "keys": {
@@ -469,5 +474,43 @@
     "fileType": "MDNote 스타일 세트",
     "notASet": "“{{path}}”은(는) MDNote 스타일 세트가 아닙니다.",
     "imported": "스타일 세트 “{{name}}”을(를) 가져왔습니다."
+  },
+  "pageSetup": {
+    "title": "페이지 설정",
+    "size": "크기",
+    "custom": "사용자 지정",
+    "customSize": "너비 × 높이",
+    "width": "너비",
+    "height": "높이",
+    "paper": {
+      "A4": "A4",
+      "Letter": "Letter",
+      "Legal": "Legal",
+      "A5": "A5",
+      "B5": "B5 (JIS)"
+    },
+    "orientation": "용지 방향",
+    "portrait": "세로",
+    "landscape": "가로",
+    "margins": "여백",
+    "preset": {
+      "normal": "보통",
+      "narrow": "좁게",
+      "moderate": "중간",
+      "wide": "넓게"
+    },
+    "top": "위쪽",
+    "bottom": "아래쪽",
+    "left": "왼쪽",
+    "right": "오른쪽",
+    "tooBig": "여백이 너무 커서 글을 쓸 공간이 부족합니다.",
+    "setDefault": "기본값으로 설정",
+    "setDefaultHint": "자체 페이지 설정이 없는 문서에 이 설정을 사용합니다"
+  },
+  "ruler": {
+    "left": "왼쪽 여백: {{value}}",
+    "right": "오른쪽 여백: {{value}}",
+    "leftLabel": "왼쪽 여백",
+    "rightLabel": "오른쪽 여백"
   }
 }

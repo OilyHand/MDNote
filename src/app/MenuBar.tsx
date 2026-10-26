@@ -19,6 +19,11 @@ import { requestOpen } from "./commands";
 import { runCommand } from "./run";
 import { baseName } from "../documents/naming";
 import { MenuList, SEPARATOR, type MenuExit, type MenuItem } from "./Menu";
+import { activePage, setMarginPreset, setOrientation, setPaperSize } from "../page/actions";
+import { MARGIN_PRESETS, presetOf, type MarginPreset } from "../page/page";
+import { useDocMetas } from "../state/documents";
+import type { PageSetup } from "../mdmeta/schema";
+import { usePreviewMeta } from "../styles/look";
 
 interface Menu {
   id: string;
@@ -59,6 +64,13 @@ function useMenus(): Menu[] {
   const statusBar = usePrefs((s) => s.preferences.statusBar);
   const sidebar = useView((s) => s.sidebar);
   const folderOpen = useFolder((s) => s.root !== null);
+  const ruler = useView((s) => s.ruler);
+  // The Layout menu checks the active page's size, orientation and margins; these
+  // subscriptions redraw the menus when it changes.
+  useDocMetas();
+  usePreviewMeta((s) => s.meta);
+  usePrefs((s) => s.preferences.defaultPage);
+  const pageKey = JSON.stringify(activePage());
 
   return useMemo(() => {
     const needsDoc = (id: CommandId) => item(id, { disabled: !hasDoc });
@@ -184,6 +196,12 @@ function useMenus(): Menu[] {
         ],
       },
       {
+        id: "layout",
+        label: t("menu.layout"),
+        accessKey: "l",
+        items: layoutItems(t, item, JSON.parse(pageKey) as PageSetup | null),
+      },
+      {
         id: "view",
         label: t("menu.view"),
         accessKey: "v",
@@ -198,6 +216,7 @@ function useMenus(): Menu[] {
           item("view.fitWidth", { checked: fitWidth }),
           SEPARATOR,
           item("view.sidebar", { checked: sidebar }),
+          item("view.ruler", { checked: ruler }),
           item("view.statusBar", { checked: statusBar }),
         ],
       },
@@ -217,7 +236,60 @@ function useMenus(): Menu[] {
         ],
       },
     ];
-  }, [t, item, hasDoc, tabCount, recent, viewMode, fitWidth, statusBar, sidebar, folderOpen]);
+  }, [
+    t,
+    item,
+    hasDoc,
+    tabCount,
+    recent,
+    viewMode,
+    fitWidth,
+    statusBar,
+    sidebar,
+    folderOpen,
+    ruler,
+    pageKey,
+  ]);
+}
+
+/** Layout: Page Setup, and Word's quick choices (O9). */
+function layoutItems(
+  t: (key: string) => string,
+  item: (id: CommandId) => MenuItem,
+  page: PageSetup | null,
+): MenuItem[] {
+  const sizes = ["A4", "Letter", "Legal", "A5", "B5"] as const;
+  return [
+    item("layout.pageSetup"),
+    SEPARATOR,
+    {
+      label: t("pageSetup.size"),
+      disabled: !page,
+      submenu: sizes.map((size) => ({
+        label: t(`pageSetup.paper.${size}`),
+        checked: page?.size === size,
+        action: () => setPaperSize(size),
+      })),
+    },
+    {
+      label: t("pageSetup.orientation"),
+      disabled: !page,
+      submenu: (["portrait", "landscape"] as const).map((o) => ({
+        label: t(`pageSetup.${o}`),
+        checked: page?.orientation === o,
+        action: () => setOrientation(o),
+      })),
+    },
+    {
+      label: t("pageSetup.margins"),
+      disabled: !page,
+      submenu: (Object.keys(MARGIN_PRESETS) as MarginPreset[]).map((name) => ({
+        label: t(`pageSetup.preset.${name}`),
+        checked: page ? presetOf(page.margins) === name : false,
+        action: () => setMarginPreset(name),
+      })),
+    },
+  ];
 }
 
 /** The table commands, for the Format menu and the editor's right-click menu. */

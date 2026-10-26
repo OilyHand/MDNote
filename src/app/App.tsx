@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { listen } from "@tauri-apps/api/event";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { api } from "../ipc";
-import { EDITOR_COMMANDS, commandFor, commandsFor } from "../shortcuts/registry";
+import { EDITOR_COMMANDS, commandFor, commandsFor, type CommandId } from "../shortcuts/registry";
 import { finishComposition, isModifiedKey } from "../editor/composition";
 import { getActiveView } from "../editor/view";
 import type { EditorView } from "@codemirror/view";
@@ -115,6 +115,19 @@ function editorOf(event: KeyboardEvent): EditorView | null {
   return view && view.contentDOM.contains(event.target as Node) ? view : null;
 }
 
+/**
+ * Ctrl+Z and Ctrl+Y outside the editor (on the page, in the sidebar, Preview
+ * Only view) undo and redo the document's changes too, such as a margin
+ * dragged on the ruler. Text fields keep their own Undo.
+ */
+function documentUndoCommand(event: KeyboardEvent): CommandId | undefined {
+  const target = event.target as HTMLElement | null;
+  if (editorOf(event) || target?.closest?.("input, textarea, select, [contenteditable='true']")) {
+    return undefined;
+  }
+  return commandsFor(event, ["edit.undo", "edit.redo"])[0];
+}
+
 /** Runs the shortcut for a key event in the editor, after `ready`. False if it is not one. */
 function runEditorShortcut(event: KeyboardEvent, view: EditorView, ready: () => Promise<void>) {
   const windowCommand = commandFor(event);
@@ -150,7 +163,7 @@ function useWindowShortcuts() {
         return;
       }
       if (useDialog.getState().queue.length > 0 || isModalOpen()) return;
-      const command = commandFor(event);
+      const command = commandFor(event) ?? documentUndoCommand(event);
       if (!command) return;
       event.preventDefault();
       event.stopPropagation();

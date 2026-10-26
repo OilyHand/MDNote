@@ -18,7 +18,8 @@
     "table": "Table",
     "makeDefault": "Make MDNote the Default for .md Files…",
     "about": "About MDNote",
-    "design": "Design"
+    "design": "Design",
+    "layout": "Layout"
   },
   "commands": {
     "file": {
@@ -108,7 +109,8 @@
       "fitWidth": "Fit Page Width",
       "statusBar": "Status Bar",
       "shortcuts": "Keyboard Shortcuts",
-      "sidebar": "Sidebar"
+      "sidebar": "Sidebar",
+      "ruler": "Ruler"
     },
     "styles": {
       "pane": "Styles Pane",
@@ -119,6 +121,9 @@
       "reset": "Reset to Defaults",
       "sets": "Style Sets…",
       "saveSet": "Save as New Style Set…"
+    },
+    "layout": {
+      "pageSetup": "Page Setup…"
     }
   },
   "keys": {
@@ -478,5 +483,43 @@
     "fileType": "MDNote style set",
     "notASet": "“{{path}}” is not an MDNote style set.",
     "imported": "Imported the style set “{{name}}”."
+  },
+  "pageSetup": {
+    "title": "Page Setup",
+    "size": "Size",
+    "custom": "Custom",
+    "customSize": "Width × height",
+    "width": "Width",
+    "height": "Height",
+    "paper": {
+      "A4": "A4",
+      "Letter": "Letter",
+      "Legal": "Legal",
+      "A5": "A5",
+      "B5": "B5 (JIS)"
+    },
+    "orientation": "Orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "margins": "Margins",
+    "preset": {
+      "normal": "Normal",
+      "narrow": "Narrow",
+      "moderate": "Moderate",
+      "wide": "Wide"
+    },
+    "top": "Top",
+    "bottom": "Bottom",
+    "left": "Left",
+    "right": "Right",
+    "tooBig": "The margins leave too little room for text.",
+    "setDefault": "Set as Default",
+    "setDefaultHint": "Use this page setup for documents that don't have their own"
+  },
+  "ruler": {
+    "left": "Left margin: {{value}}",
+    "right": "Right margin: {{value}}",
+    "leftLabel": "Left margin",
+    "rightLabel": "Right margin"
   }
 }
