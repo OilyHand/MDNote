@@ -21,6 +21,7 @@ const FONTS = fontIndex([
   font("Segoe UI", 1.33),
   font("Consolas", 1.171, true),
   font("Georgia", 1.136),
+  font("Malgun Gothic", 1.729),
 ]);
 
 describe("styles", () => {
@@ -108,6 +109,15 @@ describe("style sheets", () => {
     expect(fontStack("body", { fontFamily: "Nowhere Sans" }, null)).toBe(
       '"Nowhere Sans", sans-serif',
     );
+  });
+
+  it("give Korean text the Korean font and Word's taller lines", () => {
+    const css = styleSheet(resolveStyles({}, undefined), FONTS);
+    // Body text: Segoe UI 1.15 lines for English; Malgun Gothic 1.15 × 1.729 for Korean.
+    expect(css).toContain("line-height: 1.529;");
+    expect(css).toContain('--md-ea-font: "Malgun Gothic", "Segoe UI", sans-serif;');
+    expect(css).toContain("--md-ea-line: 1.988;");
+    expect(css).toContain(".page .md-ea {\n  font-family: var(--md-ea-font);");
   });
 
   it("lighten dark colours for the dark page", () => {

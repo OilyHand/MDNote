@@ -2,11 +2,14 @@
 // like Word, so the page, the PDF and the Word export agree.
 //
 // Line spacing follows Word: "Multiple" is a multiple of the font's own single
-// line (its ascent, descent and line gap, reported by DirectWrite), and
-// "Exactly" is a fixed height. A font that is not installed is replaced by the
-// default font, keeping the fallback font for Korean (O3). Text colours are
-// printed as chosen; on the dark page, dark colours are shown lighter, as Word
-// does in dark mode.
+// line, measured as Word measures it (fonts.rs), and "Exactly" is a fixed
+// height. Korean (East Asian) text always uses the style's Korean font, as
+// Word's "Asian text" font does, and a line holding it is as tall as that
+// font's line: the render worker wraps such text in span.md-ea, which takes
+// the font and line height from variables each style sets. A font that is not
+// installed is replaced by the default font, keeping the Korean font (O3).
+// Text colours are printed as chosen; on the dark page, dark colours are shown
+// lighter, as Word does in dark mode.
 
 import type { FontFamily } from "../ipc";
 import type { StyleKey, StyleProps } from "../mdmeta/schema";
@@ -42,14 +45,35 @@ export function fontStack(key: StyleKey, props: StyleProps, fonts: FontIndex): s
   return [...new Set(names)].map(quote).join(", ") + `, ${generic}`;
 }
 
-/** CSS line-height for Word's line spacing. */
-export function lineHeight(key: StyleKey, props: StyleProps, fonts: FontIndex): string | null {
+/** The style's Korean font, if it has one that is installed. */
+export function koreanFont(props: StyleProps, fonts: FontIndex): string | null {
+  return props.fallbackFont && isInstalled(fonts, props.fallbackFont) ? props.fallbackFont : null;
+}
+
+/** CSS line-height for Word's line spacing, for lines in `family`. */
+function spacingIn(props: StyleProps, family: string, fonts: FontIndex): string | null {
   const spacing = props.lineSpacing;
   if (!spacing) return null;
   if (spacing.rule === "exactly") return `${spacing.value}pt`;
-  const font = fonts?.get(shownFont(key, props, fonts).toLowerCase());
-  const single = font?.lineHeight ?? DEFAULT_LINE_HEIGHT;
+  const single = fonts?.get(family.toLowerCase())?.lineHeight ?? DEFAULT_LINE_HEIGHT;
   return String(Math.round(spacing.value * single * 1000) / 1000);
+}
+
+/** CSS line-height for Word's line spacing. */
+export function lineHeight(key: StyleKey, props: StyleProps, fonts: FontIndex): string | null {
+  return spacingIn(props, shownFont(key, props, fonts), fonts);
+}
+
+/** The font and line height of Korean text in this style (span.md-ea). */
+function eastAsianDeclarations(key: StyleKey, props: StyleProps, fonts: FontIndex): Declarations {
+  if (!props.fontFamily || CODE_STYLES.includes(key)) return [];
+  const main = shownFont(key, props, fonts);
+  const korean = koreanFont(props, fonts);
+  const names = korean ? [korean, main] : [main];
+  return [
+    ["--md-ea-font", `${[...new Set(names)].map(quote).join(", ")}, sans-serif`],
+    ["--md-ea-line", spacingIn(props, korean ?? main, fonts)],
+  ];
 }
 
 /** Whether the page is shown dark (the dark theme, chosen or from Windows). */
@@ -79,8 +103,6 @@ export function darkModeColor(hex: string): string {
   return `hsl(${hue} ${percent(s)} ${percent(1 - l)})`;
 }
 
-type Declarations = [string, string | null | undefined][];
-
 function block(selector: string, declarations: Declarations): string {
   const lines = declarations
     .filter(([, value]) => value !== null && value !== undefined)
@@ -94,8 +116,11 @@ const weight = (bold: boolean | undefined) =>
 const style = (italic: boolean | undefined) =>
   italic === undefined ? undefined : italic ? "italic" : "normal";
 
+type Declarations = [string, string | null | undefined][];
+
 function textDeclarations(key: StyleKey, props: StyleProps, fonts: FontIndex): Declarations {
   return [
+    ...eastAsianDeclarations(key, props, fonts),
     ["font-family", props.fontFamily || props.fallbackFont ? fontStack(key, props, fonts) : null],
     ["font-size", pt(props.fontSize)],
     ["font-weight", weight(props.bold)],
@@ -163,6 +188,12 @@ export function styleSheet(styles: ResolvedStyles, fonts: FontIndex, scope = ".p
       ]);
     }
   }
+
+  // Korean text takes the font and line height of the style it is in.
+  css += block(`${scope} .md-ea`, [
+    ["font-family", "var(--md-ea-font)"],
+    ["line-height", "var(--md-ea-line)"],
+  ]);
 
   // Dark page: chosen colours, lightened. Screen only: printing always uses the light page.
   let dark = "";

@@ -200,6 +200,85 @@ const rehypeHighlight: Plugin<[], Root> = () => async (tree, file) => {
   await Promise.all(jobs);
 };
 
+/**
+ * East Asian characters (Hangul, kana, CJK ideographs and their punctuation):
+ * Word's "Asian text", which always uses the style's Korean font.
+ */
+const EAST_ASIAN_RANGES: [number, number][] = [
+  [0x1100, 0x11ff],
+  [0x2e80, 0x2fff],
+  [0x3000, 0x33ff],
+  [0x3400, 0x4dbf],
+  [0x4e00, 0x9fff],
+  [0xa960, 0xa97f],
+  [0xac00, 0xd7ff],
+  [0xf900, 0xfaff],
+  [0xfe30, 0xfe4f],
+  [0xff00, 0xffef],
+  [0x20000, 0x2fa1f],
+];
+const EAST_ASIAN_CLASS = EAST_ASIAN_RANGES.map(
+  ([from, to]) => `\\u{${from.toString(16)}}-\\u{${to.toString(16)}}`,
+).join("");
+/** A run of East Asian text, with the spaces between its words. */
+const EAST_ASIAN_RUN = new RegExp(`[${EAST_ASIAN_CLASS}]+(?:[ \\t]+[${EAST_ASIAN_CLASS}]+)*`, "gu");
+const HAS_EAST_ASIAN = new RegExp(`[${EAST_ASIAN_CLASS}]`, "u");
+
+/** Code keeps its own font; math is KaTeX's. */
+const NO_EAST_ASIAN_SPANS = new Set([
+  "code",
+  "pre",
+  "kbd",
+  "samp",
+  "script",
+  "style",
+  "svg",
+  "math",
+]);
+
+function wrapEastAsian(node: Element | Root) {
+  let changed = false;
+  const children: (typeof node.children)[number][] = [];
+  for (const child of node.children) {
+    if (child.type === "text" && HAS_EAST_ASIAN.test(child.value)) {
+      changed = true;
+      let last = 0;
+      for (const match of child.value.matchAll(EAST_ASIAN_RUN)) {
+        if (match.index > last)
+          children.push({ type: "text", value: child.value.slice(last, match.index) });
+        children.push({
+          type: "element",
+          tagName: "span",
+          properties: { className: ["md-ea"] },
+          children: [{ type: "text", value: match[0] }],
+        });
+        last = match.index + match[0].length;
+      }
+      if (last < child.value.length)
+        children.push({ type: "text", value: child.value.slice(last) });
+      continue;
+    }
+    if (
+      child.type === "element" &&
+      !NO_EAST_ASIAN_SPANS.has(child.tagName) &&
+      !classesOf(child).includes("katex")
+    ) {
+      wrapEastAsian(child);
+    }
+    children.push(child);
+  }
+  if (changed) node.children = children as typeof node.children;
+}
+
+/**
+ * Wraps runs of Korean (East Asian) text in `span.md-ea`. As in Word, they use
+ * the style's Korean font even when the main font has Korean letters, and a
+ * line that holds them is as tall as that font's line (O3, O4).
+ */
+const rehypeEastAsian: Plugin<[], Root> = () => (tree) => {
+  wrapEastAsian(tree);
+};
+
 function languageOf(code: Element | undefined): string | undefined {
   const classes = code?.properties.className;
   if (!Array.isArray(classes)) return undefined;
@@ -219,6 +298,7 @@ const processor = unified()
   // Trusted output from here on.
   .use(rehypeMath)
   .use(rehypeHighlight)
+  .use(rehypeEastAsian)
   .freeze();
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath).freeze();

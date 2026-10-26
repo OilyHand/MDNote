@@ -62,6 +62,18 @@ describe("Markdown rendering", () => {
     expect(out).toContain('<div class="page-break"></div>');
   });
 
+  it("wraps Korean text in spans for the Korean font, but not in code", async () => {
+    const out = await html(
+      ["Text 한글 문장 and 더 `코드` end", "", "```", "주석", "```"].join("\n"),
+    );
+    expect(out).toContain(
+      'Text <span class="md-ea">한글 문장</span> and <span class="md-ea">더</span>',
+    );
+    expect(out).toContain("<code>코드</code>");
+    expect(out).toContain("주석");
+    expect(out.match(/md-ea/g)).toHaveLength(2);
+  });
+
   it("gives headings ids, including Korean ones", async () => {
     const out = await html("## 한글 제목\n\n## Hello World");
     expect(out).toContain('id="한글-제목"');

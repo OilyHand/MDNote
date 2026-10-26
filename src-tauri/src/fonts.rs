@@ -23,28 +23,90 @@ pub struct FontFamily {
     pub name_ko: Option<String>,
     pub monospaced: bool,
     pub has_hangul: bool,
-    /// The font's single line height as a multiple of its size (ascent,
-    /// descent and line gap): Word's "Single" line spacing (O4).
+    /// The font's single line height as a multiple of its size: Word's
+    /// "Single" line spacing (O4).
     pub line_height: f32,
 }
 
 /// When a font reports no usable metrics.
 const DEFAULT_LINE_HEIGHT: f32 = 1.2;
 
-fn line_height(font: &IDWriteFont) -> f32 {
-    let mut metrics = DWRITE_FONT_METRICS::default();
-    // SAFETY: GetMetrics fills the struct it is given.
-    unsafe { font.GetMetrics(&mut metrics) };
-    if metrics.designUnitsPerEm == 0 {
-        return DEFAULT_LINE_HEIGHT;
+const fn table_tag(tag: &[u8; 4]) -> u32 {
+    u32::from_le_bytes(*tag)
+}
+
+/// The OpenType table `tag` of a font, copied out.
+fn font_table(face: &IDWriteFontFace, tag: &[u8; 4]) -> Option<Vec<u8>> {
+    let mut data = std::ptr::null_mut();
+    let mut size = 0u32;
+    let mut context = std::ptr::null_mut();
+    let mut exists = windows::core::BOOL::default();
+    // SAFETY: DirectWrite fills the pointers; the table is copied before it is released.
+    unsafe {
+        face.TryGetFontTable(
+            table_tag(tag),
+            &mut data,
+            &mut size,
+            &mut context,
+            &mut exists,
+        )
+        .ok()?;
+        if !exists.as_bool() || data.is_null() {
+            return None;
+        }
+        let bytes = std::slice::from_raw_parts(data as *const u8, size as usize).to_vec();
+        face.ReleaseFontTable(context);
+        Some(bytes)
     }
-    let height = metrics.ascent as f32 + metrics.descent as f32 + metrics.lineGap as f32;
-    let ratio = height / metrics.designUnitsPerEm as f32;
-    if (0.5..=4.0).contains(&ratio) {
-        (ratio * 1000.0).round() / 1000.0
+}
+
+fn read_u16(table: &[u8], offset: usize) -> Option<u16> {
+    Some(u16::from_be_bytes([
+        *table.get(offset)?,
+        *table.get(offset + 1)?,
+    ]))
+}
+
+/// Japanese, Chinese and Korean code pages in OS/2 `ulCodePageRange1` (bits 17-21).
+const EAST_ASIAN_CODE_PAGES: u32 = 0b1_1111 << 17;
+
+/// Word's single line height as a multiple of the font size, measured in Word
+/// 365 for many fonts: for most fonts, GDI's height (the Windows ascent and
+/// descent, plus the "external leading" the line gap adds beyond them); for
+/// East Asian fonts, 1.3 times the Windows ascent and descent. So Segoe UI is
+/// 1.331, Arial 1.150, Malgun Gothic 1.729 and Gulim 1.300, and Korean text in
+/// Word is spaced much wider than DirectWrite's metrics (1.33) suggest.
+fn word_line_height(font: &IDWriteFont) -> Option<f32> {
+    // SAFETY: a plain COM call on a font object owned by the caller.
+    let face = unsafe { font.CreateFontFace() }.ok()?;
+    let head = font_table(&face, b"head")?;
+    let hhea = font_table(&face, b"hhea")?;
+    let os2 = font_table(&face, b"OS/2")?;
+    let units = read_u16(&head, 18)? as f32;
+    let ascender = read_u16(&hhea, 4)? as i16 as f32;
+    let descender = read_u16(&hhea, 6)? as i16 as f32;
+    let line_gap = read_u16(&hhea, 8)? as i16 as f32;
+    let win_ascent = read_u16(&os2, 74)? as f32;
+    let win_descent = read_u16(&os2, 76)? as f32;
+    let win_height = win_ascent + win_descent;
+    // Version 0 OS/2 tables have no code page bits.
+    let code_pages = match (read_u16(&os2, 78), read_u16(&os2, 80)) {
+        (Some(high), Some(low)) => ((high as u32) << 16) | low as u32,
+        _ => 0,
+    };
+    let height = if code_pages & EAST_ASIAN_CODE_PAGES != 0 {
+        1.3 * win_height
     } else {
-        DEFAULT_LINE_HEIGHT
-    }
+        win_height + (line_gap - (win_height - (ascender - descender))).max(0.0)
+    };
+    let ratio = height / units;
+    (0.5..=4.0)
+        .contains(&ratio)
+        .then(|| (ratio * 1000.0).round() / 1000.0)
+}
+
+fn line_height(font: &IDWriteFont) -> f32 {
+    word_line_height(font).unwrap_or(DEFAULT_LINE_HEIGHT)
 }
 
 #[derive(Default)]
@@ -161,15 +223,34 @@ mod tests {
             .expect("Malgun Gothic");
         assert_eq!(malgun.name_ko.as_deref(), Some("맑은 고딕"));
         assert!(malgun.has_hangul);
-        // Segoe UI's single line is about 1.33 times its size, as Word shows it.
-        let segoe = fonts
-            .iter()
-            .find(|f| f.name == "Segoe UI")
-            .expect("Segoe UI");
-        assert!(
-            (1.25..1.4).contains(&segoe.line_height),
-            "{}",
-            segoe.line_height
-        );
+    }
+
+    #[test]
+    fn single_lines_match_word() {
+        // Measured in Word 365 (single line spacing, 20 pt, average gap between lines).
+        let measured = [
+            ("Segoe UI", 1.331),
+            ("Calibri", 1.222),
+            ("Cambria", 1.172),
+            ("Consolas", 1.170),
+            ("Arial", 1.150),
+            ("Times New Roman", 1.150),
+            ("Malgun Gothic", 1.729),
+            ("Gulim", 1.300),
+            ("Batang", 1.300),
+            ("Microsoft YaHei", 1.715),
+        ];
+        let fonts = read_fonts(false).unwrap();
+        for (name, word) in measured {
+            // Fonts from Windows' optional language packs may be missing.
+            let Some(font) = fonts.iter().find(|f| f.name == name) else {
+                continue;
+            };
+            assert!(
+                (font.line_height - word).abs() < 0.01,
+                "{name}: {} (Word {word})",
+                font.line_height
+            );
+        }
     }
 }
