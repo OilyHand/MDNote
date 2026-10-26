@@ -96,7 +96,7 @@ export function EditorPane() {
       const id = shownId.current;
       if (!id || !editorStates.has(id)) return;
       editorStates.set(id, state);
-      refreshDirty(id, state.doc);
+      refreshDirty(id, state);
       notifyDocEdited(id);
     });
     setCursorListener((state) => {

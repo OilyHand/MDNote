@@ -9,6 +9,8 @@ import { editorStates, getDoc, onDocEdited, useDocs, type Doc } from "../state/d
 import { ask } from "../state/dialog";
 import { baseName } from "../documents/naming";
 import { restoreRecoveryCopy } from "./commands";
+import { metaOf } from "../mdmeta/field";
+import { metaKey } from "../mdmeta/schema";
 
 const DELAY_MS = 1000;
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
@@ -30,6 +32,7 @@ function write(id: string) {
       encoding: doc.encoding,
       lineEnding: doc.lineEnding,
       text: state.doc.toString(),
+      meta: metaKey(metaOf(state)),
       savedMs: Date.now(),
     })
     .catch((error) => console.error("could not write a recovery copy", error));

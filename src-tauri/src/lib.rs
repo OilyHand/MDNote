@@ -7,6 +7,7 @@ mod folders;
 mod fonts;
 mod images;
 mod locale;
+mod meta;
 mod paths;
 mod prefs;
 mod preview;
@@ -124,6 +125,8 @@ pub fn run() {
             documents::write_document,
             documents::default_line_ending,
             documents::system_code_page,
+            meta::read_meta,
+            meta::write_meta,
             prefs::get_preferences,
             prefs::set_preferences,
             recent::get_recent_files,

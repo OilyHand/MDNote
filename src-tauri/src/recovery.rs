@@ -30,6 +30,9 @@ pub struct RecoveryCopy {
     pub encoding: TextEncoding,
     pub line_ending: LineEnding,
     pub text: String,
+    /// The `.mdmeta` text (O7), if the formatting has unsaved changes too.
+    #[serde(default)]
+    pub meta: Option<String>,
     /// When the copy was written (ms since 1970), shown in the restore question.
     pub saved_ms: u64,
 }
@@ -107,6 +110,7 @@ mod tests {
             encoding: TextEncoding::Utf8,
             line_ending: LineEnding::Crlf,
             text: "한글\n".into(),
+            meta: None,
             saved_ms: 1,
         };
         let json = serde_json::to_string(&copy).unwrap();

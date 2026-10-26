@@ -277,7 +277,9 @@
     "recentMissing": "“{{path}}” no longer exists, so it was removed from Recent Files.",
     "pasteBlocked": "Use Ctrl+V to paste.",
     "notInTable": "Put the cursor in a table first.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "metaBroken": "The formatting file of “{{name}}” can't be read ({{detail}}), so the note uses the default formatting. If you change its formatting and save, the old file is kept with “.bak” added to its name.",
+    "metaNewer": "The formatting of “{{name}}” was saved by a newer version of MDNote. Settings this version doesn't know are kept, but not shown."
   },
   "errors": {
     "notFound": "File not found: {{detail}}",

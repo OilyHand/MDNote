@@ -268,7 +268,9 @@
     "recentMissing": "“{{path}}”이(가) 더 이상 없어서 최근 파일 목록에서 제거했습니다.",
     "pasteBlocked": "붙여넣으려면 Ctrl+V를 누르세요.",
     "notInTable": "먼저 커서를 표 안에 두세요.",
-    "dismiss": "닫기"
+    "dismiss": "닫기",
+    "metaBroken": "“{{name}}”의 서식 파일을 읽을 수 없어({{detail}}) 기본 서식으로 표시합니다. 서식을 바꿔 저장하면 이전 파일은 이름 끝에 “.bak”을 붙여 보관합니다.",
+    "metaNewer": "“{{name}}”의 서식은 더 새로운 버전의 MDNote에서 저장되었습니다. 이 버전이 모르는 설정은 표시되지 않지만 그대로 보관합니다."
   },
   "errors": {
     "notFound": "파일을 찾을 수 없습니다: {{detail}}",

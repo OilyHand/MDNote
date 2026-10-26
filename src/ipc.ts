@@ -84,6 +84,8 @@ export interface RecoveryCopy {
   encoding: TextEncoding;
   lineEnding: LineEnding;
   text: string;
+  /** The `.mdmeta` text (O7), when the formatting has changes too. */
+  meta?: string | null;
   savedMs: number;
 }
 
@@ -131,6 +133,11 @@ export const api = {
     remember = true,
   ) => invoke<FileStamp>("write_document", { path, text, encoding, lineEnding, remember }),
   defaultLineEnding: () => invoke<LineEnding>("default_line_ending"),
+  /** The text of the note's `.mdmeta` (O7), or null if it has none. */
+  readMeta: (note: string) => invoke<string | null>("read_meta", { note }),
+  /** Saves the note's `.mdmeta`; null removes it. `backup` keeps a broken one as .bak first. */
+  writeMeta: (note: string, text: string | null, backup: boolean) =>
+    invoke<void>("write_meta", { note, text, backup }),
   systemCodePage: () => invoke<number>("system_code_page"),
 
   getPreferences: () => invoke<PreferencesView>("get_preferences"),
