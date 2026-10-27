@@ -54,3 +54,17 @@ export function updateCursor(docId: string, state: EditorState) {
 
 /** The zoom the preview shows right now (Fit Page Width included); null while it is hidden. */
 export const useShownZoom = create<{ zoom: number | null }>(() => ({ zoom: null }));
+
+/**
+ * In Print Layout (O9): the page in the middle of the preview, and how many
+ * pages the document fills. Both are 0 while the pages are not shown.
+ */
+export const useShownPages = create<{ page: number; pages: number }>(() => ({
+  page: 0,
+  pages: 0,
+}));
+
+export function setShownPages(page: number, pages: number) {
+  const current = useShownPages.getState();
+  if (current.page !== page || current.pages !== pages) useShownPages.setState({ page, pages });
+}

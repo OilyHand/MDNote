@@ -20,6 +20,8 @@ export interface ViewState {
   split: number;
   /** View > Ruler (O9), above the rendered page. */
   ruler: boolean;
+  /** View > Print Layout (O9): the page split into the sheets it prints on, as in Word. */
+  printLayout: boolean;
   /** Preview zoom, 0.5–2. Ignored while `fitWidth` is on. */
   zoom: number;
   fitWidth: boolean;
@@ -38,6 +40,7 @@ const DEFAULTS: ViewState = {
   folderSort: "name",
   split: 0.5,
   ruler: true,
+  printLayout: true,
   zoom: 1,
   fitWidth: true,
 };
@@ -63,6 +66,14 @@ useView.subscribe((state) => {
     // Remembering the view is a convenience; MDNote works without it.
   }
 });
+
+/**
+ * Print Layout needs the browser to break the text into rows of pages
+ * (CSS column-wrap, WebView2 145 and later). WebView2 updates itself, so this
+ * only fails on a runtime that was kept from updating.
+ */
+export const PRINT_LAYOUT_SUPPORTED =
+  typeof CSS !== "undefined" && CSS.supports("column-wrap", "wrap");
 
 export const clampZoom = (zoom: number) =>
   Math.round(Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, zoom)) * 100) / 100;

@@ -33,6 +33,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
   sidebarShowAllFiles: false,
   statusBar: true,
   statusBarItems: {
+    page: true,
     words: true,
     characters: true,
     charactersNoSpaces: true,

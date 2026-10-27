@@ -104,3 +104,19 @@ export function printPageRule(page: PageSetup): string {
   const m = page.margins;
   return `@page {\n  size: ${width}mm ${height}mm;\n  margin: ${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm;\n}\n`;
 }
+
+/** The space between sheets in Print Layout, in CSS px at 100% zoom. */
+export const PAGE_GAP_PX = 16;
+
+/**
+ * Print Layout: how many sheets a page `height` px tall fills (sheets and the
+ * gaps between them), and the 1-based sheet at `y` px from its top. Both are
+ * in the same pixels, zoom included.
+ */
+export function sheetsIn(height: number, sheetHeight: number, gap: number): number {
+  return Math.max(1, Math.round((height + gap) / (sheetHeight + gap)));
+}
+
+export function sheetAt(y: number, sheets: number, sheetHeight: number, gap: number): number {
+  return Math.min(sheets, Math.max(1, Math.floor((y + gap / 2) / (sheetHeight + gap)) + 1));
+}

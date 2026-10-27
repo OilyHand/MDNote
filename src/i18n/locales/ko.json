@@ -110,7 +110,8 @@
       "statusBar": "상태 표시줄",
       "shortcuts": "바로 가기 키",
       "sidebar": "사이드바",
-      "ruler": "눈금자"
+      "ruler": "눈금자",
+      "printLayout": "인쇄 모양"
     },
     "styles": {
       "pane": "스타일 창",
@@ -182,8 +183,10 @@
       "cursor": "줄과 열",
       "encoding": "인코딩",
       "lineEnding": "줄 바꿈",
-      "zoom": "배율"
-    }
+      "zoom": "배율",
+      "page": "페이지 번호"
+    },
+    "page": "{{page}}/{{pages}} 페이지"
   },
   "preview": {
     "linkNotFound": "링크 대상 “{{target}}”을(를) 찾을 수 없습니다.",

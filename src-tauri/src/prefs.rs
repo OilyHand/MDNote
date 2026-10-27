@@ -47,6 +47,8 @@ pub enum UnitsPref {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct StatusBarItems {
+    /// "Page 2 of 5", in Print Layout (O9).
+    pub page: bool,
     pub words: bool,
     pub characters: bool,
     pub characters_no_spaces: bool,
@@ -59,6 +61,7 @@ pub struct StatusBarItems {
 impl Default for StatusBarItems {
     fn default() -> Self {
         Self {
+            page: true,
             words: true,
             characters: true,
             characters_no_spaces: true,

@@ -31,6 +31,7 @@ export interface LoadedFile {
 export type ThemePref = "system" | "light" | "dark";
 
 export interface StatusBarItems {
+  page: boolean;
   words: boolean;
   characters: boolean;
   charactersNoSpaces: boolean;

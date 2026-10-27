@@ -9,7 +9,7 @@ import { api } from "../ipc";
 import { COMMANDS, shortcutLabel, type CommandId } from "../shortcuts/registry";
 import { useDocs } from "../state/documents";
 import { useRecent } from "../state/recent";
-import { useView } from "../state/view";
+import { PRINT_LAYOUT_SUPPORTED, useView } from "../state/view";
 import { usePrefs } from "../state/prefs";
 import { isModalOpen } from "../state/modal";
 import { useFolder } from "../state/folder";
@@ -65,6 +65,7 @@ function useMenus(): Menu[] {
   const sidebar = useView((s) => s.sidebar);
   const folderOpen = useFolder((s) => s.root !== null);
   const ruler = useView((s) => s.ruler);
+  const printLayout = useView((s) => s.printLayout);
   // The Layout menu checks the active page's size, orientation and margins; these
   // subscriptions redraw the menus when it changes.
   useDocMetas();
@@ -215,8 +216,12 @@ function useMenus(): Menu[] {
           item("view.actualSize"),
           item("view.fitWidth", { checked: fitWidth }),
           SEPARATOR,
-          item("view.sidebar", { checked: sidebar }),
+          item("view.printLayout", {
+            checked: printLayout && PRINT_LAYOUT_SUPPORTED,
+            disabled: !PRINT_LAYOUT_SUPPORTED,
+          }),
           item("view.ruler", { checked: ruler }),
+          item("view.sidebar", { checked: sidebar }),
           item("view.statusBar", { checked: statusBar }),
         ],
       },
@@ -248,6 +253,7 @@ function useMenus(): Menu[] {
     sidebar,
     folderOpen,
     ruler,
+    printLayout,
     pageKey,
   ]);
 }

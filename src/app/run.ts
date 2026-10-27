@@ -132,6 +132,8 @@ export function runCommand(id: CommandId) {
       return openPageSetup();
     case "view.ruler":
       return useView.setState(({ ruler }) => ({ ruler: !ruler }));
+    case "view.printLayout":
+      return useView.setState(({ printLayout }) => ({ printLayout: !printLayout }));
     case "styles.pane":
       return useView.setState({ sidebar: true, sidebarTab: "styles" });
     case "styles.modify":

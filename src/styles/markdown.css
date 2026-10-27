@@ -4,17 +4,27 @@
    This file holds the rest: layout, borders, backgrounds, and the colours
    that follow the light or dark page. */
 
+/* The page's width and zoom, and in Print Layout its sheets (PreviewPane). */
+.page-frame {
+  position: relative;
+  margin: 24px auto;
+}
+
+/* The margins are its padding, around a text area at least a page tall. */
 .page {
   box-sizing: content-box;
-  margin: 24px auto;
+  min-height: var(--page-body-height);
   background: var(--paper);
   color: var(--paper-text);
   box-shadow: var(--paper-shadow);
   overflow-wrap: break-word;
   user-select: text;
   text-wrap: pretty;
-  /* A column of blocks whose spacing adds up, as in Word: space after one
-     paragraph plus space before the next (CSS margins would overlap). */
+}
+
+/* A column of blocks whose spacing adds up, as in Word: space after one
+   paragraph plus space before the next (CSS margins would overlap). */
+.page-body {
   display: flex;
   flex-direction: column;
 }
@@ -24,7 +34,7 @@
   display: contents;
 }
 
-.page > .md-block:first-child > :first-child {
+.page-body > .md-block:first-child > :first-child {
   margin-top: 0;
 }
 
@@ -184,6 +194,66 @@
   font-size: 8pt;
 }
 
+/* ---- Print Layout: the pages as they print (O9) ---------------------------- */
+
+/* The browser breaks the text into pages as it does when printing: rows of one
+   column each, as tall as the page's text area, with the bottom margin, the
+   space between sheets and the top margin as the gap between rows. The sheets
+   are drawn behind the text. */
+@media screen {
+  .page-frame.paged .page {
+    position: relative;
+    background: none;
+    box-shadow: none;
+    column-count: 1;
+    column-fill: auto;
+    column-height: var(--page-body-height);
+    column-wrap: wrap;
+    row-gap: calc(var(--page-height) - var(--page-body-height) + var(--page-gap));
+  }
+
+  .page-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--page-height);
+    background: var(--paper);
+    box-shadow: var(--paper-shadow);
+  }
+
+  .page-frame.paged .page-break {
+    break-before: column;
+    margin: 0;
+    border: none;
+  }
+
+  .page-frame.paged .page-break::after {
+    content: none;
+  }
+
+  /* As when printing (below): code and tables continue on the next page
+     instead of scrolling, and nothing is taller than a page. */
+  .page-frame.paged .page pre {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+
+  .page-frame.paged .page table {
+    overflow: visible;
+  }
+
+  .page-frame.paged .page img {
+    max-height: var(--page-body-height);
+  }
+
+  .page-frame.paged .page pre,
+  .page-frame.paged .page table,
+  .page-frame.paged .page img,
+  .page-frame.paged .page .katex-display {
+    break-inside: avoid;
+  }
+}
+
 /* ---- Dark theme ------------------------------------------------------------ */
 
 @media screen and (prefers-color-scheme: dark) {
@@ -249,11 +319,18 @@
   }
 
   /* The page's size and margins are inline styles on screen; the printer's page has them. */
-  .page {
+  .page-frame {
     zoom: 1 !important;
     width: auto !important;
-    min-height: 0 !important;
     margin: 0;
+  }
+
+  .page-sheet {
+    display: none;
+  }
+
+  .page {
+    min-height: 0;
     padding: 0 !important;
     box-shadow: none;
   }
@@ -275,6 +352,26 @@
 
   .page .page-break::after {
     content: none;
+  }
+
+  /* Code and tables continue on the next page instead of scrolling, and
+     nothing is taller than a page. */
+  .page pre {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+
+  .page table {
+    overflow: visible;
+  }
+
+  /* As in Word, and in Print Layout: a table's header row is not repeated on each page. */
+  .page thead {
+    display: table-row-group;
+  }
+
+  .page img {
+    max-height: var(--page-body-height);
   }
 
   .page pre,

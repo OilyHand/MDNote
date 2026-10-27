@@ -110,7 +110,8 @@
       "statusBar": "Status Bar",
       "shortcuts": "Keyboard Shortcuts",
       "sidebar": "Sidebar",
-      "ruler": "Ruler"
+      "ruler": "Ruler",
+      "printLayout": "Print Layout"
     },
     "styles": {
       "pane": "Styles Pane",
@@ -188,8 +189,10 @@
       "cursor": "Line and column",
       "encoding": "Encoding",
       "lineEnding": "Line endings",
-      "zoom": "Zoom"
-    }
+      "zoom": "Zoom",
+      "page": "Page number"
+    },
+    "page": "Page {{page}} of {{pages}}"
   },
   "preview": {
     "linkNotFound": "Can't find the link target “{{target}}”.",

@@ -128,6 +128,8 @@ export const COMMANDS = {
   "view.actualSize": view(),
   "view.fitWidth": view(),
   "view.sidebar": view(),
+  // Word's Ctrl+Alt+P switches to Print Layout; here it also switches back.
+  "view.printLayout": view(["Ctrl+Alt+P"]),
   "view.ruler": view(),
   "view.statusBar": view(),
   "view.shortcuts": view(["F1"]),
