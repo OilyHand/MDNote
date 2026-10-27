@@ -115,7 +115,7 @@ Features planned for after the essential implementation are listed under [After 
   - the rendered view
 - Dividers between the areas can be dragged.
 - The source editor and the rendered view scroll together.
-- The rendered view shows the document on a page with the width and margins set in Page Setup (O9), like Word's page layout.
+- The rendered view shows the document on a page with the size and margins set in Page Setup (O9). As in Word's Print Layout, it is split into the pages it prints on; this can be turned off for one continuous sheet.
 - If the window is narrower than the page, the rendered view scrolls sideways. **View > Zoom** offers 50–200% and **Fit page width**.
 - The **View** menu switches between **Split** (default), **Source only**, and **Preview only**.
 - Formatting shortcuts (O8) work in the source editor. In v1 you cannot type in the rendered pane. There you can:
@@ -450,16 +450,20 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - Page setup is saved for each document in its `.mdmeta` file (O7).
 
 **On screen**
-- The rendered view shows the text on a page of the chosen width, with its margins, as one continuous sheet. Page breaks appear in print and export output, not in the editing view.
+- **View > Print Layout** (on by default; Ctrl+Alt+P, Word's shortcut) shows the document on separate sheets of the chosen paper, as in Word's Print Layout. The text breaks into pages exactly where it does when printed, because the browser breaks it the same way for both.
+- The status bar shows the page in the middle of the pane and the number of pages, for example "Page 2 of 5" (O18).
+- With Print Layout off, the text is on one continuous sheet of the chosen width, with its margins.
+- On the page, and so in print: code blocks and tables continue on the next page instead of scrolling sideways (long code lines wrap), images are never taller than a page, and a table's header row is not repeated on each page (as in Word). Headings stay with the text that follows them, and paragraphs keep at least two lines on each page, as with Word's widow and orphan control.
 
 **Page breaks**
 - Ctrl+Enter, Word's page break shortcut, inserts a `<!-- pagebreak -->` line into the `.md` file.
-- MDNote shows it as a dashed "Page break" line, and PDF and Word exports start a new page there.
+- In Print Layout, and in PDF and Word exports, a new page starts there. With Print Layout off, MDNote shows it as a dashed "Page break" line.
 - Other Markdown apps ignore the line, because it is an HTML comment.
 
 **Done when**
 - Changing the paper size or margins changes the rendered page width immediately.
 - Dragging a margin marker on the ruler changes that margin.
+- In Print Layout, every page on screen starts where the printed page does.
 - Exported PDF and DOCX files use the same paper size and margins.
 
 ---
@@ -681,6 +685,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - When text is selected, the counts cover the selection, for example "120 / 3,450 words".
 - Counts are based on the rendered text, so Markdown syntax such as `**` or `#` is not counted.
 - **Cursor:** line and column.
+- **Page**, in Print Layout (O9): the page in the middle of the rendered pane and the number of pages, for example "Page 2 of 5".
 - **Encoding and line endings**, for example `UTF-8 · CRLF`. Clicking either one lets the user change it. The change applies on the next save.
 - **Zoom level.** Clicking it resets the zoom to 100%.
 - Right-clicking the status bar chooses which items are shown, as in Word.
@@ -829,6 +834,7 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-26 | Measurement defaults | Units and paper size follow Windows' regional format (Settings > Time & language > Region), as Word does; Preferences can override both. |
 | 2026-10-27 | Korean text | As in Word, Korean (East Asian) characters always use the style's font for Korean text, and a line holding them is as tall as that font's line. Word measures East Asian fonts as 1.3 times their height (Malgun Gothic 12 pt: 20.7 pt per line, against 16 pt for Segoe UI), which MDNote now follows (found in the Phase 5 hands-on test). |
 | 2026-10-27 | Colours | Modify Style picks colours from a menu like Word's (Automatic, theme colours with shades, standard colours, any #RRGGBB), not WebView2's colour popup. |
+| 2026-10-27 | Pages on screen | The rendered view shows the printed pages (View > Print Layout, on by default), as asked in the Phase 5 hands-on test; one continuous sheet stays available. The browser breaks the text into pages on screen as it does when printing (CSS multi-column rows), so both match. A table's header row is no longer repeated on each printed page, as in Word and on screen. |
 
 ## Open decisions
 

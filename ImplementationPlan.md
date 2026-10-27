@@ -434,7 +434,13 @@ Hands-on checklist [docs/testing/phase-5.md](docs/testing/phase-5.md), first run
 - **Font for Korean (item 6) and the comparison with Word (item 7):** measured in Word 365, a line holding Korean text is far taller than an English one (Segoe UI 12 pt at 1.5 lines: 24 pt for English, 31 pt with Korean in Malgun Gothic). Word measures fonts the GDI way, and East Asian fonts as 1.3 times their Windows ascent and descent (Malgun Gothic: 1.729, against 1.33 from DirectWrite); and it always sets Korean in the "Asian text" font. MDNote now does both: the font list reports Word's line heights (checked for ten fonts), and the render worker wraps Korean runs so they take the style's Korean font and line height.
 - **Margins in cm (item 29):** values such as 2.54 cm were refused by the browser's check for multiples of the arrows' step; Page Setup and Modify Style no longer use it.
 
-Still open: the rechecks R1–R4 in the checklist, and the suggestion from item 29 to show the printed pages in the preview (a decision for Objectives O9).
+Rechecks R1–R4 (2026-10-27): all pass. The suggestion from item 29 was accepted: the preview now shows the printed pages (**View > Print Layout**, Objectives O9).
+- The browser breaks the text into rows of one column each, as tall as the page's text area (CSS `column-height` and `column-wrap`, in WebView2 since version 145). Sheets of the paper size are drawn behind them. The breaks are the browser's own, so the pages on screen match the printed ones; checked on a 12-page test note against a PDF printed from the app, page by page.
+- Code blocks and tables continue on the next page instead of scrolling, both on screen and in print, and long code lines wrap. Table header rows are no longer repeated on each printed page, which the screen can't do.
+- The status bar shows "Page 2 of 5".
+- On a 190-page note, a full relayout takes about 40–70 ms in Print Layout, against 10–17 ms on the continuous sheet.
+
+Still open: the rechecks R5–R9 in the checklist.
 
 **What changed from the plan**
 - **Word's line spacing is exact:** DirectWrite reports each font's single line height, and the page uses it. The built-in Body text uses 1.15 lines (about the earlier 1.5 times the font size).
@@ -444,6 +450,7 @@ Still open: the rechecks R1–R4 in the checklist, and the suggestion from item 
 - **Page Setup has Set as Default**, and the Layout menu Word's quick Size, Orientation and Margins choices.
 - **The built-in sets are defined in code** (`src/styles/sets.ts`), not in `resources/stylesets/`.
 - **Ctrl+Z and Ctrl+Y work outside the editor**, for changes made on the page.
+- **Print Layout** (O9) was added after the hands-on test asked for it. The earlier plan showed one continuous sheet and left pages to printing and export.
 - **Fixed on the way:** printing with the theme "Same as Windows" while Windows was in dark mode printed a dark page (since Phase 2).
 - **Known limitation:** after a tab moves to another window, Undo still reverts its text, but no longer its formatting changes from before the move (CodeMirror keeps only text changes when its history is moved).
 

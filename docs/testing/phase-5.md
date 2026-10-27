@@ -72,10 +72,18 @@ This PC's Windows regional format is English (United States), so MDNote starts w
 
 Install the new build, then:
 
-- ⬜ **R1.** Item 5: Modify Style > **Color** opens a menu like Word's Font Color: **Automatic**, the theme colours with their shades, the standard colours, and **Other color** for a value such as `#1F3864` (Enter or **Use**). Pick a dark blue for Heading 1: the page shows it (lighter on the dark page), and it prints as chosen. The menu is never cut off by the dialog.
-- ⬜ **R2.** Item 6: set Body text's **Font for Korean** to 바탕 (Batang): the Korean text changes, the English text doesn't. This also holds when the main font has Korean letters (set Body text's **Font** to 맑은 고딕 and its Font for Korean to 바탕: Korean shows in 바탕).
-- ⬜ **R3.** Item 7, with Word: Segoe UI 12 pt at 1.5 lines, Word's font for Asian text 맑은 고딕 in both. English lines are as far apart in both (24 pt), and so are lines with Korean text (31 pt in Word, wider than the English ones).
-- ⬜ **R4.** Item 29: Page Setup accepts values such as 2.54 cm or 1.27 in (Preferences > Documents > Measurement units to switch). Then print with A5, landscape and Wide margins, as in item 29.
+- ✅ **R1.** Item 5: Modify Style > **Color** opens a menu like Word's Font Color: **Automatic**, the theme colours with their shades, the standard colours, and **Other color** for a value such as `#1F3864` (Enter or **Use**). Pick a dark blue for Heading 1: the page shows it (lighter on the dark page), and it prints as chosen. The menu is never cut off by the dialog.
+- ✅ **R2.** Item 6: set Body text's **Font for Korean** to 바탕 (Batang): the Korean text changes, the English text doesn't. This also holds when the main font has Korean letters (set Body text's **Font** to 맑은 고딕 and its Font for Korean to 바탕: Korean shows in 바탕).
+- ✅ **R3.** Item 7, with Word: Segoe UI 12 pt at 1.5 lines, Word's font for Asian text 맑은 고딕 in both. English lines are as far apart in both (24 pt), and so are lines with Korean text (31 pt in Word, wider than the English ones).
+- ✅ **R4.** Item 29: Page Setup accepts values such as 2.54 cm or 1.27 in (Preferences > Documents > Measurement units to switch). Then print with A5, landscape and Wide margins, as in item 29.
+<!-- Currently, the document is displayed as a single continuous page in the preview. I would like the preview to show the pages divided according to the paper size, just like in an actual Word document. (It would be nice to add this as an option.) -->
 
-About the suggestion in item 29 (showing the printed pages in the preview): see my reply; it changes O9, which says the rendered view is one continuous sheet.
+## Print Layout (2026-10-27)
 
+Added for the suggestion above. Install the new build, then open [phase-5-sample.md](phase-5-sample.md) and a long note of your own (several pages, with a long table or code block if you have one).
+
+- ⬜ **R5.** **View > Print Layout** is checked: the page is split into sheets of the paper size, with a gap between them, as in Word. **Ctrl+Alt+P** or the menu item turns it off (one continuous sheet, as before) and on again. MDNote remembers the choice after a restart.
+- ⬜ **R6.** The status bar shows "Page 2 of 5" while Print Layout is on, following as you scroll. Right-clicking the status bar lists **Page number**, which hides it.
+- ⬜ **R7.** Change the paper, orientation and margins (Layout menu, Page Setup, the ruler) and the zoom: the sheets follow at once, and the pages break elsewhere.
+- ⬜ **R8.** Print (Ctrl+P) the long note: every printed page starts with the same text as the page on screen. The `<!-- pagebreak -->` line in the sample starts a new page on screen too.
+- ⬜ **R9.** Code blocks and tables: a long one continues on the next page instead of scrolling sideways, on screen and in print, and long code lines wrap. A table's header row is not repeated on the next page (as in Word). With Print Layout off, they scroll sideways as before.
