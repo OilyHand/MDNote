@@ -299,6 +299,8 @@
   .preview-scroll {
     display: block !important;
     height: auto !important;
+    /* The pane's padding around the page on screen would narrow the printed text. */
+    padding: 0 !important;
     overflow: visible !important;
     background: none !important;
   }
