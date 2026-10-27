@@ -115,7 +115,7 @@ Features planned for after the essential implementation are listed under [After 
   - the rendered view
 - Dividers between the areas can be dragged.
 - The source editor and the rendered view scroll together.
-- The rendered view shows the document on a page with the width and margins set in Page Setup (O9), like Word's page layout.
+- The rendered view shows the document on a page with the size and margins set in Page Setup (O9). As in Word's Print Layout, it is split into the pages it prints on; this can be turned off for one continuous sheet.
 - If the window is narrower than the page, the rendered view scrolls sideways. **View > Zoom** offers 50–200% and **Fit page width**.
 - The **View** menu switches between **Split** (default), **Source only**, and **Preview only**.
 - Formatting shortcuts (O8) work in the source editor. In v1 you cannot type in the rendered pane. There you can:
@@ -136,7 +136,7 @@ Features planned for after the essential implementation are listed under [After 
 - Relative image paths are resolved from the folder that contains the `.md` file.
 - Web links open in the default browser. Links to other `.md` files open in MDNote.
 - The rendered view updates while typing, with no noticeable lag for documents up to about 1 MB.
-- **Print** (Ctrl+P) uses the current styles and page setup. To make a PDF file, use **Export > PDF** (O10).
+- **Print** (Ctrl+P) uses the current styles and page setup, and prints on the paper set in Page Setup (O9), as Word does. MDNote's Print dialog offers the printer, copies, pages (all, the current page, or ranges such as 1-3, 5), one- or two-sided printing and colour. To make a PDF file, use **Export > PDF** (O10).
 
 **Done when**
 - A test document that uses every syntax item above renders correctly.
@@ -155,7 +155,7 @@ Features planned for after the essential implementation are listed under [After 
   - each font name shown in its own typeface
   - recently used fonts at the top
   - a "monospaced only" filter (useful for code)
-- Each style can have an optional fallback font for characters the main font doesn't contain (for example Korean text). This works like Word's separate "Asian text" font.
+- Each style can have a font for Korean text (Malgun Gothic by default). As with Word's separate "Asian text" font, Korean and other East Asian characters always use it, even when the main font has Korean letters.
 - **Missing fonts:** a `.mdmeta` file may name a font that isn't installed on this PC. In that case:
   - that style uses the default font
   - the picker shows the name marked as *not installed*
@@ -176,30 +176,32 @@ Features planned for after the essential implementation are listed under [After 
 - **Body text** (paragraphs): the base style. Other styles inherit any value they don't set.
 - **Headings 1–6:** each level has its own style.
 - **Blockquote**
-- **Lists:** bulleted, numbered, and task lists.
+- **Lists:** bulleted, numbered, and task lists (one style for all three).
 - **Inline code**
 - **Code block:** also has a syntax-highlighting color theme.
-- **Equations** (inline and block): only size, color, and spacing can be changed. KaTeX uses its own math fonts, so the math font family cannot be changed freely.
+- **Equations** (inline and block): only size, color, and spacing can be changed. KaTeX uses its own math fonts, so the math font family cannot be changed freely. By default an equation is a little larger than the text around it (KaTeX's 1.21 times); a size in pt fixes it.
 - **Table header cells** and **table body cells**
 - **Links:** color and underline.
 - **Footnotes**
 
 **Properties of each style**
-- Font family, plus an optional fallback font (O3)
+- Font family, plus a font for Korean text (O3)
 - Font size, in points (pt), as in Word
 - Bold and italic
 - Text color
-- Line spacing, with Word's options: Single, 1.15, 1.5, Double, Multiple (custom value), Exactly (pt)
-- Spacing before and after, in pt
+- Line spacing, with Word's options: Single, 1.15, 1.5, Double, Multiple (custom value), Exactly (pt). As in Word, "Single" is the font's own line height, measured as Word measures it: about 1.33 times the size for Segoe UI, and 1.3 times its height for East Asian fonts (1.73 for Malgun Gothic). A line that holds Korean text is as tall as the Korean font's line, so Korean text is spaced wider than English text, as in Word.
+- Spacing before and after, in pt. As in Word, the space after one paragraph and the space before the next add up.
 - Alignment (left, center, right, justify) for paragraphs and headings
 
 **Page layout**
 - Paper size and margins are set for each document in Page Setup (O9). The width of the text column is the page width minus the left and right margins.
 
 **Where settings come from** (later items override earlier ones)
-1. **Built-in defaults:** for example Segoe UI 12 pt with Malgun Gothic as the fallback for Korean text, 1.5 line spacing, and code in Consolas 10.5 pt.
-2. **User defaults:** the user's own defaults, set in Preferences (O12) and stored in `%APPDATA%\io.github.oilyhand.mdnote\`.
+1. **Built-in defaults:** Segoe UI 12 pt with Malgun Gothic for Korean text, 1.15 line spacing (about 1.5 times the font size), and code in Consolas 10.5 pt.
+2. **User defaults:** the user's own defaults, set in Preferences (O12) and stored in `%APPDATA%\io.github.oilyhand.mdnote\`. For a document with a style set applied (O19), the set's copy takes this place instead, so the document looks the same on every PC.
 3. **Document settings:** read from the note's `.mdmeta` file (O7).
+
+A style that doesn't set a value takes it from Body text, except inline code, links and equations, which follow the text around them.
 
 **UI**
 - A **Styles** panel lists all section types. Editing a style updates the rendered view live.
@@ -279,7 +281,7 @@ Features planned for after the essential implementation are listed under [After 
 - The `.mdmeta` is saved together with the `.md` when the user saves (Ctrl+S). Layout-only changes, such as resizing a table, mark the document unsaved just like text edits do.
 - Only files that actually changed are written.
 - An `.mdmeta` file is created only when the note has settings that differ from the defaults. Opening and saving a plain note leaves no extra file behind.
-- Only values that differ from the defaults are stored, which keeps the file small.
+- Only the document's own settings are stored, which keeps the file small: the style values changed in the document (a value set back to its default is removed), the page setup if it differs from the default, and, when a style set is applied, a full copy of that set's styles (O19).
 - If every setting is back at its default, the existing `.mdmeta` is removed on save.
 - Save As also writes the `.mdmeta` file under the new name.
 
@@ -427,7 +429,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 **Goal:** Set the paper size and margins as with Word's **Layout > Size** and **Layout > Margins**, so the screen, PDF exports, and Word exports all use the same page.
 
 **Page Setup dialog** (Layout menu)
-- Paper size: A4, Letter, Legal, A5, B5, or a custom width and height.
+- Paper size: A4, Letter, Legal, A5, B5 (JIS, 182 × 257 mm, as Word lists it in Korea and Japan), or a custom width and height.
 - Orientation: portrait or landscape.
 - Margins: Word's presets or custom values.
   - **Normal:** 2.54 cm on all sides
@@ -435,6 +437,8 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
   - **Moderate:** 2.54 cm top and bottom, 1.91 cm left and right
   - **Wide:** 2.54 cm top and bottom, 5.08 cm left and right
 - A thumbnail previews the page and its margins.
+- **Set as Default** makes the setup the default for documents without their own, as in Word.
+- The **Layout** menu also offers Word's quick choices: **Size**, **Orientation** and **Margins**.
 
 **Ruler**
 - A horizontal ruler above the rendered page shows the margins. Dragging its margin markers changes the left and right margins, as in Word.
@@ -446,16 +450,21 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - Page setup is saved for each document in its `.mdmeta` file (O7).
 
 **On screen**
-- The rendered view shows the text on a page of the chosen width, with its margins, as one continuous sheet. Page breaks appear in print and export output, not in the editing view.
+- **View > Print Layout** (on by default; Ctrl+Alt+P, Word's shortcut) shows the document on separate sheets of the chosen paper, as in Word's Print Layout. The text breaks into pages exactly where it does when printed, because the browser breaks it the same way for both.
+- The status bar shows the page in the middle of the pane and the number of pages, for example "Page 2 of 5" (O18).
+- With Print Layout off, the text is on one continuous sheet of the chosen width, with its margins.
+- On the page, and so in print: code blocks and tables continue on the next page instead of scrolling sideways (long code lines wrap), images are never taller than a page, and a table's header row is not repeated on each page (as in Word). Headings stay with the text that follows them, and paragraphs keep at least two lines on each page, as with Word's widow and orphan control.
 
 **Page breaks**
 - Ctrl+Enter, Word's page break shortcut, inserts a `<!-- pagebreak -->` line into the `.md` file.
-- MDNote shows it as a dashed "Page break" line, and PDF and Word exports start a new page there.
+- In Print Layout, and in PDF and Word exports, a new page starts there. With Print Layout off, MDNote shows it as a dashed "Page break" line.
 - Other Markdown apps ignore the line, because it is an HTML comment.
 
 **Done when**
 - Changing the paper size or margins changes the rendered page width immediately.
 - Dragging a margin marker on the ruler changes that margin.
+- In Print Layout, every page on screen starts where the printed page does.
+- A note set to A4 prints on A4 paper, and one set to Letter on Letter, whatever paper the printer was last used with.
 - Exported PDF and DOCX files use the same paper size and margins.
 
 ---
@@ -510,7 +519,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - The language can be changed in Preferences (O12) and takes effect immediately.
 - All UI text lives in translation files from the start. No text is hard-coded, and the build reports any text that is missing a translation.
 - Dates and numbers are formatted for the selected language.
-- Korean text displays correctly with any font: when a font has no Korean characters, the fallback font is used (Malgun Gothic by default; see O3 and O4).
+- Korean text displays correctly with any font: it uses the style's font for Korean text (Malgun Gothic by default; see O3 and O4).
 
 **Done when**
 - Switching the language changes every visible piece of UI text without a restart.
@@ -677,6 +686,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - When text is selected, the counts cover the selection, for example "120 / 3,450 words".
 - Counts are based on the rendered text, so Markdown syntax such as `**` or `#` is not counted.
 - **Cursor:** line and column.
+- **Page**, in Print Layout (O9): the page in the middle of the rendered pane and the number of pages, for example "Page 2 of 5".
 - **Encoding and line endings**, for example `UTF-8 · CRLF`. Clicking either one lets the user change it. The change applies on the next save.
 - **Zoom level.** Clicking it resets the zoom to 100%.
 - Right-clicking the status bar chooses which items are shown, as in Word.
@@ -694,11 +704,11 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 **Goal:** Change the whole look of a note in one step, like Word's **Design > Style Sets**.
 
 - A style set is a named collection of every section style (O4): fonts, sizes, spacing, and colors. It does not include page setup.
-- MDNote ships at least three built-in sets (for example Default, Report, and Compact). Each set is checked with both English and Korean text.
+- MDNote ships three built-in sets: Default, Report, and Compact. They use only fonts that come with Windows (Segoe UI, Cambria, Consolas, Malgun Gothic). Each set is checked with both English and Korean text.
 - **Design > Style Sets** shows a gallery. Hovering over a set previews it in the rendered view, and clicking applies it.
 - Applying a set copies its styles into the document's `.mdmeta` file. The document therefore looks the same on a PC that doesn't have the set, and later changes to the set don't alter documents that already used it. The name of the set is remembered for display.
 - **Save as new style set** stores the current document's styles as a user set. User sets can be renamed and deleted. Built-in sets cannot be changed.
-- Sets can be exported to a file and imported, for sharing or for moving to another PC.
+- Sets can be exported to a file and imported, for sharing or for moving to another PC. The file is JSON (`<name>.json`), so no new file type is registered.
 - User sets are stored in `%APPDATA%\io.github.oilyhand.mdnote\stylesets\`.
 - A set can be chosen as the default for documents without an `.mdmeta` file (O12).
 
@@ -815,6 +825,18 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-24 | Clicking in the folder tree | A click opens a note but keeps the keyboard in the tree, so F2 and Delete act on the tree, not on the text. Double-click or Enter moves on to the editor. Other files are only shown in File Explorer, never started. |
 | 2026-10-24 | Links after a move | MDNote checks a single note's relative links when it is renamed or moved and offers to fix those that would break. Moving a whole folder keeps the links inside it working and is not checked. |
 | 2026-10-26 | Metadata file extension | `.mdmeta` instead of `.mdn`, which Microsoft Access registers for its blank database templates: on a PC with Office, a `.mdn` showed the Access icon and opened in Access. `.mdmeta` is not used by other programs and reads as "the metadata of the `.md`". |
+| 2026-10-26 | Line spacing | Word's measure: "Single" is the font's own line height, read from DirectWrite, so a document's spacing matches Word's. The built-in Body text uses 1.15 lines, which looks like the 1.5 times the font size used until Phase 4. |
+| 2026-10-26 | Paragraph spacing | The space after a paragraph and the space before the next add up, as in Word (CSS would use only the larger). |
+| 2026-10-26 | Style layers | Built-in styles, then the user's defaults or (for a document with a style set) the set's copy, then the document's own changes. A document stores only its own changes and the copy of an applied set. |
+| 2026-10-26 | Colours in dark mode | Chosen text colours show lighter on the dark page, keeping their hue, as Word does in dark mode. Printing and exports use the real colours. |
+| 2026-10-26 | Missing fonts | A style whose font is not installed uses Segoe UI (Consolas for code), keeping its Korean font. |
+| 2026-10-26 | Code block colours | Six themes, each with a light and a dark version: GitHub (default), Visual Studio Code, One, Solarized, Catppuccin, Gruvbox. The light version is printed. |
+| 2026-10-26 | Undo outside the editor | Ctrl+Z and Ctrl+Y also work with the focus on the page or in the sidebar, so a style or margin change made there can be taken back. |
+| 2026-10-26 | Measurement defaults | Units and paper size follow Windows' regional format (Settings > Time & language > Region), as Word does; Preferences can override both. |
+| 2026-10-27 | Korean text | As in Word, Korean (East Asian) characters always use the style's font for Korean text, and a line holding them is as tall as that font's line. Word measures East Asian fonts as 1.3 times their height (Malgun Gothic 12 pt: 20.7 pt per line, against 16 pt for Segoe UI), which MDNote now follows (found in the Phase 5 hands-on test). |
+| 2026-10-27 | Colours | Modify Style picks colours from a menu like Word's (Automatic, theme colours with shades, standard colours, any #RRGGBB), not WebView2's colour popup. |
+| 2026-10-27 | Pages on screen | The rendered view shows the printed pages (View > Print Layout, on by default), as asked in the Phase 5 hands-on test; one continuous sheet stays available. The browser breaks the text into pages on screen as it does when printing (CSS multi-column rows), so both match. A table's header row is no longer repeated on each printed page, as in Word and on screen. |
+| 2026-10-27 | Printing | Ctrl+P opens MDNote's own Print dialog (printer, copies, pages, sides, colour) and prints through WebView2's print call with the page setup's paper and margins. The browser's print dialog took the paper from the printer's settings instead, so an A4 note came out on Letter paper (found in the Phase 5 hands-on test). |
 
 ## Open decisions
 

@@ -28,6 +28,8 @@ import { listContinuation, renumberLists } from "./lists";
 import { autoCloseBrackets, wrapSelection } from "./conveniences";
 import { editorPhrases, searchSupport } from "./search";
 import { alignTablesOnLeave } from "./table";
+import { metaChanged, metaExtensions, metaField } from "../mdmeta/field";
+import type { DocMeta } from "../mdmeta/schema";
 
 type ChangeListener = (state: EditorState) => void;
 let onChange: ChangeListener = () => {};
@@ -181,31 +183,36 @@ const fixed: Extension[] = [
   tabFallback,
   EditorView.contentAttributes.of({ spellcheck: "false", autocapitalize: "off" }),
   EditorView.updateListener.of((update) => {
-    if (update.docChanged) onChange(update.state);
+    if (update.docChanged || metaChanged(update.startState, update.state)) onChange(update.state);
     if (update.docChanged || update.selectionSet) onCursor(update.state);
   }),
 ];
 
-export function createEditorState(text: string, cursor = 0): EditorState {
+/** A new document's state; `meta` is the formatting from its `.mdmeta` file (O7). */
+export function createEditorState(text: string, cursor = 0, meta?: DocMeta): EditorState {
   const position = Math.min(Math.max(cursor, 0), text.length);
   return EditorState.create({
     doc: text,
     selection: EditorSelection.cursor(position),
     // The optional keymaps (lists, brackets) go first, so they act before the defaults.
-    extensions: [...configurable(options), ...fixed],
+    extensions: [...configurable(options), ...fixed, metaExtensions(meta)],
   });
 }
 
-/** A document's editor state as JSON, Undo history included, to move it to another window. */
+/**
+ * A document's editor state as JSON, with its formatting and Undo history, to
+ * move it to another window. (The history keeps the text changes only: after
+ * a move, Undo no longer reverts formatting changes made before it.)
+ */
 export function editorStateToJSON(state: EditorState): unknown {
-  return state.toJSON({ history: historyField });
+  return state.toJSON({ history: historyField, meta: metaField });
 }
 
 export function editorStateFromJSON(json: unknown): EditorState {
   return EditorState.fromJSON(
     json,
-    { extensions: [...configurable(options), ...fixed] },
-    { history: historyField },
+    { extensions: [...configurable(options), ...fixed, metaExtensions()] },
+    { history: historyField, meta: metaField },
   );
 }
 

@@ -11,6 +11,14 @@ import {
   type CommandId,
 } from "../shortcuts/registry";
 import { closeModal, useModal, type LinkFields, type LinkResult, type Modal } from "../state/modal";
+import { ModifyStyleDialog } from "../styles/ModifyStyleDialog";
+import { StyleSetGallery } from "../styles/StyleSetGallery";
+import { PageSetupDialog } from "../page/PageSetupDialog";
+import { PrintDialog } from "../page/PrintDialog";
+import type { TextPrompt } from "../state/modal";
+
+/** Dialogs that change the page as you go: the page stays visible beside them. */
+const LIVE: Modal["kind"][] = ["style", "styleSets", "pageSetup", "print"];
 
 export function ModalHost() {
   const modal = useModal((s) => s.modal);
@@ -19,6 +27,8 @@ export function ModalHost() {
     if (!modal) return;
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return;
+      // A drop-down inside the dialog (the font list) closes first.
+      if ((event.target as Element | null)?.closest?.("[data-own-escape]")) return;
       event.preventDefault();
       event.stopPropagation();
       cancel(modal);
@@ -30,7 +40,7 @@ export function ModalHost() {
   if (!modal) return null;
   return (
     <div
-      className="dialog-backdrop"
+      className={`dialog-backdrop${LIVE.includes(modal.kind) ? " live" : ""}`}
       onPointerDown={(e) => {
         if (e.target === e.currentTarget) cancel(modal);
       }}
@@ -40,12 +50,30 @@ export function ModalHost() {
         <LinkDialog initial={modal.initial} existing={modal.existing} onDone={modal.resolve} />
       ) : null}
       {modal.kind === "table" ? <TablePicker onDone={modal.resolve} /> : null}
+      {modal.kind === "style" ? (
+        <ModifyStyleDialog docId={modal.docId} styleKey={modal.key} onDone={modal.resolve} />
+      ) : null}
+      {modal.kind === "pageSetup" ? (
+        <PageSetupDialog docId={modal.docId} onDone={modal.resolve} />
+      ) : null}
+      {modal.kind === "print" ? <PrintDialog docId={modal.docId} onDone={modal.resolve} /> : null}
+      {modal.kind === "styleSets" ? (
+        <StyleSetGallery docId={modal.docId} onDone={modal.resolve} />
+      ) : null}
+      {modal.kind === "text" ? <TextDialog prompt={modal.prompt} onDone={modal.resolve} /> : null}
     </div>
   );
 }
 
 function cancel(modal: Modal) {
   if (modal.kind === "shortcuts") closeModal();
+  else if (
+    modal.kind === "style" ||
+    modal.kind === "styleSets" ||
+    modal.kind === "pageSetup" ||
+    modal.kind === "print"
+  )
+    modal.resolve();
   else modal.resolve(null);
 }
 
@@ -53,7 +81,16 @@ function cancel(modal: Modal) {
 // F1: every shortcut, generated from the shortcut table
 // ---------------------------------------------------------------------------
 
-const GROUPS: CommandGroup[] = ["file", "edit", "format", "paragraph", "insert", "table", "view"];
+const GROUPS: CommandGroup[] = [
+  "file",
+  "edit",
+  "format",
+  "paragraph",
+  "insert",
+  "table",
+  "styles",
+  "view",
+];
 
 function ShortcutList() {
   const { t } = useTranslation();
@@ -204,6 +241,51 @@ function LinkDialog({
         </button>
         <button type="button" onClick={() => onDone(null)}>
           {t("linkDialog.cancel")}
+        </button>
+      </div>
+    </form>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// A name to type
+// ---------------------------------------------------------------------------
+
+function TextDialog({ prompt, onDone }: { prompt: TextPrompt; onDone(text: string | null): void }) {
+  const { t } = useTranslation();
+  const [text, setText] = useState(prompt.initial);
+  const inputRef = useRef<HTMLInputElement>(null);
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+  return (
+    <form
+      className="dialog"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="text-title"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (text.trim()) onDone(text);
+      }}
+    >
+      <h2 id="text-title">{prompt.title}</h2>
+      <label className="dialog-field">
+        <span>{prompt.label}</span>
+        <input
+          ref={inputRef}
+          value={text}
+          maxLength={100}
+          onChange={(e) => setText(e.target.value)}
+        />
+      </label>
+      <div className="dialog-buttons">
+        <button type="submit" className="primary" disabled={!text.trim()}>
+          {prompt.ok}
+        </button>
+        <button type="button" onClick={() => onDone(null)}>
+          {t("styleSets.cancel")}
         </button>
       </div>
     </form>

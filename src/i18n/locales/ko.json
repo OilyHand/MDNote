@@ -17,7 +17,9 @@
     "heading": "제목",
     "table": "표",
     "makeDefault": "MDNote를 .md 파일의 기본 앱으로 설정…",
-    "about": "MDNote 정보"
+    "about": "MDNote 정보",
+    "design": "디자인",
+    "layout": "레이아웃"
   },
   "commands": {
     "file": {
@@ -107,7 +109,22 @@
       "fitWidth": "페이지 너비에 맞추기",
       "statusBar": "상태 표시줄",
       "shortcuts": "바로 가기 키",
-      "sidebar": "사이드바"
+      "sidebar": "사이드바",
+      "ruler": "눈금자",
+      "printLayout": "인쇄 모양"
+    },
+    "styles": {
+      "pane": "스타일 창",
+      "modify": "스타일 수정…",
+      "grow": "글꼴 크게",
+      "shrink": "글꼴 작게",
+      "setDefault": "기본값으로 설정",
+      "reset": "기본값으로 되돌리기",
+      "sets": "스타일 세트…",
+      "saveSet": "새 스타일 세트로 저장…"
+    },
+    "layout": {
+      "pageSetup": "페이지 설정…"
     }
   },
   "keys": {
@@ -124,7 +141,8 @@
       "paragraph": "단락과 블록",
       "insert": "삽입",
       "table": "표",
-      "view": "보기와 도움말"
+      "view": "보기와 도움말",
+      "styles": "스타일과 페이지"
     },
     "testTitle": "바로 가기 키 시험",
     "testHint": "여기를 클릭하고 키를 누르면 MDNote가 받은 키가 그대로 표시됩니다. 입력기(IME)나 다른 프로그램이 바로 가기 키를 가로챌 때 원인을 찾는 데 도움이 됩니다.",
@@ -165,8 +183,10 @@
       "cursor": "줄과 열",
       "encoding": "인코딩",
       "lineEnding": "줄 바꿈",
-      "zoom": "배율"
-    }
+      "zoom": "배율",
+      "page": "페이지 번호"
+    },
+    "page": "{{page}}/{{pages}} 페이지"
   },
   "preview": {
     "linkNotFound": "링크 대상 “{{target}}”을(를) 찾을 수 없습니다.",
@@ -187,7 +207,8 @@
     "outline": "개요",
     "noFolder": "열린 폴더가 없습니다.",
     "noDocument": "열린 문서가 없습니다.",
-    "noHeadings": "이 노트에는 제목이 없습니다."
+    "noHeadings": "이 노트에는 제목이 없습니다.",
+    "styles": "스타일"
   },
   "folder": {
     "open": "열기",
@@ -246,6 +267,12 @@
       "message_other": "MDNote가 예기치 않게 종료되었습니다. 저장하지 않은 변경 내용이 있는 문서 {{count}}개: {{files}}",
       "restore": "복원",
       "discard": "버리기"
+    },
+    "setDefault": {
+      "title": "기본값으로 설정",
+      "message": "이 문서의 스타일을 새 문서와, 자체 스타일이 없는 문서에 사용할까요?",
+      "set": "기본값으로 설정",
+      "cancel": "취소"
     }
   },
   "fileTypes": {
@@ -268,7 +295,9 @@
     "recentMissing": "“{{path}}”이(가) 더 이상 없어서 최근 파일 목록에서 제거했습니다.",
     "pasteBlocked": "붙여넣으려면 Ctrl+V를 누르세요.",
     "notInTable": "먼저 커서를 표 안에 두세요.",
-    "dismiss": "닫기"
+    "dismiss": "닫기",
+    "metaBroken": "“{{name}}”의 서식 파일을 읽을 수 없어({{detail}}) 기본 서식으로 표시합니다. 서식을 바꿔 저장하면 이전 파일은 이름 끝에 “.bak”을 붙여 보관합니다.",
+    "metaNewer": "“{{name}}”의 서식은 더 새로운 버전의 MDNote에서 저장되었습니다. 이 버전이 모르는 설정은 표시되지 않지만 그대로 보관합니다."
   },
   "errors": {
     "notFound": "파일을 찾을 수 없습니다: {{detail}}",
@@ -324,6 +353,219 @@
     "imageFolderAssets": "노트 옆의 assets 폴더",
     "imageFolderNoteName": "노트 이름으로 된 폴더 (이름.assets)",
     "imageFolderNoteFolder": "노트와 같은 폴더",
-    "showAllFiles": "폴더 사이드바에 다른 파일(그림 등)도 표시"
+    "showAllFiles": "폴더 사이드바에 다른 파일(그림 등)도 표시",
+    "documents": "문서",
+    "defaultStyles": "기본 스타일",
+    "builtInStyles": "기본 제공 (기본)",
+    "customStyles": "문서에서 가져옴 (기본값으로 설정)",
+    "defaultStylesHint": "새 문서와 자체 스타일이 없는 문서에 사용합니다. 문서 자체의 스타일과 적용한 스타일 세트가 항상 우선합니다.",
+    "defaultPaper": "기본 용지 크기",
+    "paperSystem": "Windows와 같게 ({{paper}})",
+    "defaultPageHint": "자체 페이지 설정이 없는 문서에 사용합니다. 사용자 지정 여백은 레이아웃 > 페이지 설정 > 기본값으로 설정에서 정합니다.",
+    "units": "측정 단위",
+    "unitsSystem": "Windows와 같게 ({{units}})",
+    "unitNames": {
+      "cm": "센티미터",
+      "in": "인치"
+    }
+  },
+  "styles": {
+    "names": {
+      "body": "본문",
+      "heading1": "제목 1",
+      "heading2": "제목 2",
+      "heading3": "제목 3",
+      "heading4": "제목 4",
+      "heading5": "제목 5",
+      "heading6": "제목 6",
+      "blockquote": "인용",
+      "list": "목록",
+      "inlineCode": "인라인 코드",
+      "codeBlock": "코드 블록",
+      "equation": "수식",
+      "tableHeader": "표 머리글",
+      "tableCell": "표 셀",
+      "link": "링크",
+      "footnote": "각주"
+    },
+    "modifyTitle": "스타일 수정: {{name}}",
+    "modifyMenu": "{{name}} 스타일 수정…",
+    "modifyItem": "수정…",
+    "sample": "AaBbCc 가나다라 123",
+    "font": "글꼴",
+    "fallbackFont": "한글 글꼴",
+    "fallbackHint": "한글(과 다른 동아시아 문자)은 Word의 한글 글꼴처럼 항상 이 글꼴로 표시합니다.",
+    "size": "크기",
+    "emphasis": "강조",
+    "bold": "굵게",
+    "italic": "기울임꼴",
+    "underline": "밑줄",
+    "color": "색",
+    "automatic": "자동",
+    "lineSpacing": "줄 간격",
+    "spacing": {
+      "115": "1.15",
+      "150": "1.5줄",
+      "single": "1줄",
+      "double": "2줄",
+      "multiple": "배수",
+      "exactly": "고정"
+    },
+    "spacingValue": "줄 간격 값",
+    "lines": "줄",
+    "spacingAround": "단락 간격",
+    "before": "앞",
+    "after": "뒤",
+    "spaceBefore": "단락 앞 간격",
+    "spaceAfter": "단락 뒤 간격",
+    "alignment": "맞춤",
+    "align": {
+      "left": "왼쪽",
+      "center": "가운데",
+      "right": "오른쪽",
+      "justify": "양쪽"
+    },
+    "codeTheme": "색 테마",
+    "themes": {
+      "github": "GitHub",
+      "vscode": "Visual Studio Code",
+      "one": "One",
+      "solarized": "Solarized",
+      "catppuccin": "Catppuccin",
+      "gruvbox": "Gruvbox"
+    },
+    "resetStyle": "스타일 되돌리기",
+    "resetStyleHint": "이 문서에서 바꾸기 전의 스타일로 되돌립니다",
+    "ok": "확인",
+    "cancel": "취소",
+    "fromSet": "스타일 세트: {{name}}",
+    "fromDefaultSet": "기본 스타일 ({{name}})",
+    "fromDefaults": "기본 스타일",
+    "withChanges": " · 변경됨",
+    "themeColors": "테마 색",
+    "standardColors": "표준 색",
+    "customColor": "다른 색",
+    "applyColor": "적용"
+  },
+  "fontPicker": {
+    "none": "(없음)",
+    "notInstalled": "설치되지 않음",
+    "search": "글꼴 검색",
+    "monospaced": "고정폭 글꼴만",
+    "refresh": "새로 고침",
+    "refreshHint": "MDNote를 시작한 뒤 설치한 글꼴을 찾습니다",
+    "recent": "최근에 사용한 글꼴",
+    "all": "모든 글꼴",
+    "loading": "설치된 글꼴을 읽는 중…",
+    "noMatch": "일치하는 글꼴이 없습니다.",
+    "mono": "고정폭"
+  },
+  "styleSets": {
+    "title": "스타일 세트",
+    "hint": "세트를 가리키면 페이지에 미리 보이고, 클릭하면 적용됩니다. 세트를 적용하면 그 스타일이 문서에 복사되며, 실행 취소로 되돌릴 수 있습니다.",
+    "builtIn": {
+      "default": "기본",
+      "report": "보고서",
+      "compact": "간결"
+    },
+    "sampleTitle": "Title 제목",
+    "sampleHeading": "Heading 소제목",
+    "sampleText": "Body text in this style set. 본문은 이렇게 보입니다.",
+    "more": "{{name}} 더 보기",
+    "apply": "적용",
+    "export": "내보내기…",
+    "renameItem": "이름 바꾸기…",
+    "deleteItem": "삭제…",
+    "import": "가져오기…",
+    "close": "닫기",
+    "name": "이름",
+    "saveTitle": "새 스타일 세트로 저장",
+    "save": "저장",
+    "saved": "스타일 세트 “{{name}}”을(를) 저장했습니다.",
+    "replaceTitle": "스타일 세트 바꾸기",
+    "replaceMessage": "“{{name}}” 스타일 세트가 이미 있습니다. 이 문서의 스타일로 바꿀까요?",
+    "replace": "바꾸기",
+    "cancel": "취소",
+    "renameTitle": "스타일 세트 이름 바꾸기",
+    "rename": "이름 바꾸기",
+    "nameTaken": "“{{name}}” 스타일 세트가 이미 있습니다.",
+    "deleteTitle": "스타일 세트 삭제",
+    "deleteMessage": "“{{name}}” 스타일 세트를 삭제할까요? 이 세트를 사용한 문서의 스타일은 그대로 남습니다.",
+    "delete": "삭제",
+    "fileType": "MDNote 스타일 세트",
+    "notASet": "“{{path}}”은(는) MDNote 스타일 세트가 아닙니다.",
+    "imported": "스타일 세트 “{{name}}”을(를) 가져왔습니다."
+  },
+  "pageSetup": {
+    "title": "페이지 설정",
+    "size": "크기",
+    "custom": "사용자 지정",
+    "customSize": "너비 × 높이",
+    "width": "너비",
+    "height": "높이",
+    "paper": {
+      "A4": "A4",
+      "Letter": "Letter",
+      "Legal": "Legal",
+      "A5": "A5",
+      "B5": "B5 (JIS)"
+    },
+    "orientation": "용지 방향",
+    "portrait": "세로",
+    "landscape": "가로",
+    "margins": "여백",
+    "preset": {
+      "normal": "보통",
+      "narrow": "좁게",
+      "moderate": "중간",
+      "wide": "넓게"
+    },
+    "top": "위쪽",
+    "bottom": "아래쪽",
+    "left": "왼쪽",
+    "right": "오른쪽",
+    "tooBig": "여백이 너무 커서 글을 쓸 공간이 부족합니다.",
+    "setDefault": "기본값으로 설정",
+    "setDefaultHint": "자체 페이지 설정이 없는 문서에 이 설정을 사용합니다"
+  },
+  "ruler": {
+    "left": "왼쪽 여백: {{value}}",
+    "right": "오른쪽 여백: {{value}}",
+    "leftLabel": "왼쪽 여백",
+    "rightLabel": "오른쪽 여백"
+  },
+  "print": {
+    "title": "인쇄",
+    "printer": "프린터",
+    "noPrinters": "설치된 프린터가 없습니다",
+    "copies": "매수",
+    "pages": "페이지",
+    "allPages": "모든 페이지",
+    "allPagesOf": "모든 페이지 ({{pages}})",
+    "currentPage": "현재 페이지 ({{page}})",
+    "customPages": "페이지 지정:",
+    "pagesHint": "예: 1-3, 5",
+    "badPages": "1-3, 5처럼 페이지 번호와 범위를 입력하세요.",
+    "pastEnd_other": "이 노트는 {{count}}페이지입니다.",
+    "badCopies": "매수는 1에서 999 사이의 정수여야 합니다.",
+    "sides": "인쇄 면",
+    "side": {
+      "printer": "프린터 설정",
+      "oneSided": "단면 인쇄",
+      "longEdge": "양면 인쇄 (긴 쪽으로 넘김)",
+      "shortEdge": "양면 인쇄 (짧은 쪽으로 넘김)"
+    },
+    "color": "색",
+    "colorMode": {
+      "printer": "프린터 설정",
+      "color": "컬러",
+      "grayscale": "흑백"
+    },
+    "paper": "용지",
+    "paperValue": "{{paper}}, {{orientation}}",
+    "paperHint": "레이아웃 > 페이지 설정에서 바꿉니다",
+    "print": "인쇄",
+    "notPrinted": "노트를 인쇄하지 않았습니다. 인쇄가 취소되었거나 프린터에서 문제를 알렸습니다.",
+    "unavailable": "프린터 “{{printer}}”을(를) 사용할 수 없습니다."
   }
 }

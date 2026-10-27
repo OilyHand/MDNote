@@ -17,7 +17,9 @@
     "heading": "Heading",
     "table": "Table",
     "makeDefault": "Make MDNote the Default for .md Files…",
-    "about": "About MDNote"
+    "about": "About MDNote",
+    "design": "Design",
+    "layout": "Layout"
   },
   "commands": {
     "file": {
@@ -107,7 +109,22 @@
       "fitWidth": "Fit Page Width",
       "statusBar": "Status Bar",
       "shortcuts": "Keyboard Shortcuts",
-      "sidebar": "Sidebar"
+      "sidebar": "Sidebar",
+      "ruler": "Ruler",
+      "printLayout": "Print Layout"
+    },
+    "styles": {
+      "pane": "Styles Pane",
+      "modify": "Modify Style…",
+      "grow": "Bigger Font",
+      "shrink": "Smaller Font",
+      "setDefault": "Set as Default",
+      "reset": "Reset to Defaults",
+      "sets": "Style Sets…",
+      "saveSet": "Save as New Style Set…"
+    },
+    "layout": {
+      "pageSetup": "Page Setup…"
     }
   },
   "keys": {
@@ -124,7 +141,8 @@
       "paragraph": "Paragraphs and blocks",
       "insert": "Insert",
       "table": "Tables",
-      "view": "View and help"
+      "view": "View and help",
+      "styles": "Styles and page"
     },
     "testTitle": "Try a shortcut",
     "testHint": "Click here and press keys. This shows exactly what MDNote receives, which helps when an input method (IME) or another program takes a shortcut.",
@@ -171,8 +189,10 @@
       "cursor": "Line and column",
       "encoding": "Encoding",
       "lineEnding": "Line endings",
-      "zoom": "Zoom"
-    }
+      "zoom": "Zoom",
+      "page": "Page number"
+    },
+    "page": "Page {{page}} of {{pages}}"
   },
   "preview": {
     "linkNotFound": "Can't find the link target “{{target}}”.",
@@ -193,7 +213,8 @@
     "outline": "Outline",
     "noFolder": "No folder is open.",
     "noDocument": "No document is open.",
-    "noHeadings": "This note has no headings."
+    "noHeadings": "This note has no headings.",
+    "styles": "Styles"
   },
   "folder": {
     "open": "Open",
@@ -254,6 +275,12 @@
       "message_other": "MDNote closed unexpectedly. {{count}} documents had unsaved changes: {{files}}",
       "restore": "Restore",
       "discard": "Discard"
+    },
+    "setDefault": {
+      "title": "Set as Default",
+      "message": "Use this document's styles for new documents, and for documents that don't have styles of their own?",
+      "set": "Set as Default",
+      "cancel": "Cancel"
     }
   },
   "fileTypes": {
@@ -277,7 +304,9 @@
     "recentMissing": "“{{path}}” no longer exists, so it was removed from Recent Files.",
     "pasteBlocked": "Use Ctrl+V to paste.",
     "notInTable": "Put the cursor in a table first.",
-    "dismiss": "Dismiss"
+    "dismiss": "Dismiss",
+    "metaBroken": "The formatting file of “{{name}}” can't be read ({{detail}}), so the note uses the default formatting. If you change its formatting and save, the old file is kept with “.bak” added to its name.",
+    "metaNewer": "The formatting of “{{name}}” was saved by a newer version of MDNote. Settings this version doesn't know are kept, but not shown."
   },
   "errors": {
     "notFound": "File not found: {{detail}}",
@@ -333,6 +362,220 @@
     "imageFolderAssets": "An “assets” folder next to the note",
     "imageFolderNoteName": "A folder named after the note (name.assets)",
     "imageFolderNoteFolder": "The note's own folder",
-    "showAllFiles": "Show other files (such as images) in the folder sidebar"
+    "showAllFiles": "Show other files (such as images) in the folder sidebar",
+    "documents": "Documents",
+    "defaultStyles": "Default styles",
+    "builtInStyles": "Built-in (Default)",
+    "customStyles": "From a document (Set as Default)",
+    "defaultStylesHint": "For new documents and documents without styles of their own. A document's own styles, and an applied style set, always win.",
+    "defaultPaper": "Default paper size",
+    "paperSystem": "Same as Windows ({{paper}})",
+    "defaultPageHint": "For documents without their own page setup. Layout > Page Setup > Set as Default sets custom margins.",
+    "units": "Measurement units",
+    "unitsSystem": "Same as Windows ({{units}})",
+    "unitNames": {
+      "cm": "Centimeters",
+      "in": "Inches"
+    }
+  },
+  "styles": {
+    "names": {
+      "body": "Body text",
+      "heading1": "Heading 1",
+      "heading2": "Heading 2",
+      "heading3": "Heading 3",
+      "heading4": "Heading 4",
+      "heading5": "Heading 5",
+      "heading6": "Heading 6",
+      "blockquote": "Quote",
+      "list": "List",
+      "inlineCode": "Inline code",
+      "codeBlock": "Code block",
+      "equation": "Equation",
+      "tableHeader": "Table header",
+      "tableCell": "Table cell",
+      "link": "Link",
+      "footnote": "Footnote"
+    },
+    "modifyTitle": "Modify Style: {{name}}",
+    "modifyMenu": "Modify {{name}} Style…",
+    "modifyItem": "Modify…",
+    "sample": "AaBbCc 가나다라 123",
+    "font": "Font",
+    "fallbackFont": "Font for Korean",
+    "fallbackHint": "Korean (and other East Asian) characters always use this font, as with Word's font for Asian text.",
+    "size": "Size",
+    "emphasis": "Emphasis",
+    "bold": "Bold",
+    "italic": "Italic",
+    "underline": "Underline",
+    "color": "Color",
+    "automatic": "Automatic",
+    "lineSpacing": "Line spacing",
+    "spacing": {
+      "115": "1.15",
+      "150": "1.5 lines",
+      "single": "Single",
+      "double": "Double",
+      "multiple": "Multiple",
+      "exactly": "Exactly"
+    },
+    "spacingValue": "Line spacing value",
+    "lines": "lines",
+    "spacingAround": "Spacing",
+    "before": "Before",
+    "after": "After",
+    "spaceBefore": "Spacing before",
+    "spaceAfter": "Spacing after",
+    "alignment": "Alignment",
+    "align": {
+      "left": "Left",
+      "center": "Center",
+      "right": "Right",
+      "justify": "Justify"
+    },
+    "codeTheme": "Colors",
+    "themes": {
+      "github": "GitHub",
+      "vscode": "Visual Studio Code",
+      "one": "One",
+      "solarized": "Solarized",
+      "catppuccin": "Catppuccin",
+      "gruvbox": "Gruvbox"
+    },
+    "resetStyle": "Reset Style",
+    "resetStyleHint": "Back to the style this document would have without its own change",
+    "ok": "OK",
+    "cancel": "Cancel",
+    "fromSet": "Style set: {{name}}",
+    "fromDefaultSet": "Default styles ({{name}})",
+    "fromDefaults": "Default styles",
+    "withChanges": " · changed",
+    "themeColors": "Theme colors",
+    "standardColors": "Standard colors",
+    "customColor": "Other color",
+    "applyColor": "Use"
+  },
+  "fontPicker": {
+    "none": "(None)",
+    "notInstalled": "not installed",
+    "search": "Search fonts",
+    "monospaced": "Monospaced only",
+    "refresh": "Refresh",
+    "refreshHint": "Look for fonts installed since MDNote started",
+    "recent": "Recently used",
+    "all": "All fonts",
+    "loading": "Reading the installed fonts…",
+    "noMatch": "No font matches.",
+    "mono": "mono"
+  },
+  "styleSets": {
+    "title": "Style Sets",
+    "hint": "Point at a set to see it on the page; click to apply it. Applying a set copies its styles into the document, and Undo takes it back.",
+    "builtIn": {
+      "default": "Default",
+      "report": "Report",
+      "compact": "Compact"
+    },
+    "sampleTitle": "Title 제목",
+    "sampleHeading": "Heading 소제목",
+    "sampleText": "Body text in this style set. 본문은 이렇게 보입니다.",
+    "more": "More for {{name}}",
+    "apply": "Apply",
+    "export": "Export…",
+    "renameItem": "Rename…",
+    "deleteItem": "Delete…",
+    "import": "Import…",
+    "close": "Close",
+    "name": "Name",
+    "saveTitle": "Save as New Style Set",
+    "save": "Save",
+    "saved": "Saved the style set “{{name}}”.",
+    "replaceTitle": "Replace Style Set",
+    "replaceMessage": "A style set named “{{name}}” already exists. Replace it with this document's styles?",
+    "replace": "Replace",
+    "cancel": "Cancel",
+    "renameTitle": "Rename Style Set",
+    "rename": "Rename",
+    "nameTaken": "A style set named “{{name}}” already exists.",
+    "deleteTitle": "Delete Style Set",
+    "deleteMessage": "Delete the style set “{{name}}”? Documents that used it keep their styles.",
+    "delete": "Delete",
+    "fileType": "MDNote style set",
+    "notASet": "“{{path}}” is not an MDNote style set.",
+    "imported": "Imported the style set “{{name}}”."
+  },
+  "pageSetup": {
+    "title": "Page Setup",
+    "size": "Size",
+    "custom": "Custom",
+    "customSize": "Width × height",
+    "width": "Width",
+    "height": "Height",
+    "paper": {
+      "A4": "A4",
+      "Letter": "Letter",
+      "Legal": "Legal",
+      "A5": "A5",
+      "B5": "B5 (JIS)"
+    },
+    "orientation": "Orientation",
+    "portrait": "Portrait",
+    "landscape": "Landscape",
+    "margins": "Margins",
+    "preset": {
+      "normal": "Normal",
+      "narrow": "Narrow",
+      "moderate": "Moderate",
+      "wide": "Wide"
+    },
+    "top": "Top",
+    "bottom": "Bottom",
+    "left": "Left",
+    "right": "Right",
+    "tooBig": "The margins leave too little room for text.",
+    "setDefault": "Set as Default",
+    "setDefaultHint": "Use this page setup for documents that don't have their own"
+  },
+  "ruler": {
+    "left": "Left margin: {{value}}",
+    "right": "Right margin: {{value}}",
+    "leftLabel": "Left margin",
+    "rightLabel": "Right margin"
+  },
+  "print": {
+    "title": "Print",
+    "printer": "Printer",
+    "noPrinters": "No printer is installed",
+    "copies": "Copies",
+    "pages": "Pages",
+    "allPages": "All pages",
+    "allPagesOf": "All pages ({{pages}})",
+    "currentPage": "Current page ({{page}})",
+    "customPages": "Pages:",
+    "pagesHint": "e.g. 1-3, 5",
+    "badPages": "Type page numbers and ranges, such as 1-3, 5.",
+    "pastEnd_one": "This note has {{count}} page.",
+    "pastEnd_other": "This note has {{count}} pages.",
+    "badCopies": "Copies must be a whole number from 1 to 999.",
+    "sides": "Sides",
+    "side": {
+      "printer": "Printer's setting",
+      "oneSided": "Print one sided",
+      "longEdge": "Print on both sides (flip on long edge)",
+      "shortEdge": "Print on both sides (flip on short edge)"
+    },
+    "color": "Color",
+    "colorMode": {
+      "printer": "Printer's setting",
+      "color": "Color",
+      "grayscale": "Black and white"
+    },
+    "paper": "Paper",
+    "paperValue": "{{paper}}, {{orientation}}",
+    "paperHint": "From Layout > Page Setup",
+    "print": "Print",
+    "notPrinted": "The note was not printed: printing was cancelled, or the printer reported a problem.",
+    "unavailable": "The printer “{{printer}}” is not available."
   }
 }

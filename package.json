@@ -1,7 +1,7 @@
 {
   "name": "mdnote",
   "private": true,
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "Markdown notes with Word-style formatting, for Windows",
   "license": "MIT",
   "type": "module",

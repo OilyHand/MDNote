@@ -23,16 +23,22 @@ import {
   findByPath,
   getDoc,
   isSavedText,
-  markSaved,
+  markMetaSaved,
+  markTextSaved,
   markUnsaved,
   refreshDirty,
   removeDoc,
+  savedMetaOf,
   scrollTops,
   updateDoc,
   useDocs,
   type Doc,
 } from "../state/documents";
+import { metaEffect, metaOf } from "../mdmeta/field";
+import { loadMeta, recoveredMeta } from "../mdmeta/io";
+import { metaKey } from "../mdmeta/schema";
 import { ask } from "../state/dialog";
+import { showPrint } from "../state/modal";
 import { notifyError, notifyInfo } from "../state/notices";
 import { useRecent } from "../state/recent";
 import { adoptUnsavedImages, discardUnsavedImages } from "./images";
@@ -123,6 +129,7 @@ async function openOne(path: string, options: OpenOptions = {}): Promise<Doc | u
     handleOpenError(path, error, options.missing);
     return undefined;
   }
+  const meta = await loadMeta(loaded.path);
   const replaced = pristineUntitled();
   if (replaced) removeDoc(replaced.id);
 
@@ -135,8 +142,9 @@ async function openOne(path: string, options: OpenOptions = {}): Promise<Doc | u
     stamp: loaded.stamp,
     dirty: false,
     disk: "ok",
+    metaBroken: meta.broken,
   };
-  addDoc(doc, createEditorState(loaded.text, options.cursor), indexAfterActive());
+  addDoc(doc, createEditorState(loaded.text, options.cursor, meta.meta), indexAfterActive());
   if (options.scrollTop) scrollTops.set(doc.id, options.scrollTop);
   api.watchDocument(loaded.path, loaded.stamp).catch(notifyError);
 
@@ -217,6 +225,12 @@ export async function saveDocumentAs(id: string): Promise<boolean> {
   return writeTo(id, path, doc.encoding);
 }
 
+/**
+ * Saves the note and its `.mdmeta` (O7). Only what changed is written: a
+ * formatting change alone leaves the `.md` untouched, and the `.mdmeta` is
+ * created, replaced or removed only when the formatting differs from the
+ * file. Save As writes both under the new name.
+ */
 async function writeTo(id: string, path: string, encoding: TextEncoding): Promise<boolean> {
   const doc = getDoc(id);
   if (!doc) return false;
@@ -225,15 +239,28 @@ async function writeTo(id: string, path: string, encoding: TextEncoding): Promis
   const state = editorStates.get(id);
   if (!state) return false;
   const snapshot = state.doc;
+  const metaText = metaKey(metaOf(state));
+  const moved = !doc.path || !samePath(doc.path, path);
   try {
-    const stamp = await api.writeDocument(path, snapshot.toString(), encoding, doc.lineEnding);
-    if (doc.path && !samePath(doc.path, path)) api.unwatchDocument(doc.path).catch(() => {});
-    updateDoc(id, { path, untitled: null, encoding, stamp, disk: "ok" });
-    markSaved(id, snapshot);
-    // Typing may have continued while the file was being written.
-    const latest = editorStates.get(id);
-    if (latest) refreshDirty(id, latest.doc);
-    api.watchDocument(path, stamp).catch(notifyError);
+    const textChanged =
+      moved ||
+      !doc.stamp ||
+      doc.disk !== "ok" ||
+      JSON.stringify(encoding) !== JSON.stringify(doc.encoding) ||
+      !isSavedText(id, snapshot.toString());
+    if (textChanged) {
+      const stamp = await api.writeDocument(path, snapshot.toString(), encoding, doc.lineEnding);
+      if (doc.path && moved) api.unwatchDocument(doc.path).catch(() => {});
+      updateDoc(id, { path, untitled: null, encoding, stamp, disk: "ok" });
+      markTextSaved(id, snapshot);
+      api.watchDocument(path, stamp).catch(notifyError);
+    }
+    if (moved || metaText !== savedMetaOf(id)) {
+      // A broken file is kept as .bak, unless the note now lives somewhere else.
+      await api.writeMeta(path, metaText, Boolean(doc.metaBroken) && !moved);
+      updateDoc(id, { metaBroken: false });
+      markMetaSaved(id, metaText);
+    }
     return true;
   } catch (error) {
     if (toAppError(error).code === "unmappable" && encoding.kind !== "utf8") {
@@ -253,6 +280,10 @@ async function writeTo(id: string, path: string, encoding: TextEncoding): Promis
     }
     notifyError(error);
     return false;
+  } finally {
+    // Typing may have continued while the files were being written.
+    const latest = editorStates.get(id);
+    if (latest) refreshDirty(id, latest);
   }
 }
 
@@ -333,6 +364,10 @@ export async function restoreRecoveryCopy(copy: RecoveryCopy): Promise<Doc | und
           changes: { from: 0, to: state.doc.length, insert: copy.text },
         }));
       }
+      const meta = recoveredMeta(copy.meta);
+      if (copy.meta !== undefined && metaKey(meta) !== savedMetaOf(doc.id)) {
+        changeDoc(doc.id, () => ({ effects: metaEffect(meta) }));
+      }
       updateDoc(doc.id, { encoding: copy.encoding, lineEnding: copy.lineEnding });
       // Text changes show as unsaved by themselves (Undo back to the file clears them).
       if (encodingDiffers) markUnsaved(doc.id);
@@ -354,7 +389,7 @@ export async function restoreRecoveryCopy(copy: RecoveryCopy): Promise<Doc | und
     dirty: true,
     disk: "ok",
   };
-  addDoc(doc, createEditorState(copy.text), indexAfterActive());
+  addDoc(doc, createEditorState(copy.text, 0, recoveredMeta(copy.meta)), indexAfterActive());
   markUnsaved(doc.id);
   return doc;
 }
@@ -394,18 +429,26 @@ export async function reloadFromDisk(id: string) {
   const doc = getDoc(id);
   if (!doc?.path) return;
   try {
-    const loaded = await api.readDocument(doc.path);
-    // A normal edit, so Ctrl+Z can bring back the text from before the reload.
+    const [loaded, meta] = await Promise.all([
+      api.readDocument(doc.path),
+      loadMeta(doc.path, true),
+    ]);
+    // A normal edit, so Ctrl+Z can bring back the text (and formatting) from before the reload.
     changeDoc(id, (state) => ({
       changes: { from: 0, to: state.doc.length, insert: loaded.text },
+      effects: metaOf(state) === meta.meta ? [] : metaEffect(meta.meta),
     }));
     updateDoc(id, {
       encoding: loaded.encoding,
       lineEnding: loaded.lineEnding,
       stamp: loaded.stamp,
       disk: "ok",
+      metaBroken: meta.broken,
     });
-    markSaved(id, editorStates.get(id)!.doc);
+    const state = editorStates.get(id)!;
+    markTextSaved(id, state.doc);
+    markMetaSaved(id, metaKey(metaOf(state)));
+    refreshDirty(id, state);
   } catch (error) {
     notifyError(error);
   }
@@ -421,15 +464,16 @@ export function keepMyVersion(id: string) {
 // ---------------------------------------------------------------------------
 
 /**
- * Prints the rendered view with the print style sheet (O2). In Source Only
- * mode the preview is shown first, so there is something to print.
+ * File > Print (O2): MDNote's Print dialog, which prints the rendered view with
+ * the print style sheet on the document's paper (O9). In Source Only mode the
+ * preview is shown first, so there is something to print.
  */
-export async function printDocument() {
+export async function printDocument(docId: string) {
   if (useView.getState().mode === "source") {
     setViewMode("split");
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  window.print();
+  await showPrint(docId);
 }
 
 export function cycleTab(step: 1 | -1) {

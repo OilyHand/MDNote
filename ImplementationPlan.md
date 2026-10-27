@@ -411,9 +411,60 @@ Hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-4.md) (2026-10-2
 
 ---
 
-### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5
+### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5 — ✅ complete (2026-10-27)
 
 **Goal:** Full control over typography and the page, saved in `.mdmeta` files.
+
+**Status (2026-10-26):** all tasks below are implemented on `phase5/styles`.
+
+Verified:
+- **Automated:** 116 frontend tests (+30: the `.mdmeta` format, the style layers, the style sheet, style set files, page sizes, Print Layout's page count, page ranges to print) and 33 Rust tests (+6: reading, writing, removing and backing up `.mdmeta` files; Windows' region settings; Word's line heights; the printer list).
+- **Running the app** (scripted through the DevTools port):
+  - Modify Style: the page changes while the dialog is open; OK, Undo and Redo; saving writes only the `.mdmeta`; Reset to Defaults removes it on save; reopening restores the styles
+  - a broken `.mdmeta`: a notice, the defaults, and a `.bak` copy when the formatting is changed and saved
+  - Ctrl+] and Ctrl+[ on a heading and on body text
+  - style sets: the gallery, a set shown on hover and applied on click, Save as New Style Set
+  - Page Setup (A4 landscape), Layout > Margins > Narrow, dragging a margin on the ruler, Undo from the page
+  - Preferences > Documents: default styles and units followed by an open window
+  - crash recovery and Move to New Window keep the formatting
+  - the print style sheet, in the light and the dark theme, and the Korean UI
+
+Hands-on checklist [docs/testing/phase-5.md](docs/testing/phase-5.md), first run (2026-10-27): 27 items pass, 4 fail. Fixes:
+- **Colour (item 5):** the colour box relied on WebView2's own colour popup and stayed disabled until Automatic was cleared. Modify Style now has a colour menu like Word's. It and the font list float above the dialog, which had cut them off.
+- **Font for Korean (item 6) and the comparison with Word (item 7):** measured in Word 365, a line holding Korean text is far taller than an English one (Segoe UI 12 pt at 1.5 lines: 24 pt for English, 31 pt with Korean in Malgun Gothic). Word measures fonts the GDI way, and East Asian fonts as 1.3 times their Windows ascent and descent (Malgun Gothic: 1.729, against 1.33 from DirectWrite); and it always sets Korean in the "Asian text" font. MDNote now does both: the font list reports Word's line heights (checked for ten fonts), and the render worker wraps Korean runs so they take the style's Korean font and line height.
+- **Margins in cm (item 29):** values such as 2.54 cm were refused by the browser's check for multiples of the arrows' step; Page Setup and Modify Style no longer use it.
+
+Rechecks R1–R4 (2026-10-27): all pass. The suggestion from item 29 was accepted: the preview now shows the printed pages (**View > Print Layout**, Objectives O9).
+- The browser breaks the text into rows of one column each, as tall as the page's text area (CSS `column-height` and `column-wrap`, in WebView2 since version 145). Sheets of the paper size are drawn behind them. The breaks are the browser's own, so the pages on screen match the printed ones; checked on a 12-page test note against a PDF printed from the app, page by page.
+- Code blocks and tables continue on the next page instead of scrolling, both on screen and in print, and long code lines wrap. Table header rows are no longer repeated on each printed page, which the screen can't do.
+- The status bar shows "Page 2 of 5".
+- On a 190-page note, a full relayout takes about 40–70 ms in Print Layout, against 10–17 ms on the continuous sheet.
+
+Rechecks R5–R9 (2026-10-27): R5–R7 and R9 pass. R8 fails: a note set to A4 printed on Letter paper.
+- **Cause:** the browser's print dialog (`window.print()`) takes the paper from the printer's own settings, or the last paper chosen in it, never from the page's CSS size. With the note on A5, the dialog still offered A4, the default of Microsoft Print to PDF on this PC.
+- **Fix:** Ctrl+P opens MDNote's own Print dialog: printer, copies, pages (all, the current page in Print Layout, or ranges), sides and colour, with the paper shown from Page Setup. It prints through WebView2's print call (`ICoreWebView2_16::Print`) with the page setup's paper size, orientation and margins. Asked through `DocumentProperties` with the same width and height, the Microsoft Print to PDF driver chooses the matching paper by itself (A4, A5, Letter).
+- Checked by script: the dialog, page range checks, and a job reaching Microsoft Print to PDF; cancelling its Save dialog shows "The note was not printed".
+
+Rechecks R10–R12 (2026-10-27): R10 and R12 pass. R11 fails: the printed margins differ from the screen.
+- **Cause:** on screen, the preview pane has 24 px of padding on each side of the page, and the print style sheet did not remove it. Every printout since Phase 2 had 0.25 in more margin on the left and right, so its text column was 0.5 in narrower than the page setup's (6.0 in instead of 6.5 in on Letter with Normal margins), and lines and pages broke elsewhere than on screen.
+- **Fix:** the pane has no padding when printing. Checked by printing to Microsoft Print to PDF and measuring: 1.00 in margins and a 6.5 in text column, and on a 12-page note every printed page starts where the page on screen does.
+- **The paper sizes were right:** the PDFs from the hands-on test are exactly Letter, A4, Legal, A5 and B5. The sizes noted (Letter 11.33 × 14.67 in) are 4/3 of the real ones, as when a viewer reads screen pixels (96 per inch) as points (72 per inch).
+
+Recheck R13 (2026-10-27): passes. Phase 5 is complete.
+
+**What changed from the plan**
+- **Word's line spacing is exact:** DirectWrite reports each font's single line height, and the page uses it. The built-in Body text uses 1.15 lines (about the earlier 1.5 times the font size).
+- **Paragraph spacing adds up as in Word**, so the page and a Word export space paragraphs alike.
+- **A style set replaces the user's defaults for that document**, and the document keeps a full copy of it, so it looks the same on any PC.
+- **The Styles panel is a sidebar tab.** The **Design** menu holds the style commands and the **Layout** menu the page setup, as in Word's ribbon.
+- **Page Setup has Set as Default**, and the Layout menu Word's quick Size, Orientation and Margins choices.
+- **The built-in sets are defined in code** (`src/styles/sets.ts`), not in `resources/stylesets/`.
+- **Ctrl+Z and Ctrl+Y work outside the editor**, for changes made on the page.
+- **MDNote has its own Print dialog**, because the browser's could not be given the paper size (O2, O9).
+- **Print Layout** (O9) was added after the hands-on test asked for it. The earlier plan showed one continuous sheet and left pages to printing and export.
+- **Fixed on the way:** printouts had 0.25 in more margin on the left and right than the page setup (since Phase 2).
+- **Fixed on the way:** printing with the theme "Same as Windows" while Windows was in dark mode printed a dark page (since Phase 2).
+- **Known limitation:** after a tab moves to another window, Undo still reverts its text, but no longer its formatting changes from before the move (CodeMirror keeps only text changes when its history is moved).
 
 **Tasks**
 - **5.1 `.mdmeta` module (O7):**

@@ -1,7 +1,7 @@
-// The status bar (O18): word and character counts of the rendered text (also
-// for the selection), the cursor position, the encoding and line endings (click
-// to change them for the next save), and the zoom (click for 100%).
-// Right-click chooses which items are shown.
+// The status bar (O18): the page in Print Layout (O9), word and character
+// counts of the rendered text (also for the selection), the cursor position,
+// the encoding and line endings (click to change them for the next save), and
+// the zoom (click for 100%). Right-click chooses which items are shown.
 
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -11,7 +11,7 @@ import { markUnsaved, updateDoc, useDocs, type Doc } from "../state/documents";
 import { usePrefs } from "../state/prefs";
 import { useActiveSummary } from "../state/summary";
 import type { TextCounts } from "../render/pipeline";
-import { useCursor, useShownZoom } from "../state/status";
+import { useCursor, useShownPages, useShownZoom } from "../state/status";
 import { setZoom } from "../state/view";
 import { ContextMenu, type MenuItem } from "./Menu";
 
@@ -43,6 +43,7 @@ function changeLineEnding(doc: Doc, lineEnding: LineEnding) {
 
 type ItemName = keyof StatusBarItems;
 const ITEM_NAMES: ItemName[] = [
+  "page",
   "words",
   "characters",
   "charactersNoSpaces",
@@ -61,6 +62,7 @@ export function StatusBar() {
   const cursor = useCursor();
   const counts = useActiveSummary();
   const zoom = useShownZoom((s) => s.zoom);
+  const pages = useShownPages();
   const codepage = useSystemCodePage();
   const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
   const closeMenu = useCallback(() => setMenu(null), []);
@@ -130,6 +132,11 @@ export function StatusBar() {
   const show = (name: ItemName) => items[name] && doc;
   return (
     <footer className="statusbar" onContextMenu={chooseItems}>
+      {show("page") && pages.pages > 0 ? (
+        <span className="status-item">
+          {t("status.page", { page: number(pages.page), pages: number(pages.pages) })}
+        </span>
+      ) : null}
       {show("words") ? <span className="status-item">{count("words", "words")}</span> : null}
       {show("characters") ? (
         <span className="status-item">{count("characters", "characters")}</span>

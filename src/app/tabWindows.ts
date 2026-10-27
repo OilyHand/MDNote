@@ -17,6 +17,7 @@ import {
   getDoc,
   moveDoc,
   removeDoc,
+  savedMetaOf,
   savedTextOf,
   scrollTops,
   useDocs,
@@ -33,6 +34,8 @@ export interface TabTransfer {
   state: unknown;
   /** The text on disk; null if the tab counts as changed until saved. */
   savedText: string | null;
+  /** The `.mdmeta` text on disk (O7). */
+  savedMeta: string | null;
   scrollTop: number;
 }
 
@@ -48,6 +51,7 @@ function pack(id: string): TabTransfer | null {
     doc,
     state: editorStateToJSON(state),
     savedText: savedTextOf(id),
+    savedMeta: savedMetaOf(id),
     scrollTop: view ? view.scrollDOM.scrollTop : (scrollTops.get(id) ?? 0),
   };
 }
@@ -68,7 +72,10 @@ function attach(transfer: TabTransfer, index?: number) {
   const doc = { ...transfer.doc };
   const used = useDocs.getState().docs.flatMap((d) => (d.untitled ? [d.untitled] : []));
   if (doc.untitled && used.includes(doc.untitled)) doc.untitled = nextUntitledNumber(used);
-  addDoc(doc, editorStateFromJSON(transfer.state), index, transfer.savedText);
+  addDoc(doc, editorStateFromJSON(transfer.state), index, {
+    text: transfer.savedText,
+    meta: transfer.savedMeta,
+  });
   scrollTops.set(doc.id, transfer.scrollTop);
   if (doc.path) api.watchDocument(doc.path, doc.stamp).catch(notifyError);
 }

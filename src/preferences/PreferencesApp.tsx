@@ -9,6 +9,7 @@ import type { LanguagePref } from "../i18n";
 import { DEFAULT_PREFERENCES, usePrefs } from "../state/prefs";
 import { notifyError } from "../state/notices";
 import { Notices } from "../app/Notices";
+import { DocumentPrefs } from "./DocumentPrefs";
 
 const MAX_RECENT = 30;
 
@@ -178,6 +179,8 @@ export function PreferencesApp() {
         <Check name="editorWrapSelection" label={t("prefs.wrapSelection")} />
         <Check name="editorFormatTables" label={t("prefs.formatTables")} />
       </section>
+
+      <DocumentPrefs />
 
       <section>
         <h2>{t("prefs.files")}</h2>

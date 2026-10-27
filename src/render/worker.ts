@@ -1,6 +1,7 @@
 // Renders Markdown off the main thread, so typing never waits for the preview.
-// One Renderer (and its chunk cache) per document. Blocks the window already
-// has are sent as key + line only; their content is sent once.
+// One Renderer (and its chunk cache) per document and code colour theme.
+// Blocks the window already has are sent as key + line only; their content is
+// sent once.
 
 import type { Element, Nodes } from "hast";
 import { Renderer } from "./pipeline";
@@ -13,6 +14,8 @@ interface DocumentState {
   /** Renders run one at a time per document; only the newest waiting one runs. */
   running: boolean;
   next?: { requestId: number; text: string };
+  /** Replaced by a fresh state (another code theme): a render still running is not sent. */
+  replaced?: boolean;
 }
 
 const documents = new Map<string, DocumentState>();
@@ -31,6 +34,7 @@ async function run(docId: string, state: DocumentState) {
     state.next = undefined;
     try {
       const result = await state.renderer.render(text);
+      if (state.replaced) break;
       const sent = new Set<string>();
       const blocks: WireBlock[] = result.blocks.map((block) => {
         sent.add(block.key);
@@ -49,7 +53,7 @@ async function run(docId: string, state: DocumentState) {
         counts: result.counts,
       });
     } catch (error) {
-      post({ type: "failed", docId, requestId, message: String(error) });
+      if (!state.replaced) post({ type: "failed", docId, requestId, message: String(error) });
     }
   }
   state.running = false;
@@ -88,15 +92,17 @@ self.onmessage = (event: MessageEvent<WorkerRequest>) => {
   if (request.type === "count") {
     let state = documents.get(request.docId);
     if (!state) {
-      state = { renderer: new Renderer(), sent: new Set(), running: false };
+      state = { renderer: new Renderer("github"), sent: new Set(), running: false };
       documents.set(request.docId, state);
     }
     void count(state, request);
     return;
   }
   let state = documents.get(request.docId);
-  if (!state || request.reset) {
-    state = { renderer: new Renderer(), sent: new Set(), running: false };
+  // Another code theme: every code block looks different, so everything is sent again.
+  if (!state || request.reset || state.renderer.codeTheme !== request.codeTheme) {
+    if (state) state.replaced = true;
+    state = { renderer: new Renderer(request.codeTheme), sent: new Set(), running: false };
     documents.set(request.docId, state);
   }
   state.next = { requestId: request.requestId, text: request.text };

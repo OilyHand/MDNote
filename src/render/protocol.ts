@@ -2,6 +2,7 @@
 
 import type { Element } from "hast";
 import type { OutlineHeading, TextCounts } from "./pipeline";
+import type { CodeTheme } from "../mdmeta/schema";
 
 export type WorkerRequest =
   | {
@@ -9,6 +10,8 @@ export type WorkerRequest =
       docId: string;
       requestId: number;
       text: string;
+      /** The code block style's colour theme (O4). */
+      codeTheme: CodeTheme;
       /** Forget what was sent before (the window dropped its copy). */
       reset?: boolean;
     }

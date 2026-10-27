@@ -1,30 +1,32 @@
-/* The rendered document on its page (O2). Typography is set with variables so
-   Phase 5 can turn them into per-section styles (O4) without touching this file.
-   Defaults follow O4: Segoe UI 12 pt with Malgun Gothic for Korean, 1.5 line
-   spacing, code in Consolas. */
+/* The rendered document on its page (O2). Fonts, sizes, line spacing, spacing,
+   alignment and chosen colours come from the document's styles (O4), written
+   by styles/css.ts; the page's size and margins from its page setup (O9).
+   This file holds the rest: layout, borders, backgrounds, and the colours
+   that follow the light or dark page. */
 
-.page {
-  --md-font: "Segoe UI", "Malgun Gothic", sans-serif;
-  --md-size: 12pt;
-  --md-line: 1.5;
-  --md-code-font: Consolas, "Malgun Gothic", monospace;
-  --md-code-size: 10.5pt;
-  --md-heading-font: var(--md-font);
-
-  box-sizing: content-box;
-  width: 159.2mm; /* A4 (210 mm) minus Normal margins (2 × 25.4 mm) */
-  min-height: 246.2mm;
+/* The page's width and zoom, and in Print Layout its sheets (PreviewPane). */
+.page-frame {
+  position: relative;
   margin: 24px auto;
-  padding: 25.4mm;
+}
+
+/* The margins are its padding, around a text area at least a page tall. */
+.page {
+  box-sizing: content-box;
+  min-height: var(--page-body-height);
   background: var(--paper);
   color: var(--paper-text);
   box-shadow: var(--paper-shadow);
-  font-family: var(--md-font);
-  font-size: var(--md-size);
-  line-height: var(--md-line);
   overflow-wrap: break-word;
   user-select: text;
   text-wrap: pretty;
+}
+
+/* A column of blocks whose spacing adds up, as in Word: space after one
+   paragraph plus space before the next (CSS margins would overlap). */
+.page-body {
+  display: flex;
+  flex-direction: column;
 }
 
 /* Blocks are wrappers for scroll sync only; they must not affect layout. */
@@ -32,7 +34,7 @@
   display: contents;
 }
 
-.page > .md-block:first-child > :first-child {
+.page-body > .md-block:first-child > :first-child {
   margin-top: 0;
 }
 
@@ -42,41 +44,16 @@
 .page h4,
 .page h5,
 .page h6 {
-  font-family: var(--md-heading-font);
-  font-weight: 600;
-  line-height: 1.25;
-  margin: 1.2em 0 0.5em;
   break-after: avoid;
 }
 
-.page h1 {
-  font-size: 20pt;
-}
-.page h2 {
-  font-size: 16pt;
-}
-.page h3 {
-  font-size: 13pt;
-}
-.page h4 {
-  font-size: 12pt;
-}
-.page h5 {
-  font-size: 11pt;
-}
 .page h6 {
-  font-size: 11pt;
   color: var(--paper-muted);
 }
 
-.page p,
-.page ul,
-.page ol,
-.page blockquote,
 .page table,
-.page pre,
-.page .katex-display {
-  margin: 0 0 0.8em;
+.page hr {
+  margin: 0 0 10pt;
 }
 
 .page ul,
@@ -84,8 +61,19 @@
   padding-left: 1.6em;
 }
 
+/* Inside lists and quotes, spacing is the block's own, not each paragraph's. */
+.page li ul,
+.page li ol {
+  margin: 0;
+}
+
 .page li > p {
-  margin-bottom: 0.4em;
+  margin: 0 0 0.4em;
+}
+
+.page blockquote > :last-child,
+.page li > :last-child {
+  margin-bottom: 0;
 }
 
 .page li.task-list-item {
@@ -99,7 +87,6 @@
 
 .page a {
   color: var(--paper-link);
-  text-decoration: underline;
   cursor: pointer;
 }
 
@@ -111,14 +98,12 @@
 
 .page hr {
   height: 1px;
-  margin: 1.5em 0;
+  margin-top: 6pt;
   border: none;
   background: var(--paper-rule);
 }
 
-.page code {
-  font-family: var(--md-code-font);
-  font-size: var(--md-code-size);
+.page :not(pre) > code {
   padding: 0.1em 0.3em;
   border-radius: 3px;
   background: var(--paper-code);
@@ -129,12 +114,10 @@
   border-radius: 4px;
   background: var(--paper-code);
   overflow-x: auto;
-  line-height: 1.45;
 }
 
 .page pre code {
-  padding: 0;
-  background: none;
+  font: inherit;
 }
 
 /* Shiki writes both themes' colours as variables (no re-render on theme change). */
@@ -160,7 +143,6 @@
 
 .page th {
   background: var(--paper-code);
-  font-weight: 600;
 }
 
 .page img {
@@ -172,13 +154,15 @@
 }
 
 .page .footnotes {
-  margin-top: 2em;
-  font-size: 0.9em;
   color: var(--paper-muted);
 }
 
+/* The "Footnotes" label belongs to the footnotes, not to the Heading 2 style. */
 .page .footnotes h2 {
-  font-size: 1em;
+  font: inherit;
+  font-weight: 700;
+  color: inherit;
+  margin: 0 0 4pt;
 }
 
 .page sup a {
@@ -210,9 +194,69 @@
   font-size: 8pt;
 }
 
+/* ---- Print Layout: the pages as they print (O9) ---------------------------- */
+
+/* The browser breaks the text into pages as it does when printing: rows of one
+   column each, as tall as the page's text area, with the bottom margin, the
+   space between sheets and the top margin as the gap between rows. The sheets
+   are drawn behind the text. */
+@media screen {
+  .page-frame.paged .page {
+    position: relative;
+    background: none;
+    box-shadow: none;
+    column-count: 1;
+    column-fill: auto;
+    column-height: var(--page-body-height);
+    column-wrap: wrap;
+    row-gap: calc(var(--page-height) - var(--page-body-height) + var(--page-gap));
+  }
+
+  .page-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: var(--page-height);
+    background: var(--paper);
+    box-shadow: var(--paper-shadow);
+  }
+
+  .page-frame.paged .page-break {
+    break-before: column;
+    margin: 0;
+    border: none;
+  }
+
+  .page-frame.paged .page-break::after {
+    content: none;
+  }
+
+  /* As when printing (below): code and tables continue on the next page
+     instead of scrolling, and nothing is taller than a page. */
+  .page-frame.paged .page pre {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+
+  .page-frame.paged .page table {
+    overflow: visible;
+  }
+
+  .page-frame.paged .page img {
+    max-height: var(--page-body-height);
+  }
+
+  .page-frame.paged .page pre,
+  .page-frame.paged .page table,
+  .page-frame.paged .page img,
+  .page-frame.paged .page .katex-display {
+    break-inside: avoid;
+  }
+}
+
 /* ---- Dark theme ------------------------------------------------------------ */
 
-@media (prefers-color-scheme: dark) {
+@media screen and (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) .page pre.shiki {
     background-color: var(--shiki-dark-bg);
   }
@@ -230,12 +274,8 @@
 
 /* ---- Print: only the page, always in light colours ----------------------- */
 
+/* The paper size and margins come from the document's page setup (styles/look.ts). */
 @media print {
-  @page {
-    size: A4;
-    margin: 25.4mm;
-  }
-
   :root,
   :root[data-theme="dark"] {
     --paper: #ffffff;
@@ -251,33 +291,50 @@
   body,
   #root,
   .app,
+  .window-body,
+  .window-main,
   .workspace,
   .panes,
   .pane-preview,
   .preview-scroll {
     display: block !important;
     height: auto !important;
+    /* The pane's padding around the page on screen would narrow the printed text. */
+    padding: 0 !important;
     overflow: visible !important;
     background: none !important;
   }
 
   .menubar,
   .tabbar,
+  .sidebar,
+  .sidebar-edge,
+  .statusbar,
+  .ruler,
   .banner,
   .notices,
   .pane-source,
   .divider,
   .zoom-badge,
-  .preview-error {
+  .preview-error,
+  .dialog-backdrop {
     display: none !important;
   }
 
-  .page {
+  /* The page's size and margins are inline styles on screen; the printer's page has them. */
+  .page-frame {
     zoom: 1 !important;
-    width: auto;
-    min-height: 0;
+    width: auto !important;
     margin: 0;
-    padding: 0;
+  }
+
+  .page-sheet {
+    display: none;
+  }
+
+  .page {
+    min-height: 0;
+    padding: 0 !important;
     box-shadow: none;
   }
 
@@ -298,6 +355,26 @@
 
   .page .page-break::after {
     content: none;
+  }
+
+  /* Code and tables continue on the next page instead of scrolling, and
+     nothing is taller than a page. */
+  .page pre {
+    overflow: visible;
+    white-space: pre-wrap;
+  }
+
+  .page table {
+    overflow: visible;
+  }
+
+  /* As in Word, and in Print Layout: a table's header row is not repeated on each page. */
+  .page thead {
+    display: table-row-group;
+  }
+
+  .page img {
+    max-height: var(--page-body-height);
   }
 
   .page pre,

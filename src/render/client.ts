@@ -5,6 +5,7 @@
 import type { Element } from "hast";
 import type { WorkerReply, WorkerRequest } from "./protocol";
 import type { OutlineHeading, TextCounts } from "./pipeline";
+import type { CodeTheme } from "../mdmeta/schema";
 
 export interface PreviewBlock {
   key: string;
@@ -110,11 +111,11 @@ function send(request: WorkerRequest) {
 }
 
 /** Renders `text` for a document; the newest request wins if several are waiting. */
-export function requestRender(docId: string, text: string) {
+export function requestRender(docId: string, text: string, codeTheme: CodeTheme) {
   const state = stateOf(docId);
   // A document seen for the first time (or forgotten) starts from scratch on both sides.
   const reset = state.nodes.size === 0 && !state.preview;
-  send({ type: "render", docId, requestId: nextRequestId++, text, reset });
+  send({ type: "render", docId, requestId: nextRequestId++, text, codeTheme, reset });
 }
 
 /** Counts (O18) and headings (O13) of the rendered text; null if that failed. */

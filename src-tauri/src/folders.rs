@@ -21,8 +21,10 @@ use crate::error::{AppError, AppResult};
 
 const SETTLE_TIME: Duration = Duration::from_millis(300);
 const NOTE_EXTENSIONS: &[&str] = &["md", "markdown"];
+/// A note's formatting file (O7).
+pub const META_SUFFIX: &str = ".mdmeta";
 /// Files that belong to a note, named after it.
-const COMPANION_SUFFIXES: &[&str] = &[".mdmeta", ".assets"];
+const COMPANION_SUFFIXES: &[&str] = &[META_SUFFIX, ".assets"];
 
 #[derive(Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -205,7 +207,7 @@ fn companions(note: &Path) -> Vec<(PathBuf, &'static str)> {
         .collect()
 }
 
-fn companion_for(note: &Path, suffix: &str) -> PathBuf {
+pub fn companion_for(note: &Path, suffix: &str) -> PathBuf {
     let stem = note
         .file_stem()
         .map(|s| s.to_string_lossy())

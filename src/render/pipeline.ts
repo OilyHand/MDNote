@@ -23,6 +23,7 @@ import { visit, SKIP } from "unist-util-visit";
 import type { Element, ElementContent, Root } from "hast";
 import type { Definition, Root as MdastRoot } from "mdast";
 import { highlightCode } from "./highlight";
+import type { CodeTheme } from "../mdmeta/schema";
 import { hasFootnotes, splitChunks, type Chunk } from "./chunks";
 
 export interface RenderedBlock {
@@ -173,8 +174,12 @@ const rehypeMath: Plugin<[], Root> = () => (tree) => {
   });
 };
 
-/** Replaces fenced code with Shiki's highlighted version (math blocks are KaTeX's). */
-const rehypeHighlight: Plugin<[], Root> = () => async (tree) => {
+/**
+ * Replaces fenced code with Shiki's highlighted version (math blocks are
+ * KaTeX's), in the code block style's colour theme (O4).
+ */
+const rehypeHighlight: Plugin<[], Root> = () => async (tree, file) => {
+  const theme = (file.data as { codeTheme?: CodeTheme }).codeTheme;
   const jobs: Promise<void>[] = [];
   visit(tree, "element", (node, index, parent) => {
     if (node.tagName !== "pre" || !parent || index === undefined) return;
@@ -184,7 +189,7 @@ const rehypeHighlight: Plugin<[], Root> = () => async (tree) => {
     const language = languageOf(code);
     if (!code || !language || language === "math") return;
     jobs.push(
-      highlightCode(toString(code), language).then((highlighted) => {
+      highlightCode(toString(code), language, theme).then((highlighted) => {
         if (!highlighted) return;
         highlighted.position = node.position;
         parent.children[index] = highlighted;
@@ -193,6 +198,85 @@ const rehypeHighlight: Plugin<[], Root> = () => async (tree) => {
     return SKIP;
   });
   await Promise.all(jobs);
+};
+
+/**
+ * East Asian characters (Hangul, kana, CJK ideographs and their punctuation):
+ * Word's "Asian text", which always uses the style's Korean font.
+ */
+const EAST_ASIAN_RANGES: [number, number][] = [
+  [0x1100, 0x11ff],
+  [0x2e80, 0x2fff],
+  [0x3000, 0x33ff],
+  [0x3400, 0x4dbf],
+  [0x4e00, 0x9fff],
+  [0xa960, 0xa97f],
+  [0xac00, 0xd7ff],
+  [0xf900, 0xfaff],
+  [0xfe30, 0xfe4f],
+  [0xff00, 0xffef],
+  [0x20000, 0x2fa1f],
+];
+const EAST_ASIAN_CLASS = EAST_ASIAN_RANGES.map(
+  ([from, to]) => `\\u{${from.toString(16)}}-\\u{${to.toString(16)}}`,
+).join("");
+/** A run of East Asian text, with the spaces between its words. */
+const EAST_ASIAN_RUN = new RegExp(`[${EAST_ASIAN_CLASS}]+(?:[ \\t]+[${EAST_ASIAN_CLASS}]+)*`, "gu");
+const HAS_EAST_ASIAN = new RegExp(`[${EAST_ASIAN_CLASS}]`, "u");
+
+/** Code keeps its own font; math is KaTeX's. */
+const NO_EAST_ASIAN_SPANS = new Set([
+  "code",
+  "pre",
+  "kbd",
+  "samp",
+  "script",
+  "style",
+  "svg",
+  "math",
+]);
+
+function wrapEastAsian(node: Element | Root) {
+  let changed = false;
+  const children: (typeof node.children)[number][] = [];
+  for (const child of node.children) {
+    if (child.type === "text" && HAS_EAST_ASIAN.test(child.value)) {
+      changed = true;
+      let last = 0;
+      for (const match of child.value.matchAll(EAST_ASIAN_RUN)) {
+        if (match.index > last)
+          children.push({ type: "text", value: child.value.slice(last, match.index) });
+        children.push({
+          type: "element",
+          tagName: "span",
+          properties: { className: ["md-ea"] },
+          children: [{ type: "text", value: match[0] }],
+        });
+        last = match.index + match[0].length;
+      }
+      if (last < child.value.length)
+        children.push({ type: "text", value: child.value.slice(last) });
+      continue;
+    }
+    if (
+      child.type === "element" &&
+      !NO_EAST_ASIAN_SPANS.has(child.tagName) &&
+      !classesOf(child).includes("katex")
+    ) {
+      wrapEastAsian(child);
+    }
+    children.push(child);
+  }
+  if (changed) node.children = children as typeof node.children;
+}
+
+/**
+ * Wraps runs of Korean (East Asian) text in `span.md-ea`. As in Word, they use
+ * the style's Korean font even when the main font has Korean letters, and a
+ * line that holds them is as tall as that font's line (O3, O4).
+ */
+const rehypeEastAsian: Plugin<[], Root> = () => (tree) => {
+  wrapEastAsian(tree);
 };
 
 function languageOf(code: Element | undefined): string | undefined {
@@ -214,6 +298,7 @@ const processor = unified()
   // Trusted output from here on.
   .use(rehypeMath)
   .use(rehypeHighlight)
+  .use(rehypeEastAsian)
   .freeze();
 
 const parser = unified().use(remarkParse).use(remarkGfm).use(remarkMath).freeze();
@@ -381,10 +466,11 @@ async function renderChunk(
   text: string,
   definitions: string,
   chunkKey: string,
+  codeTheme?: CodeTheme,
 ): Promise<ChunkOutput> {
   // Definitions go after the chunk so they cannot shift its line numbers.
   const input = definitions ? `${text}\n\n${definitions}\n` : text;
-  const tree = (await processor.run(processor.parse(input))) as Root;
+  const tree = (await processor.run(processor.parse(input), { data: { codeTheme } })) as Root;
   const chunkLines = text.split("\n").length;
   const blocks: ChunkBlock[] = [];
   const images = new Set<string>();
@@ -410,9 +496,11 @@ async function renderChunk(
 
 /**
  * Renders documents and remembers the result for each chunk. Keep one Renderer
- * per document so its cache matches that document.
+ * per document (and code colour theme) so its cache matches that document.
  */
 export class Renderer {
+  constructor(readonly codeTheme?: CodeTheme) {}
+
   private cache = new Map<string, Promise<ChunkOutput>>();
   private definitionCache = new Map<string, string[]>();
   private definitionsKey = "";
@@ -456,7 +544,9 @@ export class Renderer {
         const defs = chunk.open ? "" : definitions;
         const key = `${hashText(chunk.text)}${defs ? `~${definitionsKey}` : ""}`;
         const output =
-          previous.get(key) ?? this.cache.get(key) ?? renderChunk(chunk.text, defs, key);
+          previous.get(key) ??
+          this.cache.get(key) ??
+          renderChunk(chunk.text, defs, key, this.codeTheme);
         this.cache.set(key, output);
         return output;
       }),

@@ -11,6 +11,7 @@ use crate::locale;
 
 pub const FILE: &str = "preferences.json";
 pub const MAX_RECENT_FILES: u32 = 30;
+const MAX_RECENT_FONTS: usize = 8;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "lowercase")]
@@ -31,10 +32,23 @@ pub enum ThemePref {
     Dark,
 }
 
+/// The unit page measurements are shown in (O9).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum UnitsPref {
+    /// Inches where Windows uses the U.S. measurement system, centimetres elsewhere.
+    #[default]
+    System,
+    Cm,
+    In,
+}
+
 /// Which items the status bar shows (O18); chosen by right-clicking it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase", default)]
 pub struct StatusBarItems {
+    /// "Page 2 of 5", in Print Layout (O9).
+    pub page: bool,
     pub words: bool,
     pub characters: bool,
     pub characters_no_spaces: bool,
@@ -47,6 +61,7 @@ pub struct StatusBarItems {
 impl Default for StatusBarItems {
     fn default() -> Self {
         Self {
+            page: true,
             words: true,
             characters: true,
             characters_no_spaces: true,
@@ -85,6 +100,18 @@ pub struct Preferences {
     /// View > Status Bar (O18).
     pub status_bar: bool,
     pub status_bar_items: StatusBarItems,
+    /// The styles documents start with (O4, O12): how they differ from the
+    /// built-in styles, in the form of a `.mdmeta` "styles" object. The
+    /// window checks the values; Rust keeps them as they are.
+    pub default_styles: Map<String, Value>,
+    /// The style set the default styles were taken from, for display (O19).
+    pub default_style_set: String,
+    /// The page setup for documents without their own (O9), in the form of a
+    /// `.mdmeta` "page" object; null: the Windows region decides the paper.
+    pub default_page: Option<Value>,
+    pub units: UnitsPref,
+    /// The font picker's recently used fonts, newest first (O3).
+    pub recent_fonts: Vec<String>,
     /// Settings written by a newer MDNote are kept as they are.
     #[serde(flatten)]
     pub unknown: Map<String, Value>,
@@ -112,6 +139,11 @@ impl Default for Preferences {
             sidebar_show_all_files: false,
             status_bar: true,
             status_bar_items: StatusBarItems::default(),
+            default_styles: Map::new(),
+            default_style_set: String::new(),
+            default_page: None,
+            units: UnitsPref::System,
+            recent_fonts: Vec::new(),
             unknown: Map::new(),
         }
     }
@@ -123,6 +155,7 @@ impl Preferences {
         self.editor_font_size = self
             .editor_font_size
             .clamp(*EDITOR_FONT_SIZES.start(), *EDITOR_FONT_SIZES.end());
+        self.recent_fonts.truncate(MAX_RECENT_FONTS);
         self
     }
 }
@@ -133,14 +166,25 @@ pub struct PreferencesView {
     pub preferences: Preferences,
     /// The language "System" currently stands for: "en" or "ko".
     pub system_language: &'static str,
+    /// What Windows' region settings stand for: "cm" or "in", and "A4" or "Letter".
+    pub system_units: &'static str,
+    pub system_paper: &'static str,
+}
+
+impl PreferencesView {
+    pub fn new(preferences: Preferences) -> Self {
+        Self {
+            preferences,
+            system_language: locale::windows_ui_language(),
+            system_units: locale::windows_units(),
+            system_paper: locale::windows_paper(),
+        }
+    }
 }
 
 #[tauri::command]
 pub fn get_preferences(state: State<AppState>) -> PreferencesView {
-    PreferencesView {
-        preferences: state.prefs.lock().unwrap().clone(),
-        system_language: locale::windows_ui_language(),
-    }
+    PreferencesView::new(state.prefs.lock().unwrap().clone())
 }
 
 #[tauri::command]
@@ -154,11 +198,7 @@ pub fn set_preferences(
     *state.prefs.lock().unwrap() = preferences.clone();
     crate::recent::trim(&app, &state, preferences.recent_files_limit)?;
     apply_theme(&app, preferences.theme);
-    let view = PreferencesView {
-        preferences,
-        system_language: locale::windows_ui_language(),
-    };
-    let _ = app.emit("preferences-changed", view);
+    let _ = app.emit("preferences-changed", PreferencesView::new(preferences));
     Ok(())
 }
 

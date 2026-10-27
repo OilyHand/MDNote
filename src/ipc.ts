@@ -31,6 +31,7 @@ export interface LoadedFile {
 export type ThemePref = "system" | "light" | "dark";
 
 export interface StatusBarItems {
+  page: boolean;
   words: boolean;
   characters: boolean;
   charactersNoSpaces: boolean;
@@ -39,6 +40,8 @@ export interface StatusBarItems {
   lineEnding: boolean;
   zoom: boolean;
 }
+
+export type UnitsPref = "system" | "cm" | "in";
 
 /** Where pasted and dropped images are saved (O15). */
 export type ImageFolder = "assets" | "noteName" | "noteFolder";
@@ -67,6 +70,15 @@ export interface Preferences {
   /** View > Status Bar, and the items it shows (O18). */
   statusBar: boolean;
   statusBarItems: StatusBarItems;
+  /** Styles documents start with (O4): differences from the built-in styles, unchecked. */
+  defaultStyles: Record<string, unknown>;
+  /** The style set the default styles came from, for display (O19). */
+  defaultStyleSet: string;
+  /** Page setup for documents without their own (O9), unchecked; null: by Windows region. */
+  defaultPage: unknown;
+  units: UnitsPref;
+  /** The font picker's recently used fonts, newest first (O3). */
+  recentFonts: string[];
   /** Fields from newer MDNote versions; passed back unchanged. */
   [unknown: string]: unknown;
 }
@@ -74,6 +86,9 @@ export interface Preferences {
 export interface PreferencesView {
   preferences: Preferences;
   systemLanguage: Language;
+  /** What Windows' region settings stand for (O9). */
+  systemUnits: "cm" | "in";
+  systemPaper: "A4" | "Letter";
 }
 
 /** A copy of a document with unsaved changes, kept for crash recovery (O1). */
@@ -84,6 +99,8 @@ export interface RecoveryCopy {
   encoding: TextEncoding;
   lineEnding: LineEnding;
   text: string;
+  /** The `.mdmeta` text (O7), when the formatting has changes too. */
+  meta?: string | null;
   savedMs: number;
 }
 
@@ -131,6 +148,11 @@ export const api = {
     remember = true,
   ) => invoke<FileStamp>("write_document", { path, text, encoding, lineEnding, remember }),
   defaultLineEnding: () => invoke<LineEnding>("default_line_ending"),
+  /** The text of the note's `.mdmeta` (O7), or null if it has none. */
+  readMeta: (note: string) => invoke<string | null>("read_meta", { note }),
+  /** Saves the note's `.mdmeta`; null removes it. `backup` keeps a broken one as .bak first. */
+  writeMeta: (note: string, text: string | null, backup: boolean) =>
+    invoke<void>("write_meta", { note, text, backup }),
   systemCodePage: () => invoke<number>("system_code_page"),
 
   getPreferences: () => invoke<PreferencesView>("get_preferences"),
@@ -161,6 +183,18 @@ export const api = {
   resolveLink: (document: string | null, target: string) =>
     invoke<string | null>("resolve_link", { document, target }),
   listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
+
+  // Printing (O2, O9) on the document's paper, through MDNote's Print dialog.
+  listPrinters: () => invoke<Printers>("list_printers"),
+  /** Prints the calling window's page; resolves when the printer has the job. */
+  printDocument: (request: PrintRequest) => invoke<PrintOutcome>("print_document", { request }),
+
+  // User style sets (O19): JSON text, checked by the window.
+  listStyleSets: () => invoke<{ id: string; text: string }[]>("list_style_sets"),
+  saveStyleSet: (id: string, text: string) => invoke<void>("save_style_set", { id, text }),
+  deleteStyleSet: (id: string) => invoke<void>("delete_style_set", { id }),
+  importStyleSet: (path: string) => invoke<string>("import_style_set", { path }),
+  exportStyleSet: (path: string, text: string) => invoke<void>("export_style_set", { path, text }),
 
   // The folder sidebar (O14)
   listFolder: (path: string, showAll: boolean) =>
@@ -211,4 +245,32 @@ export interface FontFamily {
   nameKo: string | null;
   monospaced: boolean;
   hasHangul: boolean;
+  /** Single line height as a multiple of the font size (Word's "Single"). */
+  lineHeight: number;
 }
+
+export interface Printers {
+  names: string[];
+  /** Windows' default printer. */
+  default: string | null;
+}
+
+export type PrintSides = "printer" | "oneSided" | "longEdge" | "shortEdge";
+export type PrintColor = "printer" | "color" | "grayscale";
+
+export interface PrintRequest {
+  printer: string;
+  copies: number;
+  /** "1-3, 5"; empty for all pages. */
+  pages: string;
+  /** The paper upright, in mm; `landscape` turns it. */
+  paperWidth: number;
+  paperHeight: number;
+  landscape: boolean;
+  /** Top, right, bottom, left in mm. */
+  margins: [number, number, number, number];
+  sides: PrintSides;
+  color: PrintColor;
+}
+
+export type PrintOutcome = "printed" | "printerUnavailable";

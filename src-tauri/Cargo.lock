@@ -2112,7 +2112,7 @@ dependencies = [
 
 [[package]]
 name = "mdnote"
-version = "0.4.0"
+version = "0.5.0"
 dependencies = [
  "codepage",
  "dunce",
@@ -2130,6 +2130,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "trash",
+ "webview2-com",
  "windows",
 ]
 

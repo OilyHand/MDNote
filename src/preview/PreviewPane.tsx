@@ -20,10 +20,18 @@ import { api } from "../ipc";
 import { getPreview, requestRender, subscribePreview } from "../render/client";
 import { editorStates, onDocEdited, useDocs } from "../state/documents";
 import { getActiveView } from "../editor/view";
-import { useView, zoomBy, clampZoom } from "../state/view";
+import { PRINT_LAYOUT_SUPPORTED, useView, zoomBy, clampZoom } from "../state/view";
 import { resolveImages, useImageUrl } from "./images";
-import { setReadingLine, useShownZoom } from "../state/status";
+import { setReadingLine, setShownPages, useShownPages, useShownZoom } from "../state/status";
 import { followLink } from "./links";
+import { useDocumentDefaults, useDocumentLook } from "../styles/look";
+import { Ruler } from "../page/Ruler";
+import { openPageSetup } from "../page/actions";
+import { styleKeyOfElement } from "../styles/sections";
+import { modifyStyle } from "../styles/actions";
+import { ContextMenu, SEPARATOR, type MenuItem } from "../app/Menu";
+import { PAGE_GAP_PX, pageSize, PX_PER_MM, sheetAt, sheetsIn } from "../page/page";
+import type { CodeTheme, PageSetup } from "../mdmeta/schema";
 import {
   buildAnchors,
   editorTopLine,
@@ -33,8 +41,6 @@ import {
   type Anchor,
 } from "./scrollSync";
 
-/** Page width in CSS px: A4 (210 mm) until Page Setup arrives in Phase 5. */
-const PAGE_WIDTH_PX = (210 * 96) / 25.4;
 const RENDER_DELAY_MS = 30;
 const ZOOM_STEP = 0.1;
 
@@ -80,13 +86,13 @@ function useActivePreview(docId: string | null) {
   return useSyncExternalStore(subscribe, () => getPreview(docId));
 }
 
-/** Asks the worker to render the active document, now and after each edit. */
-function useRenderRequests(docId: string | null) {
+/** Asks the worker to render the active document, now, after each edit, and in another code theme. */
+function useRenderRequests(docId: string | null, codeTheme: CodeTheme) {
   useEffect(() => {
     if (!docId) return;
     const render = () => {
       const state = editorStates.get(docId);
-      if (state) requestRender(docId, state.doc.toString());
+      if (state) requestRender(docId, state.doc.toString(), codeTheme);
     };
     render();
     let timer: ReturnType<typeof setTimeout> | undefined;
@@ -99,7 +105,29 @@ function useRenderRequests(docId: string | null) {
       clearTimeout(timer);
       off();
     };
-  }, [docId]);
+  }, [docId, codeTheme]);
+}
+
+/**
+ * The page's size (O9), for the frame around it: the page fills its width,
+ * and the margins narrow the text column. In Print Layout, the text area's
+ * height is where the browser breaks the text into pages.
+ */
+function frameStyle(page: PageSetup, zoom: number): React.CSSProperties {
+  const { width, height } = pageSize(page);
+  const m = page.margins;
+  return {
+    zoom,
+    width: `${width}mm`,
+    "--page-height": `${height}mm`,
+    "--page-body-height": `${height - m.top - m.bottom}mm`,
+    "--page-gap": `${PAGE_GAP_PX}px`,
+  } as React.CSSProperties;
+}
+
+function pageStyle(page: PageSetup): React.CSSProperties {
+  const m = page.margins;
+  return { padding: `${m.top}mm ${m.right}mm ${m.bottom}mm ${m.left}mm` };
 }
 
 /**
@@ -136,8 +164,14 @@ export function PreviewPane() {
   const pageRef = useRef<HTMLElement>(null);
   const [fitZoom, setFitZoom] = useState(1);
   const effectiveZoom = fitWidth ? fitZoom : zoom;
+  const look = useDocumentLook(docId);
+  const units = useDocumentDefaults().units;
+  const ruler = useView((s) => s.ruler);
+  const paged = useView((s) => s.printLayout) && PRINT_LAYOUT_SUPPORTED;
+  const sheets = useShownPages((s) => s.pages);
+  const pageWidthPx = pageSize(look.page).width * PX_PER_MM;
 
-  useRenderRequests(docId);
+  useRenderRequests(docId, look.codeTheme);
 
   // The status bar shows the zoom in use, including Fit Page Width's.
   useEffect(() => {
@@ -156,12 +190,12 @@ export function PreviewPane() {
     if (!scroller) return;
     // Rounded down, so the fitted page never overflows by a fraction of a pixel.
     const update = () =>
-      setFitZoom(clampZoom(Math.floor(((scroller.clientWidth - 48) / PAGE_WIDTH_PX) * 100) / 100));
+      setFitZoom(clampZoom(Math.floor(((scroller.clientWidth - 48) / pageWidthPx) * 100) / 100));
     update();
     const observer = new ResizeObserver(update);
     observer.observe(scroller);
     return () => observer.disconnect();
-  }, []);
+  }, [pageWidthPx]);
 
   // Ctrl+mouse wheel zooms the page (O8). Not a React handler: it must be able
   // to cancel the browser's own zoom.
@@ -179,6 +213,7 @@ export function PreviewPane() {
   }, [fitZoom]);
 
   useScrollSync(scrollerRef, pageRef, mode === "split", preview, effectiveZoom);
+  useSheets(scrollerRef, pageRef, paged, pageSize(look.page).height, effectiveZoom);
   useReadingLineFromPreview(scrollerRef, docId, mode === "preview");
 
   const onClick = (event: React.MouseEvent) => {
@@ -188,15 +223,74 @@ export function PreviewPane() {
     void followLink(link.getAttribute("href") ?? "", docPath, scrollerRef.current);
   };
 
+  // Right-click: Copy, and Modify <style> Style… for what was clicked (O4).
+  const [menu, setMenu] = useState<{ x: number; y: number; items: MenuItem[] } | null>(null);
+  const onContextMenu = (event: React.MouseEvent) => {
+    const target = event.target as HTMLElement;
+    if (!docId || !target.closest(".page")) return;
+    event.preventDefault();
+    const key = styleKeyOfElement(target);
+    const selected = Boolean(window.getSelection()?.toString());
+    setMenu({
+      x: event.clientX,
+      y: event.clientY,
+      items: [
+        {
+          label: t("commands.edit.copy"),
+          shortcut: "Ctrl+C",
+          disabled: !selected,
+          action: () => document.execCommand("copy"),
+        },
+        SEPARATOR,
+        {
+          label: t("styles.modifyMenu", { name: t(`styles.names.${key}`) }),
+          action: () => modifyStyle(docId, key),
+        },
+      ],
+    });
+  };
+
   return (
     <>
-      <div className="preview-scroll" ref={scrollerRef} onClick={onClick}>
+      {ruler && docId ? (
+        <Ruler
+          docId={docId}
+          page={look.page}
+          units={units}
+          scrollerRef={scrollerRef}
+          pageRef={pageRef}
+          onOpenSetup={openPageSetup}
+        />
+      ) : null}
+      <div
+        className="preview-scroll"
+        ref={scrollerRef}
+        onClick={onClick}
+        onContextMenu={onContextMenu}
+      >
+        <style>{look.css}</style>
         <DocumentPath.Provider value={docPath}>
-          <article className="page" ref={pageRef} style={{ zoom: effectiveZoom }}>
-            {preview?.blocks.map((block) => (
-              <Block key={block.key} line={block.line} node={block.node} />
-            ))}
-          </article>
+          <div
+            className={paged ? "page-frame paged" : "page-frame"}
+            style={frameStyle(look.page, effectiveZoom)}
+          >
+            {paged
+              ? Array.from({ length: Math.max(1, sheets) }, (_, i) => (
+                  <div
+                    key={i}
+                    className="page-sheet"
+                    style={{ top: `calc(${i} * (var(--page-height) + var(--page-gap)))` }}
+                  />
+                ))
+              : null}
+            <article className="page" ref={pageRef} style={pageStyle(look.page)}>
+              <div className="page-body">
+                {preview?.blocks.map((block) => (
+                  <Block key={block.key} line={block.line} node={block.node} />
+                ))}
+              </div>
+            </article>
+          </div>
         </DocumentPath.Provider>
       </div>
       {preview?.error ? (
@@ -205,6 +299,9 @@ export function PreviewPane() {
         </div>
       ) : null}
       <ZoomBadge zoom={effectiveZoom} />
+      {menu ? (
+        <ContextMenu x={menu.x} y={menu.y} items={menu.items} onClose={() => setMenu(null)} />
+      ) : null}
     </>
   );
 }
@@ -242,6 +339,50 @@ function useReadingLineFromPreview(
       scroller.removeEventListener("scroll", onScroll);
     };
   }, [scrollerRef, docId, enabled]);
+}
+
+/**
+ * Print Layout (O9): the browser breaks the text into pages, as when printing;
+ * this counts them, for the sheets drawn behind the text, and tells the status
+ * bar which one is in the middle of the pane.
+ */
+function useSheets(
+  scrollerRef: React.RefObject<HTMLDivElement | null>,
+  pageRef: React.RefObject<HTMLElement | null>,
+  enabled: boolean,
+  sheetHeightMm: number,
+  zoom: number,
+) {
+  useEffect(() => {
+    const scroller = scrollerRef.current;
+    const page = pageRef.current;
+    if (!enabled || !scroller || !page) return;
+    // Measured on screen, so zoom included.
+    const sheetHeight = sheetHeightMm * PX_PER_MM * zoom;
+    const gap = PAGE_GAP_PX * zoom;
+    let frame = 0;
+    const update = () => {
+      const rect = page.getBoundingClientRect();
+      const sheets = sheetsIn(rect.height, sheetHeight, gap);
+      const middle = scroller.getBoundingClientRect().top + scroller.clientHeight / 2;
+      setShownPages(sheetAt(middle - rect.top, sheets, sheetHeight, gap), sheets);
+    };
+    const onScroll = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(update);
+    };
+    update();
+    const observer = new ResizeObserver(update);
+    observer.observe(page);
+    observer.observe(scroller);
+    scroller.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      scroller.removeEventListener("scroll", onScroll);
+      setShownPages(0, 0);
+    };
+  }, [scrollerRef, pageRef, enabled, sheetHeightMm, zoom]);
 }
 
 /** Shows the zoom level for a moment after it changes (not when the preview opens). */
