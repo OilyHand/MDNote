@@ -82,8 +82,19 @@ Install the new build, then:
 
 Added for the suggestion above. Install the new build, then open [phase-5-sample.md](phase-5-sample.md) and a long note of your own (several pages, with a long table or code block if you have one).
 
-- ⬜ **R5.** **View > Print Layout** is checked: the page is split into sheets of the paper size, with a gap between them, as in Word. **Ctrl+Alt+P** or the menu item turns it off (one continuous sheet, as before) and on again. MDNote remembers the choice after a restart.
-- ⬜ **R6.** The status bar shows "Page 2 of 5" while Print Layout is on, following as you scroll. Right-clicking the status bar lists **Page number**, which hides it.
-- ⬜ **R7.** Change the paper, orientation and margins (Layout menu, Page Setup, the ruler) and the zoom: the sheets follow at once, and the pages break elsewhere.
-- ⬜ **R8.** Print (Ctrl+P) the long note: every printed page starts with the same text as the page on screen. The `<!-- pagebreak -->` line in the sample starts a new page on screen too.
-- ⬜ **R9.** Code blocks and tables: a long one continues on the next page instead of scrolling sideways, on screen and in print, and long code lines wrap. A table's header row is not repeated on the next page (as in Word). With Print Layout off, they scroll sideways as before.
+- ✅ **R5.** **View > Print Layout** is checked: the page is split into sheets of the paper size, with a gap between them, as in Word. **Ctrl+Alt+P** or the menu item turns it off (one continuous sheet, as before) and on again. MDNote remembers the choice after a restart.
+- ✅ **R6.** The status bar shows "Page 2 of 5" while Print Layout is on, following as you scroll. Right-clicking the status bar lists **Page number**, which hides it.
+- ✅ **R7.** Change the paper, orientation and margins (Layout menu, Page Setup, the ruler) and the zoom: the sheets follow at once, and the pages break elsewhere.
+- ❌ **R8.** Print (Ctrl+P) the long note: every printed page starts with the same text as the page on screen. The `<!-- pagebreak -->` line in the sample starts a new page on screen too.
+<!-- When I changed the paper size from Letter to A4 and printed, the PDF still printed in Letter format. Please investigate this issue. -->
+
+- ✅ **R9.** Code blocks and tables: a long one continues on the next page instead of scrolling sideways, on screen and in print, and long code lines wrap. A table's header row is not repeated on the next page (as in Word). With Print Layout off, they scroll sideways as before.
+
+## Printing on the document's paper (2026-10-27)
+
+For R8: the browser's print dialog took the paper from the printer's settings, not from the note. Ctrl+P now opens MDNote's own Print dialog, which prints on the paper from Page Setup. Install the new build, then:
+
+- ⬜ **R10.** **Ctrl+P** (or File > Print…) opens MDNote's Print dialog: printer (Windows' default first), copies, pages, sides, colour, and the paper from Page Setup. **Enter** prints; **Esc** cancels.
+- ⬜ **R11.** Set a long note to **A4** (Layout > Size) and print it to **Microsoft Print to PDF**. Open the PDF: the pages are A4 (21 × 29.7 cm; in Edge, right-click > Document properties), and each starts with the same text as the page on screen. Repeat with **Letter**, and with **A5, Landscape**.
+- ⬜ **R12.** Pages: **Current page** prints the page in the middle of the screen; **Pages: 2-3** prints those two; a page past the end (for example 99) is refused with the number of pages. Cancelling the PDF printer's Save dialog shows "The note was not printed".
+

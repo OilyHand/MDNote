@@ -136,7 +136,7 @@ Features planned for after the essential implementation are listed under [After 
 - Relative image paths are resolved from the folder that contains the `.md` file.
 - Web links open in the default browser. Links to other `.md` files open in MDNote.
 - The rendered view updates while typing, with no noticeable lag for documents up to about 1 MB.
-- **Print** (Ctrl+P) uses the current styles and page setup. To make a PDF file, use **Export > PDF** (O10).
+- **Print** (Ctrl+P) uses the current styles and page setup, and prints on the paper set in Page Setup (O9), as Word does. MDNote's Print dialog offers the printer, copies, pages (all, the current page, or ranges such as 1-3, 5), one- or two-sided printing and colour. To make a PDF file, use **Export > PDF** (O10).
 
 **Done when**
 - A test document that uses every syntax item above renders correctly.
@@ -464,6 +464,7 @@ The **Source** column shows whether a shortcut is Word's default ("Word") or MDN
 - Changing the paper size or margins changes the rendered page width immediately.
 - Dragging a margin marker on the ruler changes that margin.
 - In Print Layout, every page on screen starts where the printed page does.
+- A note set to A4 prints on A4 paper, and one set to Letter on Letter, whatever paper the printer was last used with.
 - Exported PDF and DOCX files use the same paper size and margins.
 
 ---
@@ -835,6 +836,7 @@ These features follow once the essential implementation (phases 1–8) is comple
 | 2026-10-27 | Korean text | As in Word, Korean (East Asian) characters always use the style's font for Korean text, and a line holding them is as tall as that font's line. Word measures East Asian fonts as 1.3 times their height (Malgun Gothic 12 pt: 20.7 pt per line, against 16 pt for Segoe UI), which MDNote now follows (found in the Phase 5 hands-on test). |
 | 2026-10-27 | Colours | Modify Style picks colours from a menu like Word's (Automatic, theme colours with shades, standard colours, any #RRGGBB), not WebView2's colour popup. |
 | 2026-10-27 | Pages on screen | The rendered view shows the printed pages (View > Print Layout, on by default), as asked in the Phase 5 hands-on test; one continuous sheet stays available. The browser breaks the text into pages on screen as it does when printing (CSS multi-column rows), so both match. A table's header row is no longer repeated on each printed page, as in Word and on screen. |
+| 2026-10-27 | Printing | Ctrl+P opens MDNote's own Print dialog (printer, copies, pages, sides, colour) and prints through WebView2's print call with the page setup's paper and margins. The browser's print dialog took the paper from the printer's settings instead, so an A4 note came out on Letter paper (found in the Phase 5 hands-on test). |
 
 ## Open decisions
 
