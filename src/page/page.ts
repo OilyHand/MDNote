@@ -120,3 +120,19 @@ export function sheetsIn(height: number, sheetHeight: number, gap: number): numb
 export function sheetAt(y: number, sheets: number, sheetHeight: number, gap: number): number {
   return Math.min(sheets, Math.max(1, Math.floor((y + gap / 2) / (sheetHeight + gap)) + 1));
 }
+
+const PAGE_RANGES = /^\s*\d+\s*(-\s*\d+\s*)?(,\s*\d+\s*(-\s*\d+\s*)?)*$/;
+
+/**
+ * Pages typed in the Print dialog, such as "1-3, 5": null if they can be
+ * printed, else what is wrong. `pages` is the number of pages, 0 if unknown.
+ */
+export function pageRangeProblem(text: string, pages: number): "format" | "pastEnd" | null {
+  if (!PAGE_RANGES.test(text)) return "format";
+  for (const part of text.split(",")) {
+    const [from, to = from] = part.split("-").map((n) => Number(n.trim()));
+    if (from < 1 || to < from) return "format";
+    if (pages > 0 && to > pages) return "pastEnd";
+  }
+  return null;
+}

@@ -184,6 +184,11 @@ export const api = {
     invoke<string | null>("resolve_link", { document, target }),
   listFonts: (refresh = false) => invoke<FontFamily[]>("list_fonts", { refresh }),
 
+  // Printing (O2, O9) on the document's paper, through MDNote's Print dialog.
+  listPrinters: () => invoke<Printers>("list_printers"),
+  /** Prints the calling window's page; resolves when the printer has the job. */
+  printDocument: (request: PrintRequest) => invoke<PrintOutcome>("print_document", { request }),
+
   // User style sets (O19): JSON text, checked by the window.
   listStyleSets: () => invoke<{ id: string; text: string }[]>("list_style_sets"),
   saveStyleSet: (id: string, text: string) => invoke<void>("save_style_set", { id, text }),
@@ -243,3 +248,29 @@ export interface FontFamily {
   /** Single line height as a multiple of the font size (Word's "Single"). */
   lineHeight: number;
 }
+
+export interface Printers {
+  names: string[];
+  /** Windows' default printer. */
+  default: string | null;
+}
+
+export type PrintSides = "printer" | "oneSided" | "longEdge" | "shortEdge";
+export type PrintColor = "printer" | "color" | "grayscale";
+
+export interface PrintRequest {
+  printer: string;
+  copies: number;
+  /** "1-3, 5"; empty for all pages. */
+  pages: string;
+  /** The paper upright, in mm; `landscape` turns it. */
+  paperWidth: number;
+  paperHeight: number;
+  landscape: boolean;
+  /** Top, right, bottom, left in mm. */
+  margins: [number, number, number, number];
+  sides: PrintSides;
+  color: PrintColor;
+}
+
+export type PrintOutcome = "printed" | "printerUnavailable";

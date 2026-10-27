@@ -2130,6 +2130,7 @@ dependencies = [
  "tempfile",
  "thiserror 2.0.21",
  "trash",
+ "webview2-com",
  "windows",
 ]
 

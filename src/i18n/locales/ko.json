@@ -533,5 +533,39 @@
     "right": "오른쪽 여백: {{value}}",
     "leftLabel": "왼쪽 여백",
     "rightLabel": "오른쪽 여백"
+  },
+  "print": {
+    "title": "인쇄",
+    "printer": "프린터",
+    "noPrinters": "설치된 프린터가 없습니다",
+    "copies": "매수",
+    "pages": "페이지",
+    "allPages": "모든 페이지",
+    "allPagesOf": "모든 페이지 ({{pages}})",
+    "currentPage": "현재 페이지 ({{page}})",
+    "customPages": "페이지 지정:",
+    "pagesHint": "예: 1-3, 5",
+    "badPages": "1-3, 5처럼 페이지 번호와 범위를 입력하세요.",
+    "pastEnd_other": "이 노트는 {{count}}페이지입니다.",
+    "badCopies": "매수는 1에서 999 사이의 정수여야 합니다.",
+    "sides": "인쇄 면",
+    "side": {
+      "printer": "프린터 설정",
+      "oneSided": "단면 인쇄",
+      "longEdge": "양면 인쇄 (긴 쪽으로 넘김)",
+      "shortEdge": "양면 인쇄 (짧은 쪽으로 넘김)"
+    },
+    "color": "색",
+    "colorMode": {
+      "printer": "프린터 설정",
+      "color": "컬러",
+      "grayscale": "흑백"
+    },
+    "paper": "용지",
+    "paperValue": "{{paper}}, {{orientation}}",
+    "paperHint": "레이아웃 > 페이지 설정에서 바꿉니다",
+    "print": "인쇄",
+    "notPrinted": "노트를 인쇄하지 않았습니다. 인쇄가 취소되었거나 프린터에서 문제를 알렸습니다.",
+    "unavailable": "프린터 “{{printer}}”을(를) 사용할 수 없습니다."
   }
 }

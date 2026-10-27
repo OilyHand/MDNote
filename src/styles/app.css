@@ -1606,6 +1606,44 @@ kbd {
   width: min(560px, calc(100vw - 32px));
 }
 
+/* File > Print */
+.dialog-print {
+  width: min(520px, calc(100vw - 32px));
+}
+
+.print-fields {
+  margin: 8px 0 18px;
+}
+
+.print-fields .print-copies {
+  width: 76px;
+  justify-self: start;
+}
+
+.print-pages {
+  align-items: start;
+}
+
+.print-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.print-choices label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.print-choices input[type="text"] {
+  width: 140px;
+}
+
+.print-paper small {
+  color: var(--muted);
+}
+
 .page-setup {
   display: flex;
   gap: 18px;

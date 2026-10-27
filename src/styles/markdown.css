@@ -314,7 +314,8 @@
   .pane-source,
   .divider,
   .zoom-badge,
-  .preview-error {
+  .preview-error,
+  .dialog-backdrop {
     display: none !important;
   }
 

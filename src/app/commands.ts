@@ -38,6 +38,7 @@ import { metaEffect, metaOf } from "../mdmeta/field";
 import { loadMeta, recoveredMeta } from "../mdmeta/io";
 import { metaKey } from "../mdmeta/schema";
 import { ask } from "../state/dialog";
+import { showPrint } from "../state/modal";
 import { notifyError, notifyInfo } from "../state/notices";
 import { useRecent } from "../state/recent";
 import { adoptUnsavedImages, discardUnsavedImages } from "./images";
@@ -463,15 +464,16 @@ export function keepMyVersion(id: string) {
 // ---------------------------------------------------------------------------
 
 /**
- * Prints the rendered view with the print style sheet (O2). In Source Only
- * mode the preview is shown first, so there is something to print.
+ * File > Print (O2): MDNote's Print dialog, which prints the rendered view with
+ * the print style sheet on the document's paper (O9). In Source Only mode the
+ * preview is shown first, so there is something to print.
  */
-export async function printDocument() {
+export async function printDocument(docId: string) {
   if (useView.getState().mode === "source") {
     setViewMode("split");
     await new Promise((resolve) => setTimeout(resolve, 300));
   }
-  window.print();
+  await showPrint(docId);
 }
 
 export function cycleTab(step: 1 | -1) {

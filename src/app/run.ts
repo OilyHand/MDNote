@@ -67,7 +67,7 @@ export function runCommand(id: CommandId) {
     case "file.saveAs":
       return void (active && saveDocumentAs(active.id));
     case "file.print":
-      return void (active && printDocument());
+      return void (active && printDocument(active.id));
     case "file.closeTab":
       return void (active && closeDocument(active.id));
     case "file.preferences":

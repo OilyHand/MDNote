@@ -11,6 +11,7 @@ mod meta;
 mod paths;
 mod prefs;
 mod preview;
+mod print;
 mod recent;
 mod recovery;
 mod shell;
@@ -147,6 +148,8 @@ pub fn run() {
             preview::resolve_images,
             preview::resolve_link,
             fonts::list_fonts,
+            print::list_printers,
+            print::print_document,
             stylesets::list_style_sets,
             stylesets::save_style_set,
             stylesets::delete_style_set,

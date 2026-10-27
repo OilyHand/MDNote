@@ -4,6 +4,7 @@ import {
   builtInPage,
   formatLength,
   marginsFit,
+  pageRangeProblem,
   pageSize,
   parseLength,
   presetOf,
@@ -60,5 +61,23 @@ describe("Print Layout", () => {
     expect(sheetAt(1011, 3, 1000, 20)).toBe(2);
     expect(sheetAt(99999, 3, 1000, 20)).toBe(3);
     expect(sheetAt(-50, 3, 1000, 20)).toBe(1);
+  });
+});
+
+describe("page ranges to print", () => {
+  it("accepts pages and ranges as Word does", () => {
+    expect(pageRangeProblem("1-3, 5", 0)).toBeNull();
+    expect(pageRangeProblem(" 2 ", 4)).toBeNull();
+    expect(pageRangeProblem("4-4,1", 4)).toBeNull();
+  });
+
+  it("refuses other text, backward ranges and pages past the end", () => {
+    expect(pageRangeProblem("", 0)).toBe("format");
+    expect(pageRangeProblem("1-", 0)).toBe("format");
+    expect(pageRangeProblem("a", 0)).toBe("format");
+    expect(pageRangeProblem("3-1", 0)).toBe("format");
+    expect(pageRangeProblem("0", 0)).toBe("format");
+    expect(pageRangeProblem("2-6", 5)).toBe("pastEnd");
+    expect(pageRangeProblem("2-6", 0)).toBeNull();
   });
 });

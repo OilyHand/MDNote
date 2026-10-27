@@ -1,5 +1,5 @@
 // Dialogs with their own content (the shortcut list, Insert Link, the table
-// picker, Modify Style, Page Setup, style sets). Questions with buttons only
+// picker, Modify Style, Page Setup, style sets, Print). Questions with buttons only
 // use `ask()` in dialog.ts instead.
 
 import { create } from "zustand";
@@ -27,6 +27,8 @@ export type Modal =
   | { kind: "style"; docId: string; key: StyleKey; resolve(): void }
   /** Layout > Page Setup (O9); the page shows the changes while it is open. */
   | { kind: "pageSetup"; docId: string; resolve(): void }
+  /** File > Print (O2, O9): the printer, copies and pages; the page shows behind. */
+  | { kind: "print"; docId: string; resolve(): void }
   /** Design > Style Sets (O19): hovering a set shows it on the page. */
   | { kind: "styleSets"; docId: string; resolve(): void }
   /** A name to type (a new style set, renaming one). */
@@ -108,6 +110,22 @@ export function showPageSetup(docId: string): Promise<void> {
     useModal.setState({
       modal: {
         kind: "pageSetup",
+        docId,
+        resolve: () => {
+          closeModal();
+          resolve();
+        },
+      },
+    });
+  });
+}
+
+/** File > Print. */
+export function showPrint(docId: string): Promise<void> {
+  return new Promise((resolve) => {
+    useModal.setState({
+      modal: {
+        kind: "print",
         docId,
         resolve: () => {
           closeModal();

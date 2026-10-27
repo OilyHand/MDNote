@@ -14,10 +14,11 @@ import { closeModal, useModal, type LinkFields, type LinkResult, type Modal } fr
 import { ModifyStyleDialog } from "../styles/ModifyStyleDialog";
 import { StyleSetGallery } from "../styles/StyleSetGallery";
 import { PageSetupDialog } from "../page/PageSetupDialog";
+import { PrintDialog } from "../page/PrintDialog";
 import type { TextPrompt } from "../state/modal";
 
 /** Dialogs that change the page as you go: the page stays visible beside them. */
-const LIVE: Modal["kind"][] = ["style", "styleSets", "pageSetup"];
+const LIVE: Modal["kind"][] = ["style", "styleSets", "pageSetup", "print"];
 
 export function ModalHost() {
   const modal = useModal((s) => s.modal);
@@ -55,6 +56,7 @@ export function ModalHost() {
       {modal.kind === "pageSetup" ? (
         <PageSetupDialog docId={modal.docId} onDone={modal.resolve} />
       ) : null}
+      {modal.kind === "print" ? <PrintDialog docId={modal.docId} onDone={modal.resolve} /> : null}
       {modal.kind === "styleSets" ? (
         <StyleSetGallery docId={modal.docId} onDone={modal.resolve} />
       ) : null}
@@ -65,7 +67,12 @@ export function ModalHost() {
 
 function cancel(modal: Modal) {
   if (modal.kind === "shortcuts") closeModal();
-  else if (modal.kind === "style" || modal.kind === "styleSets" || modal.kind === "pageSetup")
+  else if (
+    modal.kind === "style" ||
+    modal.kind === "styleSets" ||
+    modal.kind === "pageSetup" ||
+    modal.kind === "print"
+  )
     modal.resolve();
   else modal.resolve(null);
 }
