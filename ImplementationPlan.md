@@ -411,14 +411,14 @@ Hands-on checklist [docs/testing/phase-4.md](docs/testing/phase-4.md) (2026-10-2
 
 ---
 
-### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5 — 🔄 built, hands-on test pending
+### Phase 5: Styles and page (O3, O4, O7, O9, O19) → v0.5 — ✅ complete (2026-10-27)
 
 **Goal:** Full control over typography and the page, saved in `.mdmeta` files.
 
 **Status (2026-10-26):** all tasks below are implemented on `phase5/styles`.
 
 Verified:
-- **Automated:** 106 frontend tests (+20: the `.mdmeta` format, the style layers, the style sheet, style set files) and 31 Rust tests (+4: reading, writing, removing and backing up `.mdmeta` files; Windows' region settings).
+- **Automated:** 116 frontend tests (+30: the `.mdmeta` format, the style layers, the style sheet, style set files, page sizes, Print Layout's page count, page ranges to print) and 33 Rust tests (+6: reading, writing, removing and backing up `.mdmeta` files; Windows' region settings; Word's line heights; the printer list).
 - **Running the app** (scripted through the DevTools port):
   - Modify Style: the page changes while the dialog is open; OK, Undo and Redo; saving writes only the `.mdmeta`; Reset to Defaults removes it on save; reopening restores the styles
   - a broken `.mdmeta`: a notice, the defaults, and a `.bak` copy when the formatting is changed and saved
@@ -450,7 +450,7 @@ Rechecks R10–R12 (2026-10-27): R10 and R12 pass. R11 fails: the printed margin
 - **Fix:** the pane has no padding when printing. Checked by printing to Microsoft Print to PDF and measuring: 1.00 in margins and a 6.5 in text column, and on a 12-page note every printed page starts where the page on screen does.
 - **The paper sizes were right:** the PDFs from the hands-on test are exactly Letter, A4, Legal, A5 and B5. The sizes noted (Letter 11.33 × 14.67 in) are 4/3 of the real ones, as when a viewer reads screen pixels (96 per inch) as points (72 per inch).
 
-Still open: the recheck R13 in the checklist.
+Recheck R13 (2026-10-27): passes. Phase 5 is complete.
 
 **What changed from the plan**
 - **Word's line spacing is exact:** DirectWrite reports each font's single line height, and the page uses it. The built-in Body text uses 1.15 lines (about the earlier 1.5 times the font size).

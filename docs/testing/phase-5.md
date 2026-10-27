@@ -110,5 +110,5 @@ For R8: the browser's print dialog took the paper from the printer's settings, n
 
 For R11: the paper sizes were right. Your PDFs are exactly Letter (8.5 × 11 in), A4, Legal, A5 and B5 (JIS); the sizes you noted are each 4/3 of those, so the viewer you measured with seems to show every size 4/3 too large. To confirm, open a PDF that Word saved on Letter paper in the same viewer: it should also show 11.33 × 14.67 in. The margins were wrong: every printout had 0.25 in more on the left and the right, so its lines were shorter than on screen and the pages broke elsewhere. Install the new build, then:
 
-- ⬜ **R13.** Print a long note to **Microsoft Print to PDF** with Letter and **Normal** margins, then with A4 and **Wide** margins. In the PDF, the margins are those of Page Setup (1 in; 5.08 cm left and right for Wide), each line ends with the same word as on the screen, and each page starts with the same text as the page on screen (Print Layout).
+- ✅ **R13.** Print a long note to **Microsoft Print to PDF** with Letter and **Normal** margins, then with A4 and **Wide** margins. In the PDF, the margins are those of Page Setup (1 in; 5.08 cm left and right for Wide), each line ends with the same word as on the screen, and each page starts with the same text as the page on screen (Print Layout).
 
