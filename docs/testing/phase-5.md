@@ -94,7 +94,21 @@ Added for the suggestion above. Install the new build, then open [phase-5-sample
 
 For R8: the browser's print dialog took the paper from the printer's settings, not from the note. Ctrl+P now opens MDNote's own Print dialog, which prints on the paper from Page Setup. Install the new build, then:
 
-- ⬜ **R10.** **Ctrl+P** (or File > Print…) opens MDNote's Print dialog: printer (Windows' default first), copies, pages, sides, colour, and the paper from Page Setup. **Enter** prints; **Esc** cancels.
-- ⬜ **R11.** Set a long note to **A4** (Layout > Size) and print it to **Microsoft Print to PDF**. Open the PDF: the pages are A4 (21 × 29.7 cm; in Edge, right-click > Document properties), and each starts with the same text as the page on screen. Repeat with **Letter**, and with **A5, Landscape**.
-- ⬜ **R12.** Pages: **Current page** prints the page in the middle of the screen; **Pages: 2-3** prints those two; a page past the end (for example 99) is refused with the number of pages. Cancelling the PDF printer's Save dialog shows "The note was not printed".
+- ✅ **R10.** **Ctrl+P** (or File > Print…) opens MDNote's Print dialog: printer (Windows' default first), copies, pages, sides, colour, and the paper from Page Setup. **Enter** prints; **Esc** cancels.
+- ❌ **R11.** Set a long note to **A4** (Layout > Size) and print it to **Microsoft Print to PDF**. Open the PDF: the pages are A4 (21 × 29.7 cm; in Edge, right-click > Document properties), and each starts with the same text as the page on screen. Repeat with **Letter**, and with **A5, Landscape**.
+<!-- Overall, the margins appear different when printing. -->
+<!-- Printed Size
+- Letter: 11.33 in × 14.67 in
+- A4: 11.03 × 15.60 in
+- Legal: 11.33 × 18.67 in
+- A5: 7.76 × 11.03 in
+- B5: 9.56 × 13.49 in
+-->
+- ✅ **R12.** Pages: **Current page** prints the page in the middle of the screen; **Pages: 2-3** prints those two; a page past the end (for example 99) is refused with the number of pages. Cancelling the PDF printer's Save dialog shows "The note was not printed".
+
+## Recheck after the margin fix (2026-10-27)
+
+For R11: the paper sizes were right. Your PDFs are exactly Letter (8.5 × 11 in), A4, Legal, A5 and B5 (JIS); the sizes you noted are each 4/3 of those, so the viewer you measured with seems to show every size 4/3 too large. To confirm, open a PDF that Word saved on Letter paper in the same viewer: it should also show 11.33 × 14.67 in. The margins were wrong: every printout had 0.25 in more on the left and the right, so its lines were shorter than on screen and the pages broke elsewhere. Install the new build, then:
+
+- ⬜ **R13.** Print a long note to **Microsoft Print to PDF** with Letter and **Normal** margins, then with A4 and **Wide** margins. In the PDF, the margins are those of Page Setup (1 in; 5.08 cm left and right for Wide), each line ends with the same word as on the screen, and each page starts with the same text as the page on screen (Print Layout).
 

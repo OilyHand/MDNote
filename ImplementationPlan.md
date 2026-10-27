@@ -445,7 +445,12 @@ Rechecks R5–R9 (2026-10-27): R5–R7 and R9 pass. R8 fails: a note set to A4 p
 - **Fix:** Ctrl+P opens MDNote's own Print dialog: printer, copies, pages (all, the current page in Print Layout, or ranges), sides and colour, with the paper shown from Page Setup. It prints through WebView2's print call (`ICoreWebView2_16::Print`) with the page setup's paper size, orientation and margins. Asked through `DocumentProperties` with the same width and height, the Microsoft Print to PDF driver chooses the matching paper by itself (A4, A5, Letter).
 - Checked by script: the dialog, page range checks, and a job reaching Microsoft Print to PDF; cancelling its Save dialog shows "The note was not printed".
 
-Still open: the rechecks R10–R12 in the checklist.
+Rechecks R10–R12 (2026-10-27): R10 and R12 pass. R11 fails: the printed margins differ from the screen.
+- **Cause:** on screen, the preview pane has 24 px of padding on each side of the page, and the print style sheet did not remove it. Every printout since Phase 2 had 0.25 in more margin on the left and right, so its text column was 0.5 in narrower than the page setup's (6.0 in instead of 6.5 in on Letter with Normal margins), and lines and pages broke elsewhere than on screen.
+- **Fix:** the pane has no padding when printing. Checked by printing to Microsoft Print to PDF and measuring: 1.00 in margins and a 6.5 in text column, and on a 12-page note every printed page starts where the page on screen does.
+- **The paper sizes were right:** the PDFs from the hands-on test are exactly Letter, A4, Legal, A5 and B5. The sizes noted (Letter 11.33 × 14.67 in) are 4/3 of the real ones, as when a viewer reads screen pixels (96 per inch) as points (72 per inch).
+
+Still open: the recheck R13 in the checklist.
 
 **What changed from the plan**
 - **Word's line spacing is exact:** DirectWrite reports each font's single line height, and the page uses it. The built-in Body text uses 1.15 lines (about the earlier 1.5 times the font size).
@@ -457,6 +462,7 @@ Still open: the rechecks R10–R12 in the checklist.
 - **Ctrl+Z and Ctrl+Y work outside the editor**, for changes made on the page.
 - **MDNote has its own Print dialog**, because the browser's could not be given the paper size (O2, O9).
 - **Print Layout** (O9) was added after the hands-on test asked for it. The earlier plan showed one continuous sheet and left pages to printing and export.
+- **Fixed on the way:** printouts had 0.25 in more margin on the left and right than the page setup (since Phase 2).
 - **Fixed on the way:** printing with the theme "Same as Windows" while Windows was in dark mode printed a dark page (since Phase 2).
 - **Known limitation:** after a tab moves to another window, Undo still reverts its text, but no longer its formatting changes from before the move (CodeMirror keeps only text changes when its history is moved).
 
